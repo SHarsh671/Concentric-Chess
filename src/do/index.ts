@@ -6,17 +6,17 @@ import * as t from "drizzle-orm";
 
 export class GameObject extends DurableObject<CloudflareEnv> {
   db: DrizzleD1Database<typeof schema>;
-  sessions: Map<WebSocket, { playerId: string }>;
+  sockets: Map<WebSocket, { playerId: string }>;
 
   constructor(ctx: DurableObjectState, env: CloudflareEnv) {
     super(ctx, env);
     this.db = drizzle(env.DB, { schema });
-    this.sessions = new Map();
+    this.sockets = new Map();
 
     this.ctx.getWebSockets().forEach((ws) => {
       let attachment = ws.deserializeAttachment();
       if (attachment) {
-        this.sessions.set(ws, { ...attachment });
+        this.sockets.set(ws, { ...attachment });
       }
     });
 
@@ -44,7 +44,7 @@ export class GameObject extends DurableObject<CloudflareEnv> {
     this.ctx.acceptWebSocket(server);
 
     server.serializeAttachment({ playerId: session.playerId });
-    this.sessions.set(server, { playerId: session.playerId });
+    this.sockets.set(server, { playerId: session.playerId });
 
     return new Response(null, {
       status: 101,
