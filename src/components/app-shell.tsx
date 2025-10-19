@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/sidebar";
 import { getSession } from "@/lib/auth";
 import { Button } from "./ui/button";
+import Link from "next/link";
 
 // This is sample data.
 const data = [
@@ -46,22 +47,22 @@ export async function AppShell({
     <SidebarProvider>
       <Sidebar className="border-r-0">
         <SidebarHeader className="py-0 pt-2">
-          <a className="flex h-10 items-center px-1 gap-2" href="/">
+          <Link className="flex h-10 items-center px-1 gap-2" href="/">
             <div className="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-7 items-center justify-center rounded-md">
               <Gamepad className="size-5" />
             </div>
             <span className="truncate font-medium">Concentric Chess</span>
-          </a>
+          </Link>
         </SidebarHeader>
         <SidebarContent className="px-2">
           <SidebarMenu>
             {data.map((item) => (
               <SidebarMenuItem key={item.title}>
                 <SidebarMenuButton asChild>
-                  <a href={item.url}>
+                  <Link href={item.url}>
                     <item.icon />
                     <span>{item.title}</span>
-                  </a>
+                  </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             ))}
@@ -70,24 +71,24 @@ export async function AppShell({
             <SidebarMenu className="mt-auto pb-2">
               <SidebarMenuItem>
                 <SidebarMenuButton asChild>
-                  <a href="/settings">
+                  <Link href="/settings">
                     <Settings />
                     <span>Settings</span>
-                  </a>
+                  </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             </SidebarMenu>
           ) : (
             <div className="mt-auto pb-2 flex flex-col gap-2">
               <Button className="w-full">
-                <a href="/signup">
+                <Link href="/signup">
                   <span>Sign Up</span>
-                </a>
+                </Link>
               </Button>
               <Button className="w-full" variant="secondary">
-                <a href="/login">
+                <Link href="/login">
                   <span>Log In</span>
-                </a>
+                </Link>
               </Button>
             </div>
           )}

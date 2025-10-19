@@ -14,6 +14,7 @@ import { Button } from "./ui/button";
 import { useActionState } from "react";
 import { login } from "@/actions/auth";
 import { Alert, AlertTitle } from "./ui/alert";
+import Link from "next/link";
 
 export function LoginForm({
   className,
@@ -26,7 +27,7 @@ export function LoginForm({
       <form action={formAction}>
         <FieldGroup className="gap-4">
           <div className="flex flex-col items-center gap-2 text-center">
-            <a
+            <Link
               href="/"
               className="flex flex-col items-center gap-2 font-medium"
             >
@@ -34,7 +35,7 @@ export function LoginForm({
                 <Gamepad className="size-6" />
               </div>
               <span className="sr-only">Concentric Chess</span>
-            </a>
+            </Link>
             <h1 className="text-xl font-bold">Welcome to Concentric Chess</h1>
             <FieldDescription>
               Don't have an account? <a href="/signup">Sign up</a>
