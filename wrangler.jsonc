@@ -1,0 +1,48 @@
+/**
+ * For more details on how to configure Wrangler, refer to:
+ * https://developers.cloudflare.com/workers/wrangler/configuration/
+ */
+{
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"name": "capstone",
+	"main": ".open-next/worker.js",
+	"compatibility_date": "2025-03-01",
+	"compatibility_flags": [
+		"nodejs_compat",
+		"global_fetch_strictly_public"
+	],
+	"assets": {
+		"binding": "ASSETS",
+		"directory": ".open-next/assets"
+	},
+	"observability": {
+		"enabled": true
+	},
+	"placement": {
+		"mode": "smart"
+	},
+	"routes": [
+		{
+			"pattern": "capstone.mrvillage.dev",
+			"custom_domain": true,
+		},
+	],
+	"workers_dev": false,
+	"preview_urls": false,
+	"d1_databases": [
+		{
+			"binding": "DB",
+			"database_name": "capstone",
+			"database_id": "e0546c3b-8ec7-46c3-8524-57adc3f33187",
+		}
+	],
+	"durable_objects": {
+		"bindings": [
+			{
+				"class_name": "GameObject",
+				"name": "GAME_OBJECT",
+				"script_name": "capstone-do",
+			}
+		]
+	},
+}
