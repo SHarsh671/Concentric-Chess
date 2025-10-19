@@ -79,12 +79,12 @@ export async function AppShell({
             </SidebarMenu>
           ) : (
             <div className="mt-auto pb-2 flex flex-col gap-2">
-              <Button className="w-full">
+              <Button className="w-full" asChild>
                 <Link href="/signup">
                   <span>Sign Up</span>
                 </Link>
               </Button>
-              <Button className="w-full" variant="secondary">
+              <Button className="w-full" variant="secondary" asChild>
                 <Link href="/login">
                   <span>Log In</span>
                 </Link>
