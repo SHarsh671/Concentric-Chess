@@ -20,8 +20,6 @@ export async function signup(
   _prevState: SignupState | null,
   formData: FormData,
 ): Promise<SignupState> {
-  console.log(_prevState, formData);
-
   const email = (formData.get("email") as string).toLowerCase();
   const username = (formData.get("username") as string).toLowerCase();
   const password = formData.get("password") as string;

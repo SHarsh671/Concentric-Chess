@@ -41,7 +41,6 @@ export async function AppShell({
   children,
 }: React.ComponentProps<typeof Sidebar>) {
   const session = await getSession();
-  console.log("AppShell session:", session);
 
   return (
     <SidebarProvider>
