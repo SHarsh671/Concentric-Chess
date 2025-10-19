@@ -38,7 +38,7 @@ export function LoginForm({
             </Link>
             <h1 className="text-xl font-bold">Welcome to Concentric Chess</h1>
             <FieldDescription>
-              Don't have an account? <a href="/signup">Sign up</a>
+              Don&apos;t have an account? <a href="/signup">Sign up</a>
             </FieldDescription>
           </div>
           {state?.message && (
