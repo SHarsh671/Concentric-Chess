@@ -1,3 +1,3 @@
-export function GamePage() {
+export default function GamePage() {
   return <>Game Page</>;
 }

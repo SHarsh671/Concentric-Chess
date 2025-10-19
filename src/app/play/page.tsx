@@ -1,3 +1,3 @@
-export function PlayPage() {
+export default function PlayPage() {
   return <>Play Page</>;
 }
