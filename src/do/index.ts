@@ -14,7 +14,7 @@ export class GameObject extends DurableObject<CloudflareEnv> {
     this.sockets = new Map();
 
     this.ctx.getWebSockets().forEach((ws) => {
-      let attachment = ws.deserializeAttachment();
+      const attachment = ws.deserializeAttachment();
       if (attachment) {
         this.sockets.set(ws, { ...attachment });
       }
