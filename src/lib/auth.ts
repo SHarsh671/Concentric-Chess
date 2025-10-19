@@ -3,7 +3,7 @@ import "server-only";
 import { db } from "./db";
 import * as t from "drizzle-orm";
 import { playersTable, Session, sessionsTable } from "./schema";
-import bcrypt from "bcrypt";
+import bcrypt from "bcryptjs";
 
 let _session: Session | undefined | null = undefined;
 
