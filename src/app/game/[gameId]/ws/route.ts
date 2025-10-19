@@ -6,9 +6,9 @@ import { getCloudflareContext } from "@opennextjs/cloudflare";
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { gameId: string } },
+  { params }: { params: Promise<{ gameId: string }> },
 ) {
-  const { gameId } = params;
+  const { gameId } = await params;
   const game = await db().query.gamesTable.findFirst({
     where: t.eq(gamesTable.id, gameId),
   });
