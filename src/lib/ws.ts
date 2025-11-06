@@ -2,12 +2,12 @@
 
 type GameSocketRequest = {
   action: string;
-  data?: any;
+  data?: object;
 };
 
 export type GameSocketResponse = {
   action: string;
-  data?: any;
+  data?: object;
 };
 
 export class GameSocket {

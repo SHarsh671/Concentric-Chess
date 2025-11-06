@@ -1,28 +1,26 @@
 {
-    "name": "capstone-do",
-    "main": "index.ts",
-    "compatibility_date": "2025-10-11",
-    "d1_databases": [
-        {
-            "binding": "DB",
-            "database_name": "capstone",
-            "database_id": "e0546c3b-8ec7-46c3-8524-57adc3f33187"
-        }
+  "name": "capstone-do",
+  "main": "index.ts",
+  "compatibility_date": "2025-10-11",
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "capstone",
+      "database_id": "e0546c3b-8ec7-46c3-8524-57adc3f33187",
+    },
+  ],
+  "migrations": [
+    {
+      "tag": "v1",
+      "new_sqlite_classes": ["GameObject"],
+    },
+  ],
+  "durable_objects": {
+    "bindings": [
+      {
+        "class_name": "GameObject",
+        "name": "GAME_OBJECT",
+      },
     ],
-    "migrations": [
-        {
-            "tag": "v1",
-            "new_sqlite_classes": [
-                "GameObject"
-            ]
-        }
-    ],
-    "durable_objects": {
-        "bindings": [
-            {
-                "class_name": "GameObject",
-                "name": "GAME_OBJECT"
-            }
-        ]
-    }
+  },
 }
