@@ -5,13 +5,8 @@ import * as t from "drizzle-orm";
 import { playersTable, Session, sessionsTable } from "shared";
 import bcrypt from "bcryptjs";
 
-let _session: Session | undefined | null = undefined;
-
 export async function getSession(): Promise<Session | null> {
-  if (_session === undefined) {
-    _session = await verifySession();
-  }
-  return _session;
+  return await verifySession();
 }
 
 export async function verifySession(session?: string): Promise<Session | null> {
@@ -39,13 +34,6 @@ export async function verifyPassword(
   hash: string,
 ): Promise<boolean> {
   return await bcrypt.compare(password, hash);
-}
-
-export async function logout(): Promise<void> {
-  const token = (await cookies()).get("session_token")?.value;
-  if (token) {
-    await db().delete(sessionsTable).where(t.eq(sessionsTable.token, token));
-  }
 }
 
 export async function loginWithUsername(
@@ -116,13 +104,18 @@ export async function checkUsername(
     return "Username must be 3-20 characters long and contain only alphanumeric characters and underscores.";
   }
   // then, we check if the username is already taken
-  const existingPlayer = await db().query.playersTable.findFirst({
-    where: t.eq(playersTable.username, username.toLowerCase()),
-  });
-  if (existingPlayer) {
-    return "Username is already taken.";
+  try {
+    const existingPlayer = await db().query.playersTable.findFirst({
+      where: t.eq(playersTable.username, username.toLowerCase()),
+    });
+    if (existingPlayer) {
+      return "Username is already taken.";
+    }
+    return undefined;
+  } catch (error) {
+    console.error("Error checking username:", error);
+    return "An error occurred while checking the username.";
   }
-  return undefined;
 }
 
 export async function checkEmail(email: string): Promise<string | undefined> {
@@ -131,14 +124,19 @@ export async function checkEmail(email: string): Promise<string | undefined> {
   if (!emailRegex.test(email)) {
     return "Email must be a valid email address.";
   }
-  // then, we check if the email is already taken
-  const existingPlayer = await db().query.playersTable.findFirst({
-    where: t.eq(playersTable.email, email.toLowerCase()),
-  });
-  if (existingPlayer) {
-    return "Email is already taken.";
+  try {
+    // then, we check if the email is already taken
+    const existingPlayer = await db().query.playersTable.findFirst({
+      where: t.eq(playersTable.email, email.toLowerCase()),
+    });
+    if (existingPlayer) {
+      return "Email is already taken.";
+    }
+    return undefined;
+  } catch (error) {
+    console.error("Error checking email:", error);
+    return "An error occurred while checking the email.";
   }
-  return undefined;
 }
 
 export async function checkPassword(
