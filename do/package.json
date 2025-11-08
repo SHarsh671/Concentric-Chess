@@ -1,0 +1,7 @@
+{
+  "dependencies": {
+    "cookie": "^1.0.2",
+    "drizzle-orm": "^0.44.6",
+    "shared": "file:../shared"
+  }
+}

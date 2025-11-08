@@ -1,0 +1,1 @@
+This folder contains the built output assets for the worker "capstone-do" generated at 2025-11-08T21:32:16.625Z.

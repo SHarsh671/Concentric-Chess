@@ -1,7 +1,7 @@
 import { db } from "@/lib/db";
 import { NextRequest } from "next/server";
 import * as t from "drizzle-orm";
-import { gamesTable } from "@/lib/schema";
+import { schema } from "shared";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 
 export async function GET(
@@ -10,7 +10,7 @@ export async function GET(
 ) {
   const { gameId } = await params;
   const game = await db().query.gamesTable.findFirst({
-    where: t.eq(gamesTable.id, gameId),
+    where: t.eq(schema.gamesTable.id, gameId),
   });
   if (!game) {
     return new Response("Game not found", { status: 404 });
@@ -28,6 +28,7 @@ export async function GET(
     });
   }
 
+  request.headers.set("Game-ID", gameId);
   return getCloudflareContext()
     .env.GAME_OBJECT.getByName(gameId)
     .fetch(request);

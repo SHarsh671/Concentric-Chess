@@ -1,20 +1,12 @@
 "use client";
 
-type GameSocketRequest = {
-  action: string;
-  data?: object;
-};
-
-export type GameSocketResponse = {
-  action: string;
-  data?: object;
-};
+import { ServerMsg, ClientMsg } from "shared";
 
 export class GameSocket {
   private static instance: GameSocket | null = null;
   private socket: WebSocket | null = null;
   private gameId: string | null = null;
-  private listener: ((message: GameSocketResponse) => void) | null = null;
+  private listener: ((message: ServerMsg) => void) | null = null;
 
   public static get(gameId: string): GameSocket {
     if (this.instance === null) {
@@ -32,7 +24,7 @@ export class GameSocket {
     }
     this.gameId = gameId;
     this.socket = new WebSocket(
-      `${window.location.origin.replace("http", "ws")}/game/${gameId}/ws`,
+      `${window.location.origin.replace("http", "ws")}/games/${gameId}/ws`,
     );
     this.socket.onmessage = (event) => {
       this.processMessage(event.data);
@@ -55,15 +47,13 @@ export class GameSocket {
   }
 
   public processMessage(message: string) {
-    const res: GameSocketResponse = JSON.parse(message);
-    const action = res.action;
-    const data = res.data;
+    const res: ServerMsg = JSON.parse(message);
     if (this.listener) {
-      this.listener({ action, data });
+      this.listener(res);
     }
   }
 
-  public sendMessage(message: GameSocketRequest) {
+  public sendMessage(message: ClientMsg) {
     if (this.socket && this.socket.readyState === WebSocket.OPEN) {
       this.socket.send(JSON.stringify(message));
     } else {
@@ -71,7 +61,7 @@ export class GameSocket {
     }
   }
 
-  public setListener(listener: ((message: GameSocketResponse) => void) | null) {
+  public setListener(listener: ((message: ServerMsg) => void) | null) {
     this.listener = listener;
   }
 }
