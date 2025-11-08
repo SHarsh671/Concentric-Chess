@@ -84,8 +84,8 @@ export default function SettingsPage() {
             <CardHeader>
               <CardTitle>Update Username</CardTitle>
               <CardDescription>
-                Change your username. You'll need to verify with your current
-                password.
+                Change your username. You&apos;ll need to verify with your
+                current password.
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -127,7 +127,7 @@ export default function SettingsPage() {
             <CardHeader>
               <CardTitle>Update Email</CardTitle>
               <CardDescription>
-                Change your email address. You'll need to verify with your
+                Change your email address. You&apos;ll need to verify with your
                 current password.
               </CardDescription>
             </CardHeader>
