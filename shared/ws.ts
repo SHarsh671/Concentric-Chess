@@ -27,5 +27,4 @@ export type ClientMsg =
     }
   | {
       type: "resign";
-      data: {};
     };
