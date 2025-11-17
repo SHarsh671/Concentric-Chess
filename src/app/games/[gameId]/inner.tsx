@@ -1,7 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { GameSocket, useGameSocket } from "@/lib/ws";
+import { GameSocket } from "@/lib/ws";
 import { useEffect, useState } from "react";
 import { Game, Move } from "shared";
 import "client-only";
@@ -13,7 +13,7 @@ export default function GamePage({
 }: {
   game: Game;
   moves: Move[];
-  playerId: string | null;
+  playerId: string | undefined;
 }) {
   // TODO: need to branch early if the game is deleted or completed (should not connect the websocket)
   const [game, setGame] = useState(initialGame);
