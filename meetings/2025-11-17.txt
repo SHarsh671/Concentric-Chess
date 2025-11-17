@@ -1,7 +1,7 @@
-Date: November 17, 2025 @ 8:30am - 9:07am
+Date: November 17 @ 8:30-9:07am
 Agenda:
-- Team meeting to discuss progress on proof of concept
-- Assign final tasks for proof of concept (including the presentation)
+- Team meeting to discuss progress on proof of concept.
+- Assign final tasks for proof of concept (including the presentation).
 
 Attendees:
 - Josef
@@ -9,11 +9,30 @@ Attendees:
 - Carter
 - Roland
 - Skyler
+Missing:
+- Harshmeet
+- Harkirat
+
+Discussion:
+- Scheduled meeting with Dr Rapoport for Tuesday, November 18, 5-6pm in HSL 1B6/Teams:
+  - Will discuss project progress and plan for presentation
+- Reviewed current progress on proof of concept:
+  - SVG click overlay, board and piece display
+  - Working on state-specific rendering of pieces
+- Plan for video presentation:
+  - Basic board display from board state.
+  - Basic piece movement.
+  - Starting a game, online vs personal play.
+  - Basic game state storage and retrieval.
+  - Initial rules engine for prince, pawn, and bishop.
+  - Previewing legal moves (if possible).
 
 Action Items (due by meeting on Thursday, November 20, 2025):
-- Render board from state (Carter, Harshmeet)
-- Implement frontend for basic board movement (Carter, Harshmeet)
-- Initial rules engine for prince, pawn, and bishop (Sparsh)
-- Basic start game UI (Josef)
-- Basic move storage and retrieval (Skyler)
-- Meet again Thursday, November 20, 2025 @ 11am to prepare video presentation
+- Create list of tasks on GitHub project board (Josef).
+- Render board from state (Carter, Harshmeet).
+- Implement frontend for basic board movement (Carter, Harshmeet).
+- Initial rules engine for prince, pawn, and bishop (Sparsh).
+- Basic start game UI (Josef).
+- Basic move storage and retrieval (Skyler).
+
+Next Meeting: Thursday, November 20, 2025 @ 11am to prepare video presentation.
