@@ -1,0 +1,19 @@
+Date: November 17, 2025 @ 8:30am
+Agenda:
+- Team meeting to discuss progress on proof of concept
+- Assign final tasks for proof of concept (including the presentation)
+
+Attendees:
+- Josef
+- Sparsh
+- Carter
+- Roland
+- Skyler
+
+Action Items (due by meeting on Thursday, November 20, 2025):
+- Render board from state (Carter, Harshmeet)
+- Implement frontend for basic board movement (Carter, Harshmeet)
+- Initial rules engine for prince, pawn, and bishop (Sparsh)
+- Basic start game UI (Josef)
+- Basic move storage and retrieval (Skyler)
+- Meet again Thursday, November 20, 2025 @ 11am to prepare video presentation
