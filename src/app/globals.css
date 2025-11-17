@@ -121,3 +121,226 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* use by including "r#c#" in className=?, "size-piece" is for scaling piece images to fit in the squares */
+@layer components {
+  .size-piece {
+    @apply w-[5.5%] h-[5.5%];
+  }
+  .r12c1 {
+    @apply top-[15.5%] left-[47%];
+  }
+  .r11c1 {
+    @apply top-[21.2%] left-[29.5%];
+  }
+  .r11c2 {
+    @apply top-[21.2%] left-[47%];
+  }
+  .r11c3 {
+    @apply top-[21.2%] left-[65.9%];
+  }
+  .r10c1 {
+    @apply top-[27.2%] left-[22.6%];
+  }
+  .r10c2 {
+    @apply top-[27.2%] left-[29.6%];
+  }
+  .r10c3 {
+    @apply top-[27.2%] right-[47%];
+  }
+  .r10c4 {
+    @apply top-[27.2%] right-[30%];
+  }
+  .r10c5 {
+    @apply top-[27.2%] right-[22.6%];
+  }
+  .r9c1 {
+    @apply top-[32.9%] left-[18.6%];
+  }
+  .r9c2 {
+    @apply top-[32.9%] left-[25.2%];
+  }
+  .r9c3 {
+    @apply top-[32.9%] left-[32.8%];
+  }
+  .r9c4 {
+    @apply top-[32.9%] left-[47.3%];
+  }
+  .r9c5 {
+    @apply top-[32.9%] right-[32.3%];
+  }
+  .r9c6 {
+    @apply top-[32.9%] right-[25.2%];
+  }
+  .r9c7 {
+    @apply top-[32.9%] right-[18.3%];
+  }
+  .r8c1 {
+    @apply top-[38.8%] left-[16.5%];
+  }
+  .r8c2 {
+    @apply top-[38.8%] left-[22.5%];
+  }
+  .r8c3 {
+    @apply top-[38.8%] left-[28.8%];
+  }
+  .r8c4 {
+    @apply top-[38.8%] left-[35.3%];
+  }
+  .r8c5 {
+    @apply top-[38.8%] left-[47%];
+  }
+  .r8c6 {
+    @apply top-[38.8%] right-[35.3%];
+  }
+  .r8c7 {
+    @apply top-[38.8%] right-[28.8%];
+  }
+  .r8c8 {
+    @apply top-[38.8%] right-[22.5%];
+  }
+  .r8c9 {
+    @apply top-[38.8%] right-[16.5%];
+  }
+  .r7c1 {
+    @apply top-[44.5%] left-[15.4%];
+  }
+  .r7c2 {
+    @apply top-[44.5%] left-[21.3%];
+  }
+  .r7c3 {
+    @apply top-[44.5%] left-[27.2%];
+  }
+  .r7c4 {
+    @apply top-[44.5%] left-[33.1%];
+  }
+  .r7c5 {
+    @apply top-[44.5%] left-[39%];
+  }
+  .r7c6 {
+    @apply top-[44.5%] left-[47%];
+  }
+  .r7c7 {
+    @apply top-[44.5%] right-[39%];
+  }
+  .r7c8 {
+    @apply top-[44.5%] right-[33.1%];
+  }
+  .r7c9 {
+    @apply top-[44.5%] right-[27.2%];
+  }
+  .r7c10 {
+    @apply top-[44.5%] right-[21.3%];
+  }
+  .r7c11 {
+    @apply top-[44.5%] right-[15.4%];
+  }
+  .r6c1 {
+    @apply bottom-[44.2%] left-[15.4%];
+  }
+  .r6c2 {
+    @apply bottom-[44.2%] left-[21.3%];
+  }
+  .r6c3 {
+    @apply bottom-[44.2%] left-[27.2%];
+  }
+  .r6c4 {
+    @apply bottom-[44.2%] left-[33.1%];
+  }
+  .r6c5 {
+    @apply bottom-[44.2%] left-[39%];
+  }
+  .r6c6 {
+    @apply bottom-[44.2%] left-[47%];
+  }
+  .r6c7 {
+    @apply bottom-[44.2%] right-[39%];
+  }
+  .r6c8 {
+    @apply bottom-[44.2%] right-[33.1%];
+  }
+  .r6c9 {
+    @apply bottom-[44.2%] right-[27.2%];
+  }
+  .r6c10 {
+    @apply bottom-[44.2%] right-[21.3%];
+  }
+  .r6c11 {
+    @apply bottom-[44.2%] right-[15.4%];
+  }
+  .r5c1 {
+    @apply bottom-[38.2%] left-[16.7%];
+  }
+  .r5c2 {
+    @apply bottom-[38.2%] left-[22.7%];
+  }
+  .r5c3 {
+    @apply bottom-[38.2%] left-[29.1%];
+  }
+  .r5c4 {
+    @apply bottom-[38.2%] left-[35.9%];
+  }
+  .r5c5 {
+    @apply bottom-[38.2%] left-[47%];
+  }
+  .r5c6 {
+    @apply bottom-[38.4%] right-[35.9%];
+  }
+  .r5c7 {
+    @apply bottom-[38.2%] right-[29.1%];
+  }
+  .r5c8 {
+    @apply bottom-[38.2%] right-[22.7%];
+  }
+  .r5c9 {
+    @apply bottom-[38.2%] right-[16.7%];
+  }
+  .r4c1 {
+    @apply bottom-[32.6%] left-[19.5%];
+  }
+  .r4c2 {
+    @apply bottom-[32.6%] left-[26.2%];
+  }
+  .r4c3 {
+    @apply bottom-[32.6%] left-[33.7%];
+  }
+  .r4c4 {
+    @apply bottom-[32.6%] left-[47.3%];
+  }
+  .r4c5 {
+    @apply bottom-[32.6%] right-[33.6%];
+  }
+  .r4c6 {
+    @apply bottom-[32.6%] right-[26.0%];
+  }
+  .r4c7 {
+    @apply bottom-[32.6%] right-[19.2%];
+  }
+  .r3c1 {
+    @apply bottom-[26.8%] left-[23.3%];
+  }
+  .r3c2 {
+    @apply bottom-[26.8%] left-[31.9%];
+  }
+  .r3c3 {
+    @apply bottom-[26.8%] right-[47%];
+  }
+  .r3c4 {
+    @apply bottom-[26.8%] right-[31.8%];
+  }
+  .r3c5 {
+    @apply bottom-[26.8%] right-[22.8%];
+  }
+  .r2c1 {
+    @apply bottom-[21.0%] left-[28.9%];
+  }
+  .r2c2 {
+    @apply bottom-[21.0%] left-[47%];
+  }
+  .r2c3 {
+    @apply bottom-[21.0%] left-[65.3%];
+  }
+  .r1c1 {
+    @apply bottom-[15.5%] left-[47%];
+  }
+}

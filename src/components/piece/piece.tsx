@@ -1,22 +1,22 @@
 import Image from "next/image";
 
 export type PieceProps = {
+  className?: string;
   type: string;
   color: string;
-  x: number;
-  y: number;
+  sq: string;
 };
 
-export default function Piece({ type, color }: PieceProps) {
-  return (
-    <div>
-      <Image
-        src={"/pieces/" + type + '-' + color + ".png"}
-        alt=""
-        width={30}
-        height={30}
-        onClick={() => console.log("Clicked" + type + color)}
-      />
-    </div>
+export default function Piece({ type, color, className }: PieceProps) {
+  return (<>
+    <Image
+      className={className}
+      src={"/pieces/" + type + '-' + color + ".png"}
+      alt=""
+      width={64}
+      height={64}
+      // onClick={() => console.log('')}
+    />
+  </>
   );
 }

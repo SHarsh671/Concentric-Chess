@@ -37,7 +37,7 @@ export default function Board() {
                     d={s.d}
                     fill="transparent"
                     fillOpacity={0}
-                    stroke="blue"
+                    stroke="transparent"
                     pointerEvents="auto"
                     onClick={() => console.log(s.id)}
                 />
