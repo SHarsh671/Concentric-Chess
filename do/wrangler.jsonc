@@ -12,7 +12,9 @@
   "migrations": [
     {
       "tag": "v1",
-      "new_sqlite_classes": ["GameObject"],
+      "new_sqlite_classes": [
+        "GameObject"
+      ],
     },
   ],
   "durable_objects": {
@@ -23,4 +25,10 @@
       },
     ],
   },
+  "routes": [
+    {
+      "pattern": "capstone.mrvillage.dev/do/*",
+      "zone_name": "mrvillage.dev",
+    },
+  ],
 }
