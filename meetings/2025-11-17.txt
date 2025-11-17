@@ -9,7 +9,7 @@ Attendees:
 - Carter
 - Roland
 - Skyler
-Missing:
+Missing (thought lecture was at 9:30am):
 - Harshmeet
 - Harkirat
 
@@ -29,8 +29,8 @@ Discussion:
 
 Action Items (due by meeting on Thursday, November 20, 2025):
 - Create list of tasks on GitHub project board (Josef).
-- Render board from state (Carter, Harshmeet).
-- Implement frontend for basic board movement (Carter, Harshmeet).
+- Render board from state (Carter, Harshmeet, Harkirat).
+- Implement frontend for basic board movement (Carter, Harshmeet, Harkirat).
 - Initial rules engine for prince, pawn, and bishop (Sparsh).
 - Basic start game UI (Josef).
 - Basic move storage and retrieval (Skyler).
