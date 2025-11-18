@@ -3,19 +3,37 @@ import Image from "next/image";
 export type PieceProps = {
   type: string;
   color: string;
-  x: number;
-  y: number;
+  position: string; // e.g., "r1c1"
+  x?: number;
+  y?: number;
+  onClick?: () => void;
+  isSelected?: boolean;
 };
 
-export default function Piece({ type, color }: PieceProps) {
+export default function Piece({ type, color, x = 0, y = 0, onClick, isSelected }: PieceProps) {
   return (
-    <div>
+    <div
+      className="absolute pointer-events-auto cursor-pointer transition-all duration-200"
+      style={{
+        left: `${x}px`,
+        top: `${y}px`,
+        transform: 'translate(-50%, -50%)',
+        zIndex: 10,
+        filter: isSelected ? 'drop-shadow(0 0 10px yellow)' : 'none',
+        scale: isSelected ? '1.1' : '1'
+      }}
+      onClick={(e) => {
+        e.stopPropagation();
+        onClick?.();
+      }}
+    >
       <Image
-        src={"/pieces/" + type + '-' + color + ".png"}
-        alt=""
-        width={30}
-        height={30}
-        onClick={() => console.log("Clicked" + type + color)}
+        src={`/pieces/${type}-${color}.png`}
+        alt={`${color} ${type}`}
+        width={40}
+        height={40}
+        className="pointer-events-none"
+        draggable={false}
       />
     </div>
   );
