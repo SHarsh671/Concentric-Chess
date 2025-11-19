@@ -129,7 +129,7 @@ export default function Board() {
         // Check if clicked cell has a piece
         const pieceAtCell = boardState.pieces.find(p => p.position === cellId);
         
-        if (pieceAtCell) {
+        if (pieceAtCell && pieceAtCell !== boardState.selectedPiece) {
             // Select this piece
             const legalMoves = calculateLegalMoves(pieceAtCell);
             setBoardState(prev => ({
