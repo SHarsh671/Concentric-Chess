@@ -69,27 +69,27 @@ export default function Board() {
     }, [spaces, piecesReady]);
 
     // Get cell center coordinates for piece positioning
-   const getCellCenter = (cellId: string): { x: number, y: number } => {
-    const space = spaces.find(s => s.id === cellId);
-    if (!space) return { x: 0, y: 0 };
+    const getCellCenter = (cellId: string): { x: number, y: number } => {
+        const space = spaces.find(s => s.id === cellId);
+        if (!space) return { x: 0, y: 0 };
 
-    // Parse the path data to get approximate center
-    if (typeof window !== 'undefined') {
-        const pathElement = document.getElementById(cellId) as SVGPathElement | null;
-        if (pathElement && pathElement.getBBox) {
-            try {
-                const bbox = pathElement.getBBox();
-                return {
-                    x: bbox.x + bbox.width / 2,
-                    y: bbox.y + bbox.height / 2
-                };
-            } catch (e) {
-                console.error("Error getting bbox for", cellId, e);
+        // Parse the path data to get approximate center
+        if (typeof window !== 'undefined') {
+            const pathElement = document.getElementById(cellId) as SVGPathElement | null;
+            if (pathElement && pathElement.getBBox) {
+                try {
+                    const bbox = pathElement.getBBox();
+                    return {
+                        x: bbox.x + bbox.width / 2,
+                        y: bbox.y + bbox.height / 2
+                    };
+                } catch (e) {
+                    console.error("Error getting bbox for", cellId, e);
+                }
             }
         }
-    }
-    return { x: 0, y: 0 };
-};
+        return { x: 0, y: 0 };
+    };
 
 
 
@@ -98,7 +98,7 @@ export default function Board() {
         // TODO: Implement actual chess rules for concentric board but rn im just returning some dummy adjacent cells for testing (everyone is a king ig)
         const row = parseInt(piece.position.match(/r(\d+)/)?.[1] || "0");
         const col = parseInt(piece.position.match(/c(\d+)/)?.[1] || "0");
-        
+
         const potentialMoves: string[] = [];
         // Example: allow moving to adjacent cells (simplified)
         for (let r = row - 1; r <= row + 1; r++) {
@@ -108,9 +108,9 @@ export default function Board() {
                 }
             }
         }
-        
+
         // Filter to only include cells that exist and don't have friendly pieces
-        return potentialMoves.filter(cellId => 
+        return potentialMoves.filter(cellId =>
             spaces.some(s => s.id === cellId) &&
             !boardState.pieces.some(p => p.position === cellId && p.color === piece.color)
         );
@@ -128,7 +128,7 @@ export default function Board() {
 
         // Check if clicked cell has a piece
         const pieceAtCell = boardState.pieces.find(p => p.position === cellId);
-        
+
         if (pieceAtCell && pieceAtCell !== boardState.selectedPiece) {
             // Select this piece
             const legalMoves = calculateLegalMoves(pieceAtCell);
@@ -158,13 +158,13 @@ export default function Board() {
     // Move piece to new position
     const movePiece = (piece: PieceProps, targetCell: string) => {
         console.log("Moving piece", piece, "to", targetCell);
-        
+
         setBoardState(prev => ({
             ...prev,
-            pieces: prev.pieces.map(p => 
-                p === piece 
+            pieces: prev.pieces.map(p =>
+                p === piece
                     ? { ...p, position: targetCell }
-                    : p.position === targetCell 
+                    : p.position === targetCell
                         ? { ...p, position: "" } // Capture piece
                         : p
             ).filter(p => p.position !== ""), // Remove captured pieces
@@ -202,58 +202,111 @@ export default function Board() {
         };
     };
 
-    return (
-        <div className="absolute top-0 left-0 w-full h-full">
-            {/* SVG Board with clickable cells */}
-            <svg 
-                viewBox="0 0 1710 1710" 
-                className="absolute top-[-10px] left-[-7px] w-[1700px] h-[1700px]"
-            >
-                {spaces.map(s => {
-                    const style = getCellStyle(s.id);
-                    return (
-                        <path
-                            key={s.id}
-                            id={s.id}
-                            d={s.d}
-                            fill={style.fill}
-                            fillOpacity={style.fillOpacity}
-                            stroke={style.stroke}
-                            strokeWidth={style.strokeWidth}
-                            strokeOpacity={0.8}
-                            style={{ cursor: 'pointer' }}
-                            onClick={() => handleCellClick(s.id)}
-                            onMouseEnter={(e) => {
-                                if (!boardState.selectedPiece && !boardState.legalMoves.includes(s.id)) {
-                                    e.currentTarget.setAttribute('fill', '#f533e5ff');
-                                    e.currentTarget.setAttribute('fill-opacity', '1');
-                                }
-                            }}
-                            onMouseLeave={(e) => {
-                                if (!boardState.selectedPiece && !boardState.legalMoves.includes(s.id)) {
-                                    e.currentTarget.setAttribute('fill', 'transparent');
-                                    e.currentTarget.setAttribute('fill-opacity', '0');
-                                }
-                            }}
-                        />
-                    );
-                })}
-            </svg>
-
-            {/* Render pieces */}
-            {piecesReady && boardState.pieces.map((piece, idx) => {
-                const center = getCellCenter(piece.position);
+    return <>
+        {/* SVG Board with clickable cells */}
+        <svg
+            viewBox="0 0 1730 1730"
+            className="absolute top-[-1px] left-[0px] w-[1700px] h-[1700px]"
+        >
+            {spaces.map(s => {
+                const style = getCellStyle(s.id);
                 return (
-                    <Piece
-                        key={`${piece.type}-${piece.color}-${idx}`}
-                        {...piece}
-                        x={center.x}
-                        y={center.y}
-                        onClick={() => handlePieceClick(piece)}
-                        isSelected={boardState.selectedPiece === piece}
+                    <path
+                        key={s.id}
+                        id={s.id}
+                        d={s.d}
+                        fill={style.fill}
+                        fillOpacity={style.fillOpacity}
+                        stroke={style.stroke}
+                        strokeWidth={style.strokeWidth}
+                        strokeOpacity={0} //was 0.8
+                        style={{ cursor: 'pointer' }}
+                        onClick={() => handleCellClick(s.id)}
+                        onMouseEnter={(e) => {
+                            if (!boardState.selectedPiece && !boardState.legalMoves.includes(s.id)) {
+                                e.currentTarget.setAttribute('fill', '#f533e5ff');
+                                e.currentTarget.setAttribute('fill-opacity', '1');
+                            }
+                        }}
+                        onMouseLeave={(e) => {
+                            if (!boardState.selectedPiece && !boardState.legalMoves.includes(s.id)) {
+                                e.currentTarget.setAttribute('fill', 'transparent');
+                                e.currentTarget.setAttribute('fill-opacity', '0');
+                            }
+                        }}
                     />
                 );
             })}
-        </div>
-    );
+        </svg>
+
+        {/* Render pieces */}
+        {piecesReady && boardState.pieces.map((piece, idx) => {
+            const center = getCellCenter(piece.position);
+            return (
+                <Piece
+                    key={`${piece.type}-${piece.color}-${idx}`}
+                    {...piece}
+                    x={center.x}
+                    y={center.y}
+                    onClick={() => handlePieceClick(piece)}
+                    isSelected={boardState.selectedPiece === piece}
+                />
+            );
+        })}
+    </>
+
+    // return (
+    //     <div className="absolute top-0 left-0 w-full h-full">
+    // {/* SVG Board with clickable cells */}
+    // <svg 
+    //     viewBox="0 0 1710 1710" 
+    //     className="absolute top-[-10px] left-[-7px] w-[1700px] h-[1700px]"
+    // >
+    //     {spaces.map(s => {
+    //         const style = getCellStyle(s.id);
+    //         return (
+    //             <path
+    //                 key={s.id}
+    //                 id={s.id}
+    //                 d={s.d}
+    //                 fill={style.fill}
+    //                 fillOpacity={style.fillOpacity}
+    //                 stroke={style.stroke}
+    //                 strokeWidth={style.strokeWidth}
+    //                 strokeOpacity={0.8}
+    //                 style={{ cursor: 'pointer' }}
+    //                 onClick={() => handleCellClick(s.id)}
+    //                 onMouseEnter={(e) => {
+    //                     if (!boardState.selectedPiece && !boardState.legalMoves.includes(s.id)) {
+    //                         e.currentTarget.setAttribute('fill', '#f533e5ff');
+    //                         e.currentTarget.setAttribute('fill-opacity', '1');
+    //                     }
+    //                 }}
+    //                 onMouseLeave={(e) => {
+    //                     if (!boardState.selectedPiece && !boardState.legalMoves.includes(s.id)) {
+    //                         e.currentTarget.setAttribute('fill', 'transparent');
+    //                         e.currentTarget.setAttribute('fill-opacity', '0');
+    //                     }
+    //                 }}
+    //             />
+    //         );
+    //     })}
+    // </svg>
+
+    // {/* Render pieces */}
+    // {piecesReady && boardState.pieces.map((piece, idx) => {
+    //     const center = getCellCenter(piece.position);
+    //     return (
+    //         <Piece
+    //             key={`${piece.type}-${piece.color}-${idx}`}
+    //             {...piece}
+    //             x={center.x}
+    //             y={center.y}
+    //             onClick={() => handlePieceClick(piece)}
+    //             isSelected={boardState.selectedPiece === piece}
+    //         />
+    //     );
+    // })}
+    //     </div>
+    // );
 }

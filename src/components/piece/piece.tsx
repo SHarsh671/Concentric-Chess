@@ -1,6 +1,7 @@
 import Image from "next/image";
 
 export type PieceProps = {
+  className?: string;
   type: string;
   color: string;
   position: string; // e.g., "r1c1"
@@ -10,7 +11,29 @@ export type PieceProps = {
   isSelected?: boolean;
 };
 
-export default function Piece({ type, color, x = 0, y = 0, onClick, isSelected }: PieceProps) {
+export default function Piece({ type, color, x = 0, y = 0, onClick, isSelected, position }: PieceProps) {
+
+  return <>
+    <Image
+      src={`/pieces/${type}-${color}.png`}
+      alt={`${color} ${type}`}
+      width={64}
+      height={64}
+      className={`absolute pointer-events-none size-piece ${position} cursor-pointer transition-all duration-200`}
+      draggable={false}
+      style={{
+        // transform: 'translate(-50%, -50%)',
+        zIndex: 10,
+        filter: isSelected ? 'drop-shadow(0 0 10px yellow)' : 'none',
+        scale: isSelected ? '1.1' : '1'
+      }}
+      onClick={(e) => {
+        e.stopPropagation();
+        onClick?.();
+      }}
+    />
+  </>
+
   return (
     <div
       className="absolute pointer-events-auto cursor-pointer transition-all duration-200"
