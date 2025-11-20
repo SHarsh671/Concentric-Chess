@@ -167,6 +167,12 @@ export default function Board({
   const movePiece = (piece: PieceProps, targetCell: string) => {
     console.log("Moving piece", piece, "to", targetCell);
     onMove(piece.position, targetCell);
+    setBoardState((prev) => ({
+      ...prev,
+      selectedPiece: null,
+      selectedCell: null,
+      legalMoves: [],
+    }));
 
     // setBoardState((prev) => ({
     //   ...prev,
