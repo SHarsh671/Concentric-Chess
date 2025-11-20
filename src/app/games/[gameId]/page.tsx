@@ -1,5 +1,6 @@
 import { db } from "@/lib/db";
 import Game from "./inner";
+import { getSession } from "@/lib/auth";
 
 export default async function GamePage({
   params,
@@ -17,10 +18,11 @@ export default async function GamePage({
     where: (movesTable, { eq }) => eq(movesTable.gameId, game.id),
     orderBy: (movesTable, { asc }) => [asc(movesTable.move_number)],
   });
+  const session = await getSession();
 
   return (
     <div className="p-4">
-      <Game game={game} moves={moves} />
+      <Game game={game} moves={moves} playerId={session?.playerId} />
     </div>
   );
 }

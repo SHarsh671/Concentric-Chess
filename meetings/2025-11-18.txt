@@ -1,0 +1,25 @@
+Date: November 18 @ 5:00-6:00pm
+Agenda:
+- Meeting with Dr. Rapoport to discuss project progress and presentation plan.
+
+Attendees:
+- Josef
+- Dr. Rapoport
+- Skyler
+- Harshmeet
+- Harkirat
+Missing:
+- Sparsh
+- Carter
+- Roland
+
+Discussion:
+- Reviewed current progress on proof of concept:
+  - SVG click overlay, board and piece display, state-specific rendering of pieces, simple King-like movement for pieces.
+  - Login and user management.
+  - Basic matchmaking and invitations.
+- Discussed plan for video presentation:
+  - Basic board display from board state.
+  - Initial rules engine for prince, bishop, and potentially rook.
+  - Previewing legal moves.
+  - Set up various sample boards to showcase unique movement (Bishop swinging around).

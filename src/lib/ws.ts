@@ -1,6 +1,7 @@
 "use client";
 
 import { ServerMsg, ClientMsg } from "shared";
+import "client-only";
 
 export class GameSocket {
   private static instance: GameSocket | null = null;
@@ -8,24 +9,32 @@ export class GameSocket {
   private gameId: string | null = null;
   private listener: ((message: ServerMsg) => void) | null = null;
 
-  public static get(gameId: string): GameSocket {
+  public static get(): GameSocket {
     if (this.instance === null) {
       this.instance = new GameSocket();
-    }
-    if (this.instance.gameId !== gameId) {
-      this.instance.connect(gameId);
     }
     return this.instance;
   }
 
-  public connect(gameId: string) {
+  public connect(gameId: string | null) {
+    if (this.gameId === gameId) {
+      return;
+    }
+    if (gameId === null) {
+      this.disconnect();
+      return;
+    }
     if (this.socket) {
-      this.socket.close();
+      this.disconnect();
     }
     this.gameId = gameId;
-    this.socket = new WebSocket(
-      `${window.location.origin.replace("http", "ws")}/games/${gameId}/ws`,
-    );
+    if (window.location.origin.startsWith("http://localhost")) {
+      this.socket = new WebSocket(`ws://localhost:8787/do/games/${gameId}/ws`);
+    } else {
+      this.socket = new WebSocket(
+        `wss://capstone.mrvillage.dev/do/games/${gameId}/ws`,
+      );
+    }
     this.socket.onmessage = (event) => {
       this.processMessage(event.data);
     };
@@ -40,7 +49,9 @@ export class GameSocket {
 
   public disconnect() {
     if (this.socket) {
-      this.socket.close();
+      if (this.socket.readyState === WebSocket.OPEN) {
+        this.socket.close();
+      }
       this.socket = null;
       this.gameId = null;
     }
@@ -53,7 +64,7 @@ export class GameSocket {
     }
   }
 
-  public sendMessage(message: ClientMsg) {
+  public send(message: ClientMsg) {
     if (this.socket && this.socket.readyState === WebSocket.OPEN) {
       this.socket.send(JSON.stringify(message));
     } else {
@@ -64,8 +75,4 @@ export class GameSocket {
   public setListener(listener: ((message: ServerMsg) => void) | null) {
     this.listener = listener;
   }
-}
-
-export function useGameSocket(gameId: string): GameSocket {
-  return GameSocket.get(gameId);
 }

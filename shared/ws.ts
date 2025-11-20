@@ -1,6 +1,16 @@
-import { Move } from "./schema";
+import { Move, Side } from "./schema";
 
 export type ServerMsg =
+  | {
+      type: "accepted";
+      data: {
+        whitePlayerId: string | null;
+        blackPlayerId: string | null;
+      };
+    }
+  | {
+      type: "aborted";
+    }
   | {
       type: "move";
       data: Move;
@@ -21,10 +31,14 @@ export type ClientMsg =
   | {
       type: "move";
       data: {
+        side: Side;
         from: string;
         to: string;
       };
     }
   | {
       type: "resign";
+    }
+  | {
+      type: "accept";
     };
