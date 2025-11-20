@@ -11,28 +11,37 @@ export type PieceProps = {
   isSelected?: boolean;
 };
 
-export default function Piece({ type, color, x = 0, y = 0, onClick, isSelected, position }: PieceProps) {
-
-  return <>
-    <Image
-      src={`/pieces/${type}-${color}.png`}
-      alt={`${color} ${type}`}
-      width={64}
-      height={64}
-      className={`absolute pointer-events-none size-piece ${position} cursor-pointer transition-all duration-200`}
-      draggable={false}
-      style={{
-        // transform: 'translate(-50%, -50%)',
-        zIndex: 10,
-        filter: isSelected ? 'drop-shadow(0 0 10px yellow)' : 'none',
-        scale: isSelected ? '1.1' : '1'
-      }}
-      onClick={(e) => {
-        e.stopPropagation();
-        onClick?.();
-      }}
-    />
-  </>
+export default function Piece({
+  type,
+  color,
+  x = 0,
+  y = 0,
+  onClick,
+  isSelected,
+  position,
+}: PieceProps) {
+  return (
+    <>
+      <Image
+        src={`/pieces/${type}-${color}.png`}
+        alt={`${color} ${type}`}
+        width={64}
+        height={64}
+        className={`absolute pointer-events-none size-piece ${position} cursor-pointer transition-all duration-200`}
+        draggable={false}
+        style={{
+          // transform: 'translate(-50%, -50%)',
+          zIndex: 10,
+          filter: isSelected ? "drop-shadow(0 0 10px yellow)" : "none",
+          scale: isSelected ? "1.1" : "1",
+        }}
+        onClick={(e) => {
+          e.stopPropagation();
+          onClick?.();
+        }}
+      />
+    </>
+  );
 
   return (
     <div
@@ -40,10 +49,10 @@ export default function Piece({ type, color, x = 0, y = 0, onClick, isSelected, 
       style={{
         left: `${x}px`,
         top: `${y}px`,
-        transform: 'translate(-50%, -50%)',
+        transform: "translate(-50%, -50%)",
         zIndex: 10,
-        filter: isSelected ? 'drop-shadow(0 0 10px yellow)' : 'none',
-        scale: isSelected ? '1.1' : '1'
+        filter: isSelected ? "drop-shadow(0 0 10px yellow)" : "none",
+        scale: isSelected ? "1.1" : "1",
       }}
       onClick={(e) => {
         e.stopPropagation();

@@ -1,17 +1,16 @@
-
 "use client";
 
 //used this page just for developing. this page should probably be actual ui and the board/games will be different page. sorry in advance.
 
 import Board from "@/components/piece/board";
 import Image from "next/image";
-import Piece from "@/components/piece/piece"
+import Piece from "@/components/piece/piece";
 
 export default function PlayPage() {
   return (
     <div className="relative w-[1700px] h-[1700px] border-2">
       {/* Background board image */}
-      <Image 
+      <Image
         src="/cc/ccboard.png"
         alt="Chess board"
         width={1700}
@@ -19,14 +18,14 @@ export default function PlayPage() {
         className="absolute top-0 left-0"
         priority
       />
-      
+
       {/* Overlay: SVG cells + pieces */}
       <div className="absolute top-0 left-0 w-full h-full">
         <Board />
       </div>
-      
-    {/* example pieces for all the squares on the borad */}
-    {/* <Piece className="absolute r12c1 size-piece pointer-events-none" type="rook" color="blk" sq="r12c1"/>
+
+      {/* example pieces for all the squares on the borad */}
+      {/* <Piece className="absolute r12c1 size-piece pointer-events-none" type="rook" color="blk" sq="r12c1"/>
 
     <Piece className="absolute r11c1 size-piece pointer-events-none" type="queen" color="blk" sq="r11c1"/>
     <Piece className="absolute r11c2 size-piece pointer-events-none" type="rook" color="blk" sq="r11c2"/>
@@ -109,6 +108,6 @@ export default function PlayPage() {
     <Piece className="absolute r2c3 size-piece pointer-events-none" type="king" color="wht" sq="r2c3"/> 
 
     <Piece className="absolute r1c1 size-piece pointer-events-none" type="rook" color="wht" sq="r1c1"/>     */}
-  </div>
+    </div>
   );
 }
