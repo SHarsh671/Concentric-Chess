@@ -1,6 +1,8 @@
 // shared/concentric-rules.ts
 
+import { PieceProps } from "@/components/piece/piece";
 import { VALID_GRID, isValidCell } from "./concentric-grid";
+import { Move } from "./schema";
 
 export type Side = "wht" | "blk";
 
@@ -40,7 +42,7 @@ function makeCell(r: number, c: number): CellId {
 function cellOccupied(
   pieces: RulesPiece[],
   r: number,
-  c: number
+  c: number,
 ): RulesPiece | undefined {
   if (!isValidCell(r, c)) return undefined;
   const id = makeCell(r, c);
@@ -57,7 +59,7 @@ function addStepIfFreeOrCapture(
   from: { r: number; c: number },
   dr: number,
   dc: number,
-  color: Side
+  color: Side,
 ) {
   const r = from.r + dr;
   const c = from.c + dc;
@@ -72,7 +74,7 @@ function rayMoves(
   pieces: RulesPiece[],
   from: { r: number; c: number },
   directions: Array<[number, number]>,
-  color: Side
+  color: Side,
 ): CellId[] {
   const moves: CellId[] = [];
   for (const [dr, dc] of directions) {
@@ -104,7 +106,7 @@ function rayMoves(
 function kingLikeMoves(
   pieces: RulesPiece[],
   from: CellId,
-  color: Side
+  color: Side,
 ): CellId[] {
   const { r, c } = parseCell(from);
   const moves: CellId[] = [];
@@ -117,17 +119,13 @@ function kingLikeMoves(
   return moves;
 }
 
-function rookMoves(
-  pieces: RulesPiece[],
-  from: CellId,
-  color: Side
-): CellId[] {
+function rookMoves(pieces: RulesPiece[], from: CellId, color: Side): CellId[] {
   const pos = parseCell(from);
   // Edge neighbours: same row / same column
   const dirs: Array<[number, number]> = [
-    [1, 0],  // up the board (towards higher row index)
+    [1, 0], // up the board (towards higher row index)
     [-1, 0], // down the board
-    [0, 1],  // right
+    [0, 1], // right
     [0, -1], // left
   ];
   return rayMoves(pieces, pos, dirs, color);
@@ -136,7 +134,7 @@ function rookMoves(
 function bishopMoves(
   pieces: RulesPiece[],
   from: CellId,
-  color: Side
+  color: Side,
 ): CellId[] {
   const pos = parseCell(from);
   // Vertex neighbours: diagonals
@@ -152,7 +150,7 @@ function bishopMoves(
 function knightMoves(
   pieces: RulesPiece[],
   from: CellId,
-  color: Side
+  color: Side,
 ): CellId[] {
   const { r, c } = parseCell(from);
   const moves: CellId[] = [];
@@ -178,11 +176,7 @@ function knightMoves(
   return moves;
 }
 
-function pawnMoves(
-  pieces: RulesPiece[],
-  from: CellId,
-  color: Side
-): CellId[] {
+function pawnMoves(pieces: RulesPiece[], from: CellId, color: Side): CellId[] {
   const { r, c } = parseCell(from);
   const moves: CellId[] = [];
 
@@ -222,7 +216,7 @@ function pawnMoves(
  */
 export function generatePseudoLegalMovesForPiece(
   piece: RulesPiece,
-  allPieces: RulesPiece[]
+  allPieces: RulesPiece[],
 ): CellId[] {
   const { type, color, position } = piece;
 
@@ -256,4 +250,68 @@ export function generatePseudoLegalMovesForPiece(
     default:
       return [];
   }
+}
+
+export const initialPieces: RulesPiece[] = [
+  // White pieces
+  // { type: "rook", color: "wht", position: "r1c1" },
+  // { type: "queen", color: "wht", position: "r2c1" },
+  // { type: "rook", color: "wht", position: "r2c2" },
+  // { type: "king", color: "wht", position: "r2c3" },
+  // { type: "knight", color: "wht", position: "r3c1" },
+  // { type: "bishop", color: "wht", position: "r3c2" },
+  // { type: "prince", color: "wht", position: "r3c3" },
+  // { type: "bishop", color: "wht", position: "r3c4" },
+  // { type: "knight", color: "wht", position: "r3c5" },
+  { type: "pawn", color: "wht", position: "r4c1" },
+  { type: "pawn", color: "wht", position: "r4c2" },
+  { type: "pawn", color: "wht", position: "r4c3" },
+  { type: "pawn", color: "wht", position: "r4c4" },
+  { type: "pawn", color: "wht", position: "r4c5" },
+  { type: "pawn", color: "wht", position: "r4c6" },
+  { type: "pawn", color: "wht", position: "r4c7" },
+  //black
+  // { type: "rook", color: "blk", position: "r12c1" },
+  // { type: "queen", color: "blk", position: "r11c1" },
+  // { type: "rook", color: "blk", position: "r11c2" },
+  // { type: "king", color: "blk", position: "r11c3" },
+  // { type: "knight", color: "blk", position: "r10c1" },
+  { type: "bishop", color: "blk", position: "r10c2" },
+  { type: "prince", color: "blk", position: "r10c3" },
+  { type: "bishop", color: "blk", position: "r10c4" },
+  // { type: "knight", color: "blk", position: "r10c5" },
+  // { type: "pawn", color: "blk", position: "r9c1" },
+  // { type: "pawn", color: "blk", position: "r9c2" },
+  // { type: "pawn", color: "blk", position: "r9c3" },
+  // { type: "pawn", color: "blk", position: "r9c4" },
+  // { type: "pawn", color: "blk", position: "r9c5" },
+  // { type: "pawn", color: "blk", position: "r9c6" },
+  // { type: "pawn", color: "blk", position: "r9c7" },
+];
+
+export function computePieceState(moves: Move[]): RulesPiece[] {
+  const pieces: RulesPiece[] = JSON.parse(JSON.stringify(initialPieces));
+
+  for (const move of moves) {
+    const piece = pieces.find((p) => p.position === move.fromSquare);
+    if (piece) {
+      // Move the piece
+      piece.position = move.toSquare;
+
+      // Handle captures
+      const capturedIndex = pieces.findIndex(
+        (p) => p.position === move.toSquare && p !== piece,
+      );
+      if (capturedIndex !== -1) {
+        pieces.splice(capturedIndex, 1);
+      }
+
+      // Handle promotion
+      if (move.promotion) {
+        piece.type = move.promotion as PieceType;
+      }
+    }
+  }
+
+  return pieces;
 }

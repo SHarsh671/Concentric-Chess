@@ -2,6 +2,15 @@
 
 import { useEffect, useState } from "react";
 import Piece, { PieceProps } from "./piece";
+import {
+  computePieceState,
+  generatePseudoLegalMovesForPiece,
+  initialPieces,
+  PieceType,
+  RulesPiece,
+  Side,
+} from "shared/concentric-rules";
+import { Move } from "shared";
 
 type Space = {
   id: string;
@@ -15,15 +24,31 @@ type BoardState = {
   legalMoves: string[];
 };
 
-export default function Board() {
+export default function Board({
+  moves,
+  onMove,
+}: {
+  moves: Move[];
+  onMove: (from: string, to: string) => void;
+}) {
   const [spaces, setSpaces] = useState<Space[]>([]);
   const [boardState, setBoardState] = useState<BoardState>({
-    pieces: [],
+    pieces: JSON.parse(JSON.stringify(initialPieces)),
     selectedPiece: null,
     selectedCell: null,
     legalMoves: [],
   });
   const [piecesReady, setPiecesReady] = useState(false);
+
+  useEffect(() => {
+    console.log("Moves received:", moves);
+    setPiecesReady(true);
+    // Apply moves to boardState pieces
+    setBoardState((prev) => {
+      const updatedPieces: PieceProps[] = computePieceState(moves);
+      return { ...prev, pieces: updatedPieces };
+    });
+  }, [moves]);
 
   // Parse SVG paths on mount
   useEffect(() => {
@@ -44,50 +69,17 @@ export default function Board() {
   }, []);
 
   // Initialize pieces after spaces are loaded and rendered
-  useEffect(() => {
-    if (spaces.length > 0 && !piecesReady) {
-      setTimeout(() => {
-        const initialPieces: PieceProps[] = [
-          // White pieces
-          { type: "rook", color: "wht", position: "r1c1" },
-          { type: "queen", color: "wht", position: "r2c1" },
-          { type: "rook", color: "wht", position: "r2c2" },
-          { type: "king", color: "wht", position: "r2c3" },
-          { type: "knight", color: "wht", position: "r3c1" },
-          { type: "bishop", color: "wht", position: "r3c2" },
-          { type: "prince", color: "wht", position: "r3c3" },
-          { type: "bishop", color: "wht", position: "r3c4" },
-          { type: "knight", color: "wht", position: "r3c5" },
-          { type: "pawn", color: "wht", position: "r4c1" },
-          { type: "pawn", color: "wht", position: "r4c2" },
-          { type: "pawn", color: "wht", position: "r4c3" },
-          { type: "pawn", color: "wht", position: "r4c4" },
-          { type: "pawn", color: "wht", position: "r4c5" },
-          { type: "pawn", color: "wht", position: "r4c6" },
-          { type: "pawn", color: "wht", position: "r4c7" },
-          //black
-          { type: "rook", color: "blk", position: "r12c1" },
-          { type: "queen", color: "blk", position: "r11c1" },
-          { type: "rook", color: "blk", position: "r11c2" },
-          { type: "king", color: "blk", position: "r11c3" },
-          { type: "knight", color: "blk", position: "r10c1" },
-          { type: "bishop", color: "blk", position: "r10c2" },
-          { type: "prince", color: "blk", position: "r10c3" },
-          { type: "bishop", color: "blk", position: "r10c4" },
-          { type: "knight", color: "blk", position: "r10c5" },
-          { type: "pawn", color: "blk", position: "r9c1" },
-          { type: "pawn", color: "blk", position: "r9c2" },
-          { type: "pawn", color: "blk", position: "r9c3" },
-          { type: "pawn", color: "blk", position: "r9c4" },
-          { type: "pawn", color: "blk", position: "r9c5" },
-          { type: "pawn", color: "blk", position: "r9c6" },
-          { type: "pawn", color: "blk", position: "r9c7" },
-        ];
-        setBoardState((prev) => ({ ...prev, pieces: initialPieces }));
-        setPiecesReady(true);
-      }, 100);
-    }
-  }, [spaces, piecesReady]);
+  // useEffect(() => {
+  //   if (spaces.length > 0 && !piecesReady) {
+  //     setTimeout(() => {
+  //       setBoardState((prev) => ({
+  //         ...prev,
+  //         pieces: JSON.parse(JSON.stringify(initialPieces)),
+  //       }));
+  //       setPiecesReady(true);
+  //     }, 100);
+  //   }
+  // }, [spaces, piecesReady]);
 
   // Get cell center coordinates for piece positioning
   const getCellCenter = (cellId: string): { x: number; y: number } => {
@@ -116,28 +108,20 @@ export default function Board() {
 
   // Calculate legal moves for selected piece
   const calculateLegalMoves = (piece: PieceProps): string[] => {
-    // TODO: Implement actual chess rules for concentric board but rn im just returning some dummy adjacent cells for testing (everyone is a king ig)
-    const row = parseInt(piece.position.match(/r(\d+)/)?.[1] || "0");
-    const col = parseInt(piece.position.match(/c(\d+)/)?.[1] || "0");
+    // Adapt current boardState into RulesPiece[]
+    const rulesPieces: RulesPiece[] = boardState.pieces.map((p) => ({
+      type: p.type as PieceType,
+      color: p.color as Side,
+      position: p.position,
+    }));
 
-    const potentialMoves: string[] = [];
-    // Example: allow moving to adjacent cells (simplified)
-    for (let r = row - 1; r <= row + 1; r++) {
-      for (let c = col - 1; c <= col + 1; c++) {
-        if (r > 0 && c > 0 && !(r === row && c === col)) {
-          potentialMoves.push(`r${r}c${c}`);
-        }
-      }
-    }
+    const rulesPiece: RulesPiece = {
+      type: piece.type as PieceType,
+      color: piece.color as Side,
+      position: piece.position,
+    };
 
-    // Filter to only include cells that exist and don't have friendly pieces
-    return potentialMoves.filter(
-      (cellId) =>
-        spaces.some((s) => s.id === cellId) &&
-        !boardState.pieces.some(
-          (p) => p.position === cellId && p.color === piece.color,
-        ),
-    );
+    return generatePseudoLegalMovesForPiece(rulesPiece, rulesPieces);
   };
 
   // Handle cell click
@@ -182,22 +166,23 @@ export default function Board() {
   // Move piece to new position
   const movePiece = (piece: PieceProps, targetCell: string) => {
     console.log("Moving piece", piece, "to", targetCell);
+    onMove(piece.position, targetCell);
 
-    setBoardState((prev) => ({
-      ...prev,
-      pieces: prev.pieces
-        .map((p) =>
-          p === piece
-            ? { ...p, position: targetCell }
-            : p.position === targetCell
-              ? { ...p, position: "" } // Capture piece
-              : p,
-        )
-        .filter((p) => p.position !== ""), // Remove captured pieces
-      selectedPiece: null,
-      selectedCell: null,
-      legalMoves: [],
-    }));
+    // setBoardState((prev) => ({
+    //   ...prev,
+    //   pieces: prev.pieces
+    //     .map((p) =>
+    //       p === piece
+    //         ? { ...p, position: targetCell }
+    //         : p.position === targetCell
+    //           ? { ...p, position: "" } // Capture piece
+    //           : p,
+    //     )
+    //     .filter((p) => p.position !== ""), // Remove captured pieces
+    //   selectedPiece: null,
+    //   selectedCell: null,
+    //   legalMoves: [],
+    // }));
 
     // TODO: Send move to server
   };
@@ -219,14 +204,14 @@ export default function Board() {
         strokeWidth: 6,
       };
     }
-    if (boardState.legalMoves.includes(cellId)) {
-      return {
-        fill: "#00FF00", //   green
-        fillOpacity: 0.45, //
-        stroke: "#000000", // black border
-        strokeWidth: 6,
-      };
-    }
+    // if (boardState.legalMoves.includes(cellId)) {
+    //   return {
+    //     fill: "#00FF00", //   green
+    //     fillOpacity: 0.45, //
+    //     stroke: "#000000", // black border
+    //     strokeWidth: 6,
+    //   };
+    // }
     return {
       fill: "transparent",
       fillOpacity: 0,
@@ -240,7 +225,7 @@ export default function Board() {
       {/* SVG Board with clickable cells */}
       <svg
         viewBox="0 0 1730 1730"
-        className="absolute top-[-1px] left-[0px] w-[1700px] h-[1700px]"
+        className="absolute top-[-1px] left-[0px] w-[900px] h-[900px]"
       >
         {spaces.map((s) => {
           const style = getCellStyle(s.id);

@@ -107,7 +107,7 @@ export async function play(_prevState: PlayState | null, formData: FormData) {
             whiteDrawOffer: 0,
             blackDrawOffer: 0,
             status: "ongoing",
-            nextMove: 0,
+            nextMove: 1,
             // this will be set to the current timestamp with the game starts
             lastMoveAt: null,
             whiteTimeLeft: startingTime(variant),
@@ -224,7 +224,7 @@ export async function play(_prevState: PlayState | null, formData: FormData) {
             whiteDrawOffer: 0,
             blackDrawOffer: 0,
             status: "ongoing",
-            nextMove: 0,
+            nextMove: 1,
             // this will be set to the current timestamp with the game starts
             lastMoveAt: null,
             whiteTimeLeft: startingTime(variant),
@@ -278,7 +278,7 @@ export async function play(_prevState: PlayState | null, formData: FormData) {
           whiteDrawOffer: 0,
           blackDrawOffer: 0,
           status: "ongoing",
-          nextMove: 0,
+          nextMove: 1,
           // this will be set to the current timestamp with the game starts
           lastMoveAt: null,
           whiteTimeLeft: startingTime(variant),

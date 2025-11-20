@@ -3,6 +3,11 @@ import { drizzle, DrizzleD1Database } from "drizzle-orm/d1";
 import { parse } from "cookie";
 import { ClientMsg, schema, ServerMsg, sessionsTable } from "shared";
 import * as t from "drizzle-orm";
+import { getMovesForGame, recordMove } from "shared/moves";
+import {
+  computePieceState,
+  generatePseudoLegalMovesForPiece,
+} from "shared/concentric-rules";
 
 export class GameObject extends DurableObject<CloudflareEnv> {
   db: DrizzleD1Database<typeof schema>;
@@ -190,15 +195,77 @@ export class GameObject extends DurableObject<CloudflareEnv> {
     if (!socketInfo) {
       return;
     }
+    const game = await this.getGame(socketInfo.gameId);
     switch (msg.type) {
       case "move":
-        // Handle move logic here
+        if (!game) {
+          return;
+        }
+        const turn = game.nextMove % 2 === 1 ? "white" : "black";
+        if (turn === msg.data.side) {
+          console.log("Processing move:", msg.data);
+          if (
+            (msg.data.side === "white" &&
+              socketInfo.playerId === game.whitePlayerId) ||
+            (msg.data.side === "black" &&
+              socketInfo.playerId === game.blackPlayerId)
+          ) {
+            console.log("Player is authorized for this move");
+            // check valid move
+            const moves = await getMovesForGame(this.db, game.id);
+            console.log("Existing moves:", moves);
+            const pieces = computePieceState(moves);
+            const piece = pieces.find((p) => p.position === msg.data.from);
+            if (!piece) {
+              console.log("No piece at from position");
+              return;
+            }
+            const pseudoLegalMoves = generatePseudoLegalMovesForPiece(
+              piece,
+              pieces,
+            );
+            const isValid = pseudoLegalMoves.includes(msg.data.to);
+            if (!isValid) {
+              console.log("Move is not valid");
+              return;
+            }
+            // increment nextMove
+            await this.db
+              .update(schema.gamesTable)
+              .set({
+                nextMove: game.nextMove + 1,
+                lastMoveAt: new Date().toISOString(),
+              })
+              .where(t.eq(schema.gamesTable.id, game.id));
+            const moveId = await recordMove(this.db, {
+              gameId: game.id,
+              playerId: socketInfo.playerId,
+              from: msg.data.from,
+              to: msg.data.to,
+              moveNumber: game.nextMove,
+              // TODO: implement promotions
+              promotion: null,
+            });
+            await this.broadcastToGame(game.id, {
+              type: "move",
+              data: {
+                id: moveId,
+                gameId: game.id,
+                playerId: socketInfo.playerId,
+                fromSquare: msg.data.from,
+                toSquare: msg.data.to,
+                promotion: null,
+                moveNumber: game.nextMove,
+                createdAt: new Date().toISOString(),
+              },
+            });
+          }
+        }
         break;
       case "resign":
         // Handle resign logic here
         break;
       case "accept":
-        const game = await this.getGame(socketInfo.gameId);
         if (!game) {
           return;
         }

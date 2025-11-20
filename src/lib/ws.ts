@@ -68,6 +68,7 @@ export class GameSocket {
     if (this.socket && this.socket.readyState === WebSocket.OPEN) {
       this.socket.send(JSON.stringify(message));
     } else {
+      console.log(this.socket);
       throw new Error("WebSocket is not connected.");
     }
   }

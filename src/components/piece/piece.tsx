@@ -27,7 +27,7 @@ export default function Piece({
         alt={`${color} ${type}`}
         width={64}
         height={64}
-        className={`absolute pointer-events-none size-piece ${position} cursor-pointer transition-all duration-200`}
+        className={`absolute pointer-events-none size-piece ${position} cursor-pointer`}
         draggable={false}
         style={{
           // transform: 'translate(-50%, -50%)',

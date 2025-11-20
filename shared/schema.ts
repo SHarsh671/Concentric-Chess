@@ -43,7 +43,7 @@ export const gamesTable = sqliteTable("games", {
   blackDrawOffer: int("black_draw_offer").default(0),
   // draw, white_win, black_win, white_resign, black_resign, ongoing
   status: text("status").notNull(),
-  // % 2 == 0 -> white to move, % 2 == 1 -> black to move
+  // % 2 == 1 -> white to move, % 2 == 0 -> black to move
   nextMove: int("next_move").notNull(),
   lastMoveAt: text("last_move_at").default(sql`CURRENT_TIMESTAMP`),
   // in milliseconds, if NULL then unlimited
@@ -66,10 +66,10 @@ export const movesTable = sqliteTable("moves", {
   playerId: text("player_id")
     .notNull()
     .references(() => playersTable.id),
-  from_square: text("from_square").notNull(),
-  to_square: text("to_square").notNull(),
+  fromSquare: text("from_square").notNull(),
+  toSquare: text("to_square").notNull(),
   promotion: text("promotion"),
-  move_number: int("move_number").notNull(),
+  moveNumber: int("move_number").notNull(),
   createdAt: text("created_at").default(sql`CURRENT_TIMESTAMP`),
 });
 

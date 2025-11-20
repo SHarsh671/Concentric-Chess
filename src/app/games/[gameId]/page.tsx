@@ -16,7 +16,7 @@ export default async function GamePage({
   }
   const moves = await db().query.movesTable.findMany({
     where: (movesTable, { eq }) => eq(movesTable.gameId, game.id),
-    orderBy: (movesTable, { asc }) => [asc(movesTable.move_number)],
+    orderBy: (movesTable, { asc }) => [asc(movesTable.moveNumber)],
   });
   const session = await getSession();
 
