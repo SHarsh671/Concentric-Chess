@@ -26,6 +26,7 @@ export const gamesTable = sqliteTable("games", {
   // then also can do standard, blitz, bullet, etc
   variant: text("variant").notNull(),
   // when searching for an opponent, one of these is NULL (the other is randomly assigned)
+  // if playing against self (local game), both of these are the same
   whitePlayerId: text("white_player_id").references(() => playersTable.id),
   blackPlayerId: text("black_player_id").references(() => playersTable.id),
   // when searching, this is automatically set to TRUE once both players have been assigned
@@ -95,14 +96,42 @@ export type GameStatus =
   | "black_win"
   | "white_resign"
   | "black_resign"
-  | "ongoing";
+  | "ongoing"
+  | "aborted";
 
+export const GAME_VARIANTS = [
+  {
+    variant: "concentric-rapid",
+    name: "Concentric Rapid (10m)",
+    time: 10 * 60 * 1000,
+  },
+  {
+    variant: "concentric-blitz",
+    name: "Concentric Blitz (3m)",
+    time: 3 * 60 * 1000,
+  },
+  {
+    variant: "concentric-bullet",
+    name: "Concentric Bullet (1m)",
+    time: 1 * 60 * 1000,
+  },
+  {
+    variant: "concentric-unlimited",
+    name: "Concentric (Unlimited)",
+    time: null,
+  },
+] as {
+  variant: GameVariant;
+  name: string;
+  time: number | null;
+}[];
 export type GameVariant =
   // unlimited
-  | "concentric-standard"
+  | "concentric-unlimited"
   // 10m
   | "concentric-rapid"
   // 3m
   | "concentric-blitz"
   // 1m
   | "concentric-bullet";
+export type Side = "white" | "black";

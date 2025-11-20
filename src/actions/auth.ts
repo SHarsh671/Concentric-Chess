@@ -4,6 +4,7 @@ import {
   checkEmail,
   checkPassword,
   checkUsername,
+  getSession,
   hashPassword,
   loginWithUsername,
   registerPlayer,
@@ -15,6 +16,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { playersTable, sessionsTable } from "shared";
 import * as t from "drizzle-orm";
+import { getCloudflareContext } from "@opennextjs/cloudflare";
 
 export type SignupState = {
   message: string;
@@ -165,19 +167,7 @@ export async function updateUsername(
   }
 
   try {
-    const sessionToken = (await cookies()).get("session_token")?.value;
-    if (!sessionToken) {
-      return {
-        message: "You must be logged in to change your username.",
-        username,
-      };
-    }
-    const session = await db()
-      .select()
-      .from(sessionsTable)
-      .where(t.eq(sessionsTable.token, sessionToken))
-      .limit(1)
-      .then((rows) => rows[0]);
+    const session = await getSession();
     if (!session) {
       return {
         message: "You must be logged in to change your username.",
@@ -236,19 +226,7 @@ export async function updateEmail(
   }
 
   try {
-    const sessionToken = (await cookies()).get("session_token")?.value;
-    if (!sessionToken) {
-      return {
-        message: "You must be logged in to change your email.",
-        email,
-      };
-    }
-    const session = await db()
-      .select()
-      .from(sessionsTable)
-      .where(t.eq(sessionsTable.token, sessionToken))
-      .limit(1)
-      .then((rows) => rows[0]);
+    const session = await getSession();
     if (!session) {
       return {
         message: "You must be logged in to change your email.",
@@ -311,18 +289,7 @@ export async function updatePassword(
   }
 
   try {
-    const sessionToken = (await cookies()).get("session_token")?.value;
-    if (!sessionToken) {
-      return {
-        message: "You must be logged in to change your password.",
-      };
-    }
-    const session = await db()
-      .select()
-      .from(sessionsTable)
-      .where(t.eq(sessionsTable.token, sessionToken))
-      .limit(1)
-      .then((rows) => rows[0]);
+    const session = await getSession();
     if (!session) {
       return {
         message: "You must be logged in to change your password.",
