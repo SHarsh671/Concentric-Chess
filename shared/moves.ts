@@ -1,4 +1,6 @@
 import { movesTable } from "./schema";
+import * as schema from "./schema";
+import { DrizzleD1Database } from "drizzle-orm/d1";
 import { eq } from "drizzle-orm";
 
 type RecordMoveArgs = {
@@ -11,7 +13,7 @@ type RecordMoveArgs = {
 };
 
 export async function recordMove(
-  db: any,
+  db: DrizzleD1Database<typeof schema>,
   { gameId, playerId, from, to, moveNumber, promotion }: RecordMoveArgs,
 ): Promise<string> {
   const id = crypto.randomUUID();
@@ -27,7 +29,10 @@ export async function recordMove(
   return id;
 }
 
-export async function getMovesForGame(db: any, gameId: string) {
+export async function getMovesForGame(
+  db: DrizzleD1Database<typeof schema>,
+  gameId: string,
+) {
   return db
     .select()
     .from(movesTable)
