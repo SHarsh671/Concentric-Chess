@@ -74,6 +74,7 @@ export async function signup(
       expires: new Date(session.expiresAt),
     });
   } catch (e) {
+    console.error("Error during signup:", e);
     return {
       message: "An unexpected error occurred. Please try again.",
       email,
@@ -113,6 +114,7 @@ export async function login(
       expires: new Date(session.expiresAt),
     });
   } catch (e) {
+    console.error("Error during login:", e);
     return {
       message: "An unexpected error occurred. Please try again.",
       username,
@@ -137,6 +139,7 @@ export async function logout(): Promise<{ message: string }> {
       expires: new Date(0),
     });
   } catch (e) {
+    console.error("Error during logout:", e);
     return {
       message: "An unexpected error occurred. Please try again.",
     };
@@ -195,6 +198,7 @@ export async function updateUsername(
       .set({ username })
       .where(t.eq(playersTable.id, session.playerId));
   } catch (e) {
+    console.error("Error updating username:", e);
     return {
       message: "An unexpected error occurred. Please try again.",
       username,
@@ -253,6 +257,7 @@ export async function updateEmail(
       .set({ email })
       .where(t.eq(playersTable.id, session.playerId));
   } catch (e) {
+    console.error("Error updating email:", e);
     return {
       message: "An unexpected error occurred. Please try again.",
       email,
@@ -318,6 +323,7 @@ export async function updatePassword(
       .set({ password: hashedNewPassword })
       .where(t.eq(playersTable.id, session.playerId));
   } catch (e) {
+    console.error("Error updating password:", e);
     return {
       message: "An unexpected error occurred. Please try again.",
     };
