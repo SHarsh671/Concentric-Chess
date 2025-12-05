@@ -2,7 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { GameSocket } from "@/lib/ws";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Game, Move } from "shared";
 import "client-only";
 import Board from "@/components/piece/board";
@@ -21,6 +21,7 @@ export default function GamePage({
   const [game, setGame] = useState(initialGame);
   const ws = GameSocket.get();
   const [moves, setMoves] = useState(initialMoves);
+  const gameRef = useRef(game);
   const onMove = (from: string, to: string) => {
     console.log("Sending move:", { from, to });
     ws.send({
@@ -33,19 +34,24 @@ export default function GamePage({
     });
   };
   useEffect(() => {
+    gameRef.current = game;
+  }, [game]);
+  useEffect(() => {
     ws.connect(game.id);
     ws.setListener((message) => {
       switch (message.type) {
         case "move":
           {
             const move = message.data.move;
-            if (move.moveNumber !== game.nextMove) {
+            if (move.moveNumber !== gameRef.current.nextMove) {
               console.error(
-                `Received move with moveNumber ${move.moveNumber}, but expected ${game.nextMove}`,
+                `Received move with moveNumber ${move.moveNumber}, but expected ${gameRef.current.nextMove}`,
               );
               ws.send({ type: "sync_request" });
             } else {
-              setMoves((prevMoves) => [...prevMoves, move]);
+              setMoves((prevMoves) => {
+                return [...prevMoves, move];
+              });
               setGame((prevGame) => ({
                 ...prevGame,
                 nextMove: message.data.nextMove,
@@ -173,6 +179,11 @@ export default function GamePage({
   }
   return (
     <>
+      {game.status === "white_win" && <div>White wins!</div>}
+      {game.status === "black_win" && <div>Black wins!</div>}
+      {game.status === "draw" && <div>Draw!</div>}
+      {game.status === "white_resign" && <div>White resigns. Black wins!</div>}
+      {game.status === "black_resign" && <div>Black resigns. White wins!</div>}
       You are{" "}
       {game.whitePlayerId === playerId && game.blackPlayerId === playerId
         ? "both players?"

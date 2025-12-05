@@ -11,7 +11,13 @@ import {
 
 export class GameObject extends DurableObject<CloudflareEnv> {
   db: DrizzleD1Database<typeof schema>;
-  sockets: Map<WebSocket, { gameId: string; playerId: string }>;
+  sockets: Map<
+    WebSocket,
+    {
+      gameId: string;
+      playerId: string;
+    }
+  >;
 
   constructor(ctx: DurableObjectState, env: CloudflareEnv) {
     super(ctx, env);
@@ -44,6 +50,7 @@ export class GameObject extends DurableObject<CloudflareEnv> {
       }
       const cookie = parse(request.headers.get("Cookie") || "");
       const gameId = request.url.match(URL_PATTERN)?.[1] as string;
+      await this.ctx.storage.put("id", gameId);
       const sessionToken = cookie["session_token"] ?? "";
       const session = await this.db
         .select()
@@ -105,18 +112,22 @@ export class GameObject extends DurableObject<CloudflareEnv> {
         this.ctx.acceptWebSocket(server);
 
         server.serializeAttachment({ gameId, playerId: session.playerId });
-        this.sockets.set(server, { gameId, playerId: session.playerId });
+        this.sockets.set(server, {
+          gameId,
+          playerId: session.playerId,
+        });
 
         return new Response(null, {
           status: 101,
           webSocket: client,
         });
       } else if (request.url.endsWith("/accept")) {
+        const now = new Date();
         // first, check if the player is part of the game
         if (session.playerId === game.whitePlayerId) {
           await this.db
             .update(schema.gamesTable)
-            .set({ whiteAccepted: 1, lastMoveAt: new Date().toISOString() })
+            .set({ whiteAccepted: 1, lastMoveAt: now.toISOString() })
             .where(t.eq(schema.gamesTable.id, game.id));
           await this.broadcastToGame(game.id, {
             type: "accepted",
@@ -130,7 +141,7 @@ export class GameObject extends DurableObject<CloudflareEnv> {
         if (session.playerId === game.blackPlayerId) {
           await this.db
             .update(schema.gamesTable)
-            .set({ blackAccepted: 1, lastMoveAt: new Date().toISOString() })
+            .set({ blackAccepted: 1, lastMoveAt: now.toISOString() })
             .where(t.eq(schema.gamesTable.id, game.id));
           await this.broadcastToGame(game.id, {
             type: "accepted",
@@ -148,7 +159,7 @@ export class GameObject extends DurableObject<CloudflareEnv> {
             .set({
               blackPlayerId: session.playerId,
               blackAccepted: 1,
-              lastMoveAt: new Date().toISOString(),
+              lastMoveAt: now.toISOString(),
             })
             .where(t.eq(schema.gamesTable.id, game.id));
           await this.broadcastToGame(game.id, {
@@ -166,7 +177,7 @@ export class GameObject extends DurableObject<CloudflareEnv> {
             .set({
               whitePlayerId: session.playerId,
               whiteAccepted: 1,
-              lastMoveAt: new Date().toISOString(),
+              lastMoveAt: now.toISOString(),
             })
             .where(t.eq(schema.gamesTable.id, game.id));
           await this.broadcastToGame(game.id, {
@@ -193,6 +204,58 @@ export class GameObject extends DurableObject<CloudflareEnv> {
     for (const [ws, info] of this.sockets.entries()) {
       if (info.gameId === gameId) {
         ws.send(JSON.stringify(message));
+      }
+    }
+  }
+
+  async alarm(alarmInfo?: AlarmInvocationInfo): Promise<void> {
+    if (!alarmInfo) {
+      return;
+    }
+    const gameId = await this.ctx.storage.get<string>("id");
+    if (!gameId) {
+      return;
+    }
+    const game = await this.getGame(gameId);
+    if (!game) {
+      return;
+    }
+    const now = new Date();
+    const sinceLastMove =
+      now.getTime() - new Date(game.lastMoveAt || game.createdAt!).getTime();
+    let whiteTimeLeft = game.whiteTimeLeft;
+    let blackTimeLeft = game.blackTimeLeft;
+    if (game.nextMove % 2 === 1 && whiteTimeLeft !== null) {
+      whiteTimeLeft = whiteTimeLeft - sinceLastMove;
+      if (whiteTimeLeft <= 0) {
+        // white loses on time
+        await this.db
+          .update(schema.gamesTable)
+          .set({ status: "black_win", whiteTimeLeft: 0 })
+          .where(t.eq(schema.gamesTable.id, game.id));
+        await this.broadcastToGame(game.id, {
+          type: "game_over",
+          data: { result: "black_win" },
+        });
+        return;
+      }
+    }
+    if (game.nextMove % 2 === 0 && blackTimeLeft !== null) {
+      blackTimeLeft = blackTimeLeft - sinceLastMove;
+      if (blackTimeLeft <= 0) {
+        // black loses on time
+        await this.db
+          .update(schema.gamesTable)
+          .set({
+            status: "white_win",
+            blackTimeLeft: 0,
+          })
+          .where(t.eq(schema.gamesTable.id, game.id));
+        await this.broadcastToGame(game.id, {
+          type: "game_over",
+          data: { result: "white_win" },
+        });
+        return;
       }
     }
   }
@@ -246,38 +309,14 @@ export class GameObject extends DurableObject<CloudflareEnv> {
             if (turn === "white" && whiteTimeLeft !== null) {
               whiteTimeLeft = whiteTimeLeft - sinceLastMove;
               if (whiteTimeLeft < 0) {
-                // white loses on time
-                await this.db
-                  .update(schema.gamesTable)
-                  .set({
-                    status: "black_win",
-                    lastMoveAt: now.toISOString(),
-                    whiteTimeLeft: 0,
-                  })
-                  .where(t.eq(schema.gamesTable.id, game.id));
-                await this.broadcastToGame(game.id, {
-                  type: "game_over",
-                  data: { result: "black_win" },
-                });
+                // white loses on time, this is handled by the alarm
                 return;
               }
             }
             if (turn === "black" && blackTimeLeft !== null) {
               blackTimeLeft = blackTimeLeft - sinceLastMove;
               if (blackTimeLeft < 0) {
-                // black loses on time
-                await this.db
-                  .update(schema.gamesTable)
-                  .set({
-                    status: "white_win",
-                    lastMoveAt: now.toISOString(),
-                    blackTimeLeft: 0,
-                  })
-                  .where(t.eq(schema.gamesTable.id, game.id));
-                await this.broadcastToGame(game.id, {
-                  type: "game_over",
-                  data: { result: "white_win" },
-                });
+                // black loses on time, this is handled by the alarm
                 return;
               }
             }
@@ -290,6 +329,13 @@ export class GameObject extends DurableObject<CloudflareEnv> {
                 blackTimeLeft,
               })
               .where(t.eq(schema.gamesTable.id, game.id));
+            if (turn === "white" && blackTimeLeft !== null) {
+              // it was white's turn, now it's black's turn so we set an alarm for when they run out of time
+              this.ctx.storage.setAlarm(Date.now() + blackTimeLeft + 10);
+            } else if (turn === "black" && whiteTimeLeft !== null) {
+              // it was black's turn, now it's white's turn so we set an alarm for when they run out of time
+              this.ctx.storage.setAlarm(Date.now() + whiteTimeLeft + 10);
+            }
             const moveId = await recordMove(this.db, {
               gameId: game.id,
               playerId: socketInfo.playerId,
@@ -310,7 +356,7 @@ export class GameObject extends DurableObject<CloudflareEnv> {
                   toSquare: msg.data.to,
                   promotion: null,
                   moveNumber: game.nextMove,
-                  createdAt: new Date().toISOString(),
+                  createdAt: now.toISOString(),
                 },
                 nextMove: game.nextMove + 1,
                 lastMoveAt: now.toISOString(),
