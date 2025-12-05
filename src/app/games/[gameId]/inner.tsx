@@ -38,13 +38,22 @@ export default function GamePage({
       switch (message.type) {
         case "move":
           {
-            const move = message.data as Move;
-            setMoves((prevMoves) => [...prevMoves, move]);
-            setGame((prevGame) => ({
-              ...prevGame,
-              nextMove: move.moveNumber + 1,
-              lastMoveAt: new Date().toISOString(),
-            }));
+            const move = message.data.move;
+            if (move.moveNumber !== game.nextMove) {
+              console.error(
+                `Received move with moveNumber ${move.moveNumber}, but expected ${game.nextMove}`,
+              );
+              ws.send({ type: "sync_request" });
+            } else {
+              setMoves((prevMoves) => [...prevMoves, move]);
+              setGame((prevGame) => ({
+                ...prevGame,
+                nextMove: message.data.nextMove,
+                lastMoveAt: message.data.lastMoveAt,
+                whiteTimeLeft: message.data.whiteTimeLeft,
+                blackTimeLeft: message.data.blackTimeLeft,
+              }));
+            }
           }
           break;
         case "aborted":
@@ -77,6 +86,11 @@ export default function GamePage({
             }));
           }
           break;
+        case "sync": {
+          setGame(message.data.game);
+          setMoves(message.data.moves);
+          break;
+        }
       }
     });
     return () => {
@@ -84,6 +98,57 @@ export default function GamePage({
       ws.disconnect();
     };
   }, [game.id]);
+  const timeSinceLastMove =
+    Date.now() - new Date(game.lastMoveAt || game.createdAt!).getTime();
+  const [timer, setTimer] = useState([
+    game.nextMove % 2 === 1
+      ? game.whiteTimeLeft !== null
+        ? Math.max(0, game.whiteTimeLeft - timeSinceLastMove)
+        : null
+      : game.whiteTimeLeft,
+    game.nextMove % 2 === 0
+      ? game.blackTimeLeft !== null
+        ? Math.max(0, game.blackTimeLeft - timeSinceLastMove)
+        : null
+      : game.blackTimeLeft,
+  ]);
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (game.status === "ongoing") {
+      interval = setInterval(() => {
+        const timeSinceLastMove =
+          Date.now() - new Date(game.lastMoveAt || game.createdAt!).getTime();
+        if (game.nextMove % 2 === 1) {
+          // White to move
+          setTimer([
+            game.whiteTimeLeft !== null
+              ? Math.max(0, game.whiteTimeLeft - timeSinceLastMove)
+              : null,
+            game.blackTimeLeft,
+          ]);
+        } else {
+          // Black to move
+          setTimer([
+            game.whiteTimeLeft,
+            game.blackTimeLeft !== null
+              ? Math.max(0, game.blackTimeLeft - timeSinceLastMove)
+              : null,
+          ]);
+        }
+      }, 100);
+    }
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [
+    game.status,
+    game.nextMove,
+    game.whiteTimeLeft,
+    game.blackTimeLeft,
+    game.lastMoveAt,
+    game.createdAt,
+  ]);
+
   if (!game) {
     return <>Game not found</>;
   }
@@ -117,6 +182,11 @@ export default function GamePage({
             ? "Black"
             : "a spectator"}
       . It is {game.nextMove % 2 === 1 ? "White's" : "Black's"} turn.
+      <br />
+      <div>
+        White time left: <Timer timeLeft={timer[0]} /> | Black time left:{" "}
+        <Timer timeLeft={timer[1]} />
+      </div>
       <div className="relative w-[900px] h-[900px] border-2">
         {/* Background board image */}
         <Image
@@ -134,5 +204,20 @@ export default function GamePage({
         </div>
       </div>
     </>
+  );
+}
+
+// should be a pretty HTML thing showing minutes:seconds or "unlimited"
+function Timer({ timeLeft }: { timeLeft: number | null }) {
+  if (timeLeft === null) {
+    return "unlimited";
+  }
+  const seconds = Math.floor(timeLeft / 1000);
+  const minutes = Math.floor(seconds / 60);
+  const remainingSeconds = seconds % 60;
+  return (
+    <div className="inline-block w-16 text-center">
+      {minutes}:{remainingSeconds.toString().padStart(2, "0")}
+    </div>
   );
 }

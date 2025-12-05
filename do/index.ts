@@ -116,7 +116,7 @@ export class GameObject extends DurableObject<CloudflareEnv> {
         if (session.playerId === game.whitePlayerId) {
           await this.db
             .update(schema.gamesTable)
-            .set({ whiteAccepted: 1 })
+            .set({ whiteAccepted: 1, lastMoveAt: new Date().toISOString() })
             .where(t.eq(schema.gamesTable.id, game.id));
           await this.broadcastToGame(game.id, {
             type: "accepted",
@@ -130,7 +130,7 @@ export class GameObject extends DurableObject<CloudflareEnv> {
         if (session.playerId === game.blackPlayerId) {
           await this.db
             .update(schema.gamesTable)
-            .set({ blackAccepted: 1 })
+            .set({ blackAccepted: 1, lastMoveAt: new Date().toISOString() })
             .where(t.eq(schema.gamesTable.id, game.id));
           await this.broadcastToGame(game.id, {
             type: "accepted",
@@ -145,7 +145,11 @@ export class GameObject extends DurableObject<CloudflareEnv> {
         if (game.blackPlayerId === null) {
           await this.db
             .update(schema.gamesTable)
-            .set({ blackPlayerId: session.playerId, blackAccepted: 1 })
+            .set({
+              blackPlayerId: session.playerId,
+              blackAccepted: 1,
+              lastMoveAt: new Date().toISOString(),
+            })
             .where(t.eq(schema.gamesTable.id, game.id));
           await this.broadcastToGame(game.id, {
             type: "accepted",
@@ -159,7 +163,11 @@ export class GameObject extends DurableObject<CloudflareEnv> {
         if (game.whitePlayerId === null) {
           await this.db
             .update(schema.gamesTable)
-            .set({ whitePlayerId: session.playerId, whiteAccepted: 1 })
+            .set({
+              whitePlayerId: session.playerId,
+              whiteAccepted: 1,
+              lastMoveAt: new Date().toISOString(),
+            })
             .where(t.eq(schema.gamesTable.id, game.id));
           await this.broadcastToGame(game.id, {
             type: "accepted",
@@ -196,11 +204,11 @@ export class GameObject extends DurableObject<CloudflareEnv> {
       return;
     }
     const game = await this.getGame(socketInfo.gameId);
+    if (!game) {
+      return;
+    }
     switch (msg.type) {
       case "move":
-        if (!game) {
-          return;
-        }
         const turn = game.nextMove % 2 === 1 ? "white" : "black";
         if (turn === msg.data.side) {
           console.log("Processing move:", msg.data);
@@ -229,12 +237,57 @@ export class GameObject extends DurableObject<CloudflareEnv> {
               console.log("Move is not valid");
               return;
             }
-            // increment nextMove
+            const now = new Date();
+            const sinceLastMove =
+              now.getTime() -
+              new Date(game.lastMoveAt || game.createdAt!).getTime();
+            let whiteTimeLeft = game.whiteTimeLeft;
+            let blackTimeLeft = game.blackTimeLeft;
+            if (turn === "white" && whiteTimeLeft !== null) {
+              whiteTimeLeft = whiteTimeLeft - sinceLastMove;
+              if (whiteTimeLeft < 0) {
+                // white loses on time
+                await this.db
+                  .update(schema.gamesTable)
+                  .set({
+                    status: "black_win",
+                    lastMoveAt: now.toISOString(),
+                    whiteTimeLeft: 0,
+                  })
+                  .where(t.eq(schema.gamesTable.id, game.id));
+                await this.broadcastToGame(game.id, {
+                  type: "game_over",
+                  data: { result: "black_win" },
+                });
+                return;
+              }
+            }
+            if (turn === "black" && blackTimeLeft !== null) {
+              blackTimeLeft = blackTimeLeft - sinceLastMove;
+              if (blackTimeLeft < 0) {
+                // black loses on time
+                await this.db
+                  .update(schema.gamesTable)
+                  .set({
+                    status: "white_win",
+                    lastMoveAt: now.toISOString(),
+                    blackTimeLeft: 0,
+                  })
+                  .where(t.eq(schema.gamesTable.id, game.id));
+                await this.broadcastToGame(game.id, {
+                  type: "game_over",
+                  data: { result: "white_win" },
+                });
+                return;
+              }
+            }
             await this.db
               .update(schema.gamesTable)
               .set({
                 nextMove: game.nextMove + 1,
-                lastMoveAt: new Date().toISOString(),
+                lastMoveAt: now.toISOString(),
+                whiteTimeLeft,
+                blackTimeLeft,
               })
               .where(t.eq(schema.gamesTable.id, game.id));
             const moveId = await recordMove(this.db, {
@@ -249,14 +302,20 @@ export class GameObject extends DurableObject<CloudflareEnv> {
             await this.broadcastToGame(game.id, {
               type: "move",
               data: {
-                id: moveId,
-                gameId: game.id,
-                playerId: socketInfo.playerId,
-                fromSquare: msg.data.from,
-                toSquare: msg.data.to,
-                promotion: null,
-                moveNumber: game.nextMove,
-                createdAt: new Date().toISOString(),
+                move: {
+                  id: moveId,
+                  gameId: game.id,
+                  playerId: socketInfo.playerId,
+                  fromSquare: msg.data.from,
+                  toSquare: msg.data.to,
+                  promotion: null,
+                  moveNumber: game.nextMove,
+                  createdAt: new Date().toISOString(),
+                },
+                nextMove: game.nextMove + 1,
+                lastMoveAt: now.toISOString(),
+                whiteTimeLeft,
+                blackTimeLeft,
               },
             });
           }
@@ -266,9 +325,6 @@ export class GameObject extends DurableObject<CloudflareEnv> {
         // Handle resign logic here
         break;
       case "accept":
-        if (!game) {
-          return;
-        }
         if (socketInfo.playerId === game.whitePlayerId) {
           await this.db
             .update(schema.gamesTable)
@@ -286,6 +342,16 @@ export class GameObject extends DurableObject<CloudflareEnv> {
           data: {
             whitePlayerId: game.whitePlayerId,
             blackPlayerId: game.blackPlayerId,
+          },
+        });
+        break;
+      case "sync_request":
+        const moves = await getMovesForGame(this.db, game.id);
+        await this.broadcastToGame(game.id, {
+          type: "sync",
+          data: {
+            game,
+            moves,
           },
         });
         break;
