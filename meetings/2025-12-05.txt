@@ -1,0 +1,23 @@
+Date: November 28 @ 10:30am
+Agenda:
+- Assign tasks for finishing concentric chess.
+
+Attendees:
+- Josef
+- Carter
+- Roland
+- Harshmeet
+- Harkirat
+Missing:
+- Sparsh
+- Skyler
+
+Discussion:
+- Checked in on progress since last meeting:
+  Josef - finished desync handling, making progress on timer
+  Carter - starting on game sidebar
+  Roland - no updates
+  Skyler - no updates
+  Harshmeet - making progress on move confirmation, rules page
+  Harkirat - making progress on move confirmation
+  Sparsh - no updates
