@@ -1,0 +1,37 @@
+Date: January 8 @ 10:30am
+Agenda:
+- Check in on progress since last meeting.
+- Assign tasks for design document.
+- Schedule next meetings with prof and TA.
+
+Attendees:
+- Josef
+- Carter
+- Roland
+- Harshmeet
+- Harkirat
+- Sparsh
+- Skyler
+
+Discussion:
+- Checked in on progress since last meeting:
+  Josef - finished desync handling and timer.
+  Carter - will have sidebar by next week.
+  Roland - some progress on game history.
+  Skyler - will have home page by next week.
+  Harshmeet - move confirmation and rules page completed.
+  Harkirat - will have home page by next week.
+  Sparsh - will have rules engine by next week.
+- Assigned tasks for design document:
+  Josef - brief and component diagram (sections 3 and 4).
+  Carter - UI stuff (section 7).
+  Roland - relationships between components (section 5).
+  Skyler - UI stuff (section 7).
+  Harshmeet - part 6 for components (minus any group contributions).
+  Harkirat - V&V plan for frontend.
+  Sparsh - V&V plan for backend.
+  Everyone - the sections of part 6 that they've worked on.
+- Scheduled next meetings with prof and TA:
+  - Meeting with prof on January 19 @ 9:45-10:00am.
+
+Next Meeting: Friday, January 16 @ 10:30am
