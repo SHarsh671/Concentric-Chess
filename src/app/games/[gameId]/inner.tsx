@@ -222,9 +222,8 @@ export default function GamePage({
           <div className="relative w-1/3 h-1/2 top-1/4 left-1/18 border-gray-400 border-2 rounded-2xl bg-gray-200 text-center text-[37px] text-black overflow-auto"><Timer timeLeft={timer[0]}></Timer></div>
           <div className="relative w-1/3 h-1/2 top-1/4 left-5/18 border-gray-800 border-2 rounded-2xl bg-gray-600 text-center text-[37px] text-white font-mono overflow-auto"><Timer timeLeft={timer[1]}/></div>
         </div>
-        {/* there's a bug with CSS where it's tricky to get auto-scroll to the bottom, will attempt to find a workaround */}
-        <div className="relative flex flex-col w-18/20 mx-auto h-3/5 border-2 columns-1 overflow-y-auto justify-end">
-          {moves.map((m) => {
+        <div className="relative flex flex-col-reverse w-18/20 mx-auto h-3/5 border-2 columns-1 overflow-y-auto">
+          {moves.toReversed().map((m) => {
             const turn = Math.floor((m.moveNumber - 1)/ 2) + 1;
             const mover = m.moveNumber % 2 == 1 ? "w" : "b";
             return <p>{turn}{mover}. {m.fromSquare}-{m.toSquare}</p>
