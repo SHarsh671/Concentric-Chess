@@ -216,11 +216,13 @@ export default function GamePage({
           </div>
         </div>
       </div>
+      {/* game sidebar */}
       <div className="relative w-[30%] h-[70%] top-[15%] left-1/36 border-2">
         <div className="flex w-full h-1/5">
           <div className="relative w-1/3 h-1/2 top-1/4 left-1/18 border-gray-400 border-2 rounded-2xl bg-gray-200 text-center text-[37px] text-black overflow-auto"><Timer timeLeft={timer[0]}></Timer></div>
           <div className="relative w-1/3 h-1/2 top-1/4 left-5/18 border-gray-800 border-2 rounded-2xl bg-gray-600 text-center text-[37px] text-white font-mono overflow-auto"><Timer timeLeft={timer[1]}/></div>
         </div>
+        {/* there's a bug with CSS where it's tricky to get auto-scroll to the bottom, will attempt to find a workaround */}
         <div className="relative flex flex-col w-18/20 mx-auto h-3/5 border-2 columns-1 overflow-y-auto justify-end">
           {moves.map((m) => {
             const turn = Math.floor((m.moveNumber - 1)/ 2) + 1;
@@ -228,6 +230,7 @@ export default function GamePage({
             return <p>{turn}{mover}. {m.fromSquare}-{m.toSquare}</p>
           })}
         </div>
+        {/* TODO: i assume the schema for the draw/resign is incomplete and needs to be finished */}
         <div className="flex w-full h-1/5">
           <Button className="relative w-2/5 h-1/2 top-1/4 left-1/15 border-orange-400 border-2 rounded-2xl bg-orange-300 text-center text-5xl text-gray-100 overflow-auto" onClick={() => ws.send({ type: "draw" })}>Draw</Button>
           <Button className="relative w-2/5 h-1/2 top-1/4 left-4/30 border-orange-400 border-2 rounded-2xl bg-orange-300 text-center text-5xl text-gray-100 overflow-auto" onClick={() => ws.send({ type: "resign" })}>Resign</Button>
