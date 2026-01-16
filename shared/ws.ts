@@ -52,6 +52,9 @@ export type ClientMsg =
       type: "resign";
     }
   | {
+      type: "draw";
+  }
+  | {
       type: "accept";
     }
   | {
