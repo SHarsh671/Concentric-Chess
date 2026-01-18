@@ -7,6 +7,8 @@ import { Game, Move } from "shared";
 import "client-only";
 import Board from "@/components/piece/board";
 import Image from "next/image";
+import RulesDialog from "@/components/piece/rules-dialog";
+import { HelpCircle } from "lucide-react";
 
 export default function GamePage({
   game: initialGame,
@@ -17,10 +19,11 @@ export default function GamePage({
   moves: Move[];
   playerId: string | undefined;
 }) {
-  // TODO: need to branch early if the game is deleted or completed (should not connect the websocket)
   const [game, setGame] = useState(initialGame);
   const ws = GameSocket.get();
   const [moves, setMoves] = useState(initialMoves);
+  const [showRules, setShowRules] = useState(false);
+  
   const onMove = (from: string, to: string) => {
     console.log("Sending move:", { from, to });
     ws.send({
@@ -32,6 +35,7 @@ export default function GamePage({
       },
     });
   };
+  
   useEffect(() => {
     ws.connect(game.id);
     ws.setListener((message) => {
@@ -84,6 +88,7 @@ export default function GamePage({
       ws.disconnect();
     };
   }, [game.id]);
+  
   if (!game) {
     return <>Game not found</>;
   }
@@ -106,19 +111,33 @@ export default function GamePage({
   if (game.whiteAccepted === 0 || game.blackAccepted === 0) {
     return <>Waiting for opponent to accept the game...</>;
   }
+  
   return (
-    <>
-      You are{" "}
-      {game.whitePlayerId === playerId && game.blackPlayerId === playerId
-        ? "both players?"
-        : game.whitePlayerId === playerId
-          ? "White"
-          : game.blackPlayerId === playerId
-            ? "Black"
-            : "a spectator"}
-      . It is {game.nextMove % 2 === 1 ? "White's" : "Black's"} turn.
+    <div className="flex flex-col items-center gap-4">
+      <div className="flex items-center justify-between w-full max-w-[900px]">
+        <div className="text-lg">
+          You are{" "}
+          {game.whitePlayerId === playerId && game.blackPlayerId === playerId
+            ? "both players?"
+            : game.whitePlayerId === playerId
+              ? "White"
+              : game.blackPlayerId === playerId
+                ? "Black"
+                : "a spectator"}
+          . It is {game.nextMove % 2 === 1 ? "White's" : "Black's"} turn.
+        </div>
+        
+        <Button
+          onClick={() => setShowRules(true)}
+          variant="outline"
+          className="flex items-center gap-2 bg-indigo-50 hover:bg-indigo-100 border-indigo-300 text-indigo-700"
+        >
+          <HelpCircle size={20} />
+          Rules
+        </Button>
+      </div>
+
       <div className="relative w-[900px] h-[900px] border-2">
-        {/* Background board image */}
         <Image
           src="/cc/ccboard.png"
           alt="Chess board"
@@ -128,11 +147,21 @@ export default function GamePage({
           priority
         />
 
-        {/* Overlay: SVG cells + pieces */}
         <div className="absolute top-0 left-0 w-full h-full">
           <Board moves={moves} onMove={onMove} />
         </div>
       </div>
-    </>
+
+      <div className="bg-blue-50 border-2 border-blue-300 rounded-lg p-4 max-w-[900px] text-sm text-blue-800">
+        <p className="font-semibold mb-1">💡 How to move:</p>
+        <ol className="list-decimal list-inside space-y-1">
+          <li>Click a piece to select it (yellow highlight)</li>
+          <li>Click a legal destination cell (blue highlight)</li>
+          <li>Click the destination again (green highlight) to confirm the move</li>
+        </ol>
+      </div>
+
+      <RulesDialog isOpen={showRules} onClose={() => setShowRules(false)} />
+    </div>
   );
 }

@@ -1,4 +1,4 @@
-import { Gamepad, Book, History, Settings } from "lucide-react";
+import { Gamepad, Book, History, Settings, FlaskConical } from "lucide-react";
 
 import * as React from "react";
 
@@ -34,6 +34,11 @@ const data = [
     title: "Rules",
     url: "/rules",
     icon: Book,
+  },
+  {
+    title: "Test Board",
+    url: "/test-board",
+    icon: FlaskConical,
   },
 ];
 
