@@ -23,7 +23,7 @@ export default function GamePage({
   const ws = GameSocket.get();
   const [moves, setMoves] = useState(initialMoves);
   const [showRules, setShowRules] = useState(false);
-  
+
   const gameRef = useRef(game);
   const onMove = (from: string, to: string) => {
     console.log("Sending move:", { from, to });
@@ -36,7 +36,7 @@ export default function GamePage({
       },
     });
   };
-  
+
   useEffect(() => {
     gameRef.current = game;
   }, [game]);
@@ -181,10 +181,10 @@ export default function GamePage({
   if (game.whiteAccepted === 0 || game.blackAccepted === 0) {
     return <>Waiting for opponent to accept the game...</>;
   }
-  
+
   return (
     <div className="flex w-full">
-      <div>
+      <div className="flex flex-col items-center space-y-4">
         {game.status === "white_win" && <div>White wins!</div>}
         {game.status === "black_win" && <div>Black wins!</div>}
         {game.status === "draw" && <div>Draw!</div>}
@@ -192,7 +192,7 @@ export default function GamePage({
         {game.status === "black_resign" && <div>Black resigns. White wins!</div>}
         You are{" "}
         {game.whitePlayerId === playerId && game.blackPlayerId === playerId
-          ? "both players?"
+          ? "both players"
           : game.whitePlayerId === playerId
             ? "White"
             : game.blackPlayerId === playerId
@@ -200,10 +200,6 @@ export default function GamePage({
               : "a spectator"}
         . It is {game.nextMove % 2 === 1 ? "White's" : "Black's"} turn.
         <br />
-        <div>
-          White time left: <Timer timeLeft={timer[0]} /> | Black time left:{" "}
-          <Timer timeLeft={timer[1]} />
-        </div>
         <div className="relative w-[900px] h-[900px] border-2">
           {/* Background board image */}
           <Image
@@ -222,16 +218,16 @@ export default function GamePage({
         </div>
       </div>
       {/* game sidebar */}
-      <div className="relative w-[30%] h-[70%] top-[15%] left-1/36 border-2">
+      <div className="relative w-[30%] h-[70%] left-1/36 border-2 mt-[24px]">
         <div className="flex w-full h-1/5">
           <div className="relative w-1/3 h-1/2 top-1/4 left-1/18 border-gray-400 border-2 rounded-2xl bg-gray-200 text-center text-[37px] text-black overflow-auto"><Timer timeLeft={timer[0]}></Timer></div>
-          <div className="relative w-1/3 h-1/2 top-1/4 left-5/18 border-gray-800 border-2 rounded-2xl bg-gray-600 text-center text-[37px] text-white font-mono overflow-auto"><Timer timeLeft={timer[1]}/></div>
+          <div className="relative w-1/3 h-1/2 top-1/4 left-5/18 border-gray-800 border-2 rounded-2xl bg-gray-600 text-center text-[37px] text-white font-mono overflow-auto"><Timer timeLeft={timer[1]} /></div>
         </div>
         <div className="relative flex flex-col-reverse w-18/20 mx-auto h-3/5 border-2 columns-1 overflow-y-auto">
           {moves.toReversed().map((m) => {
-            const turn = Math.floor((m.moveNumber - 1)/ 2) + 1;
+            const turn = Math.floor((m.moveNumber - 1) / 2) + 1;
             const mover = m.moveNumber % 2 == 1 ? "w" : "b";
-            return <p>{turn}{mover}. {m.fromSquare}-{m.toSquare}</p>
+            return <p key={m.id}>{turn}{mover}. {m.fromSquare}-{m.toSquare}</p>
           })}
         </div>
         {/* TODO: i assume the schema for the draw/resign is incomplete and needs to be finished */}
@@ -239,15 +235,15 @@ export default function GamePage({
           <Button className="relative w-2/5 h-1/2 top-1/4 left-1/15 border-orange-400 border-2 rounded-2xl bg-orange-300 text-center text-5xl text-gray-100 overflow-auto" onClick={() => ws.send({ type: "draw" })}>Draw</Button>
           <Button className="relative w-2/5 h-1/2 top-1/4 left-4/30 border-orange-400 border-2 rounded-2xl bg-orange-300 text-center text-5xl text-gray-100 overflow-auto" onClick={() => ws.send({ type: "resign" })}>Resign</Button>
         </div>
-      </div>
 
-      <div className="bg-blue-50 border-2 border-blue-300 rounded-lg p-4 max-w-[900px] text-sm text-blue-800">
-        <p className="font-semibold mb-1">💡 How to move:</p>
-        <ol className="list-decimal list-inside space-y-1">
-          <li>Click a piece to select it (yellow highlight)</li>
-          <li>Click a legal destination cell (blue highlight)</li>
-          <li>Click the destination again (green highlight) to confirm the move</li>
-        </ol>
+        <div className="bg-blue-50 border-2 border-blue-300 rounded-lg p-4 max-w-[900px] text-sm text-blue-800 mt-[24px]">
+          <p className="font-semibold mb-1">💡 How to move:</p>
+          <ol className="list-decimal list-inside space-y-1">
+            <li>Click a piece to select it (yellow highlight)</li>
+            <li>Click a legal destination cell (blue highlight)</li>
+            <li>Click the destination again (green highlight) to confirm the move</li>
+          </ol>
+        </div>
       </div>
 
       <RulesDialog isOpen={showRules} onClose={() => setShowRules(false)} />
