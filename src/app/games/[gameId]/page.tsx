@@ -21,7 +21,7 @@ export default async function GamePage({
   const session = await getSession();
 
   return (
-    <div className="p-4">
+    <div className="flex p-4">
       <Game game={game} moves={moves} playerId={session?.playerId} />
     </div>
   );
