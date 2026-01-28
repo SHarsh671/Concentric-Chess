@@ -22,6 +22,7 @@ type BoardState = {
   selectedPiece: PieceProps | null;
   selectedCell: string | null;
   legalMoves: string[];
+  pendingMove: string | null; // The destination cell waiting for confirmation
 };
 
 export default function Board({
@@ -37,20 +38,19 @@ export default function Board({
     selectedPiece: null,
     selectedCell: null,
     legalMoves: [],
+    pendingMove: null,
   });
   const [piecesReady, setPiecesReady] = useState(false);
 
   useEffect(() => {
     console.log("Moves received:", moves);
     setPiecesReady(true);
-    // Apply moves to boardState pieces
     setBoardState((prev) => {
       const updatedPieces: PieceProps[] = computePieceState(moves);
       return { ...prev, pieces: updatedPieces };
     });
   }, [moves]);
 
-  // Parse SVG paths on mount
   useEffect(() => {
     fetch("/cc/ccboard.svg")
       .then((res) => res.text())
@@ -68,25 +68,10 @@ export default function Board({
       });
   }, []);
 
-  // Initialize pieces after spaces are loaded and rendered
-  // useEffect(() => {
-  //   if (spaces.length > 0 && !piecesReady) {
-  //     setTimeout(() => {
-  //       setBoardState((prev) => ({
-  //         ...prev,
-  //         pieces: JSON.parse(JSON.stringify(initialPieces)),
-  //       }));
-  //       setPiecesReady(true);
-  //     }, 100);
-  //   }
-  // }, [spaces, piecesReady]);
-
-  // Get cell center coordinates for piece positioning
   const getCellCenter = (cellId: string): { x: number; y: number } => {
     const space = spaces.find((s) => s.id === cellId);
     if (!space) return { x: 0, y: 0 };
 
-    // Parse the path data to get approximate center
     if (typeof window !== "undefined") {
       const pathElement = document.getElementById(
         cellId,
@@ -106,9 +91,7 @@ export default function Board({
     return { x: 0, y: 0 };
   };
 
-  // Calculate legal moves for selected piece
   const calculateLegalMoves = (piece: PieceProps): string[] => {
-    // Adapt current boardState into RulesPiece[]
     const rulesPieces: RulesPiece[] = boardState.pieces.map((p) => ({
       type: p.type as PieceType,
       color: p.color as Side,
@@ -124,76 +107,72 @@ export default function Board({
     return generatePseudoLegalMovesForPiece(rulesPiece, rulesPieces);
   };
 
-  // Handle cell click
   const handleCellClick = (cellId: string) => {
     console.log("Cell clicked:", cellId);
 
-    // If a piece is selected and this is a legal move, move the piece
+    // If there's a pending move and clicking the same cell, confirm the move
+    if (boardState.pendingMove === cellId && boardState.selectedPiece) {
+      onMove(boardState.selectedPiece.position, cellId);
+      setBoardState((prev) => ({
+        ...prev,
+        selectedPiece: null,
+        selectedCell: null,
+        legalMoves: [],
+        pendingMove: null,
+      }));
+      return;
+    }
+
+    // If a piece is selected and this is a legal move, set as pending
     if (boardState.selectedPiece && boardState.legalMoves.includes(cellId)) {
-      movePiece(boardState.selectedPiece, cellId);
+      setBoardState((prev) => ({
+        ...prev,
+        pendingMove: cellId,
+      }));
       return;
     }
 
     // Check if clicked cell has a piece
     const pieceAtCell = boardState.pieces.find((p) => p.position === cellId);
 
-    if (pieceAtCell && pieceAtCell !== boardState.selectedPiece) {
-      // Select this piece
-      const legalMoves = calculateLegalMoves(pieceAtCell);
-      setBoardState((prev) => ({
-        ...prev,
-        selectedPiece: pieceAtCell,
-        selectedCell: cellId,
-        legalMoves,
-      }));
-      console.log("Piece selected:", pieceAtCell, "Legal moves:", legalMoves);
+    if (pieceAtCell) {
+      // If clicking the already selected piece, deselect it
+      if (pieceAtCell === boardState.selectedPiece) {
+        setBoardState((prev) => ({
+          ...prev,
+          selectedPiece: null,
+          selectedCell: null,
+          legalMoves: [],
+          pendingMove: null,
+        }));
+      } else {
+        // Select this piece
+        const legalMoves = calculateLegalMoves(pieceAtCell);
+        setBoardState((prev) => ({
+          ...prev,
+          selectedPiece: pieceAtCell,
+          selectedCell: cellId,
+          legalMoves,
+          pendingMove: null,
+        }));
+        console.log("Piece selected:", pieceAtCell, "Legal moves:", legalMoves);
+      }
     } else {
-      // Deselect if clicking empty cell
+      // Clicking empty non-legal cell deselects everything
       setBoardState((prev) => ({
         ...prev,
         selectedPiece: null,
         selectedCell: null,
         legalMoves: [],
+        pendingMove: null,
       }));
     }
   };
 
-  // Handle piece click (delegates to cell click)
   const handlePieceClick = (piece: PieceProps) => {
     handleCellClick(piece.position);
   };
 
-  // Move piece to new position
-  const movePiece = (piece: PieceProps, targetCell: string) => {
-    console.log("Moving piece", piece, "to", targetCell);
-    onMove(piece.position, targetCell);
-    setBoardState((prev) => ({
-      ...prev,
-      selectedPiece: null,
-      selectedCell: null,
-      legalMoves: [],
-    }));
-
-    // setBoardState((prev) => ({
-    //   ...prev,
-    //   pieces: prev.pieces
-    //     .map((p) =>
-    //       p === piece
-    //         ? { ...p, position: targetCell }
-    //         : p.position === targetCell
-    //           ? { ...p, position: "" } // Capture piece
-    //           : p,
-    //     )
-    //     .filter((p) => p.position !== ""), // Remove captured pieces
-    //   selectedPiece: null,
-    //   selectedCell: null,
-    //   legalMoves: [],
-    // }));
-
-    // TODO: Send move to server
-  };
-
-  // Get fill color and stroke for cells
   const getCellStyle = (
     cellId: string,
   ): {
@@ -202,22 +181,36 @@ export default function Board({
     stroke: string;
     strokeWidth: number;
   } => {
-    if (cellId === boardState.selectedCell) {
+    // Pending move highlight (green for confirmation)
+    if (cellId === boardState.pendingMove) {
       return {
-        fill: "#FFD700", // yellow
-        fillOpacity: 0.7,
-        stroke: "#000000", // black border
+        fill: "#00FF00",
+        fillOpacity: 0.6,
+        stroke: "#00CC00",
         strokeWidth: 6,
       };
     }
-    // if (boardState.legalMoves.includes(cellId)) {
-    //   return {
-    //     fill: "#00FF00", //   green
-    //     fillOpacity: 0.45, //
-    //     stroke: "#000000", // black border
-    //     strokeWidth: 6,
-    //   };
-    // }
+    
+    // Selected piece highlight (yellow)
+    if (cellId === boardState.selectedCell) {
+      return {
+        fill: "#FFD700",
+        fillOpacity: 0.7,
+        stroke: "#000000",
+        strokeWidth: 6,
+      };
+    }
+    
+    // Legal moves highlight (light blue)
+    if (boardState.legalMoves.includes(cellId)) {
+      return {
+        fill: "#4DA6FF",
+        fillOpacity: 0.4,
+        stroke: "#000000",
+        strokeWidth: 4,
+      };
+    }
+    
     return {
       fill: "transparent",
       fillOpacity: 0,
@@ -228,7 +221,6 @@ export default function Board({
 
   return (
     <>
-      {/* SVG Board with clickable cells */}
       <svg
         viewBox="0 0 1730 1730"
         className="absolute top-[-1px] left-[0px] w-[900px] h-[900px]"
@@ -244,7 +236,7 @@ export default function Board({
               fillOpacity={style.fillOpacity}
               stroke={style.stroke}
               strokeWidth={style.strokeWidth}
-              strokeOpacity={0} //was 0.8
+              strokeOpacity={0}
               style={{ cursor: "pointer" }}
               onClick={() => handleCellClick(s.id)}
               onMouseEnter={(e) => {
@@ -270,7 +262,6 @@ export default function Board({
         })}
       </svg>
 
-      {/* Render pieces */}
       {piecesReady &&
         boardState.pieces.map((piece, idx) => {
           const center = getCellCenter(piece.position);
@@ -287,59 +278,4 @@ export default function Board({
         })}
     </>
   );
-
-  // return (
-  //     <div className="absolute top-0 left-0 w-full h-full">
-  // {/* SVG Board with clickable cells */}
-  // <svg
-  //     viewBox="0 0 1710 1710"
-  //     className="absolute top-[-10px] left-[-7px] w-[1700px] h-[1700px]"
-  // >
-  //     {spaces.map(s => {
-  //         const style = getCellStyle(s.id);
-  //         return (
-  //             <path
-  //                 key={s.id}
-  //                 id={s.id}
-  //                 d={s.d}
-  //                 fill={style.fill}
-  //                 fillOpacity={style.fillOpacity}
-  //                 stroke={style.stroke}
-  //                 strokeWidth={style.strokeWidth}
-  //                 strokeOpacity={0.8}
-  //                 style={{ cursor: 'pointer' }}
-  //                 onClick={() => handleCellClick(s.id)}
-  //                 onMouseEnter={(e) => {
-  //                     if (!boardState.selectedPiece && !boardState.legalMoves.includes(s.id)) {
-  //                         e.currentTarget.setAttribute('fill', '#f533e5ff');
-  //                         e.currentTarget.setAttribute('fill-opacity', '1');
-  //                     }
-  //                 }}
-  //                 onMouseLeave={(e) => {
-  //                     if (!boardState.selectedPiece && !boardState.legalMoves.includes(s.id)) {
-  //                         e.currentTarget.setAttribute('fill', 'transparent');
-  //                         e.currentTarget.setAttribute('fill-opacity', '0');
-  //                     }
-  //                 }}
-  //             />
-  //         );
-  //     })}
-  // </svg>
-
-  // {/* Render pieces */}
-  // {piecesReady && boardState.pieces.map((piece, idx) => {
-  //     const center = getCellCenter(piece.position);
-  //     return (
-  //         <Piece
-  //             key={`${piece.type}-${piece.color}-${idx}`}
-  //             {...piece}
-  //             x={center.x}
-  //             y={center.y}
-  //             onClick={() => handlePieceClick(piece)}
-  //             isSelected={boardState.selectedPiece === piece}
-  //         />
-  //     );
-  // })}
-  //     </div>
-  // );
 }
