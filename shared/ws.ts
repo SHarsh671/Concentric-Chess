@@ -1,4 +1,4 @@
-import { Move, Side } from "./schema";
+import { Game, Move, Side } from "./schema";
 
 export type ServerMsg =
   | {
@@ -13,7 +13,13 @@ export type ServerMsg =
     }
   | {
       type: "move";
-      data: Move;
+      data: {
+        move: Move;
+        nextMove: number;
+        lastMoveAt: string;
+        whiteTimeLeft: number | null;
+        blackTimeLeft: number | null;
+      };
     }
   | {
       type: "game_over";
@@ -25,8 +31,14 @@ export type ServerMsg =
           | "white_resign"
           | "black_resign";
       };
+    }
+  | {
+      type: "sync";
+      data: {
+        game: Game;
+        moves: Move[];
+      };
     };
-
 export type ClientMsg =
   | {
       type: "move";
@@ -41,4 +53,7 @@ export type ClientMsg =
     }
   | {
       type: "accept";
+    }
+  | {
+      type: "sync_request";
     };
