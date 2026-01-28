@@ -376,20 +376,27 @@ export class GameObject extends DurableObject<CloudflareEnv> {
             .update(schema.gamesTable)
             .set({ whiteAccepted: 1 })
             .where(t.eq(schema.gamesTable.id, game.id));
+          await this.broadcastToGame(game.id, {
+            type: "accepted",
+            data: {
+              whitePlayerId: game.whitePlayerId,
+              blackPlayerId: game.blackPlayerId,
+            },
+          });
         }
         if (socketInfo.playerId === game.blackPlayerId) {
           await this.db
             .update(schema.gamesTable)
             .set({ blackAccepted: 1 })
             .where(t.eq(schema.gamesTable.id, game.id));
+          await this.broadcastToGame(game.id, {
+            type: "accepted",
+            data: {
+              whitePlayerId: game.whitePlayerId,
+              blackPlayerId: game.blackPlayerId,
+            },
+          });
         }
-        await this.broadcastToGame(game.id, {
-          type: "accepted",
-          data: {
-            whitePlayerId: game.whitePlayerId,
-            blackPlayerId: game.blackPlayerId,
-          },
-        });
         break;
       case "sync_request":
         const moves = await getMovesForGame(this.db, game.id);

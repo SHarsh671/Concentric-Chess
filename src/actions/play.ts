@@ -179,7 +179,7 @@ export async function play(_prevState: PlayState | null, formData: FormData) {
           const res = await fetch(
             process.env.NODE_ENV === "development"
               ? `http://localhost:8787/do/games/${waitingGame.id}/accept`
-              : `https://your-production-domain.com/do/games/${waitingGame.id}/accept`,
+              : `https://capstone.mrvillage.dev/do/games/${waitingGame.id}/accept`,
             {
               method: "POST",
               headers: {
