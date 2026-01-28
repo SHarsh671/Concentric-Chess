@@ -1,0 +1,24 @@
+Date: January 16 @ 10:30am
+Agenda:
+- Check in on progress since last meeting (concentric chess and design document).
+
+Attendees:
+- Josef
+- Carter
+Absent:
+- Roland
+- Harshmeet
+- Harkirat
+- Sparsh
+- Skyler
+
+Discussion:
+- Checked in on progress since last meeting:
+  Josef - set up design document layout, completed sections 3 and 4.
+  Carter - completed sidebar.
+- Tasks for next meeting:
+  Josef - draw and resignation backend, fix double connect (and random disconnect) WebSocket issue, update GitHub project board, register for Capstone Expo.
+  Carter - UI stuff (section 7).
+- Had to reschedule meeting with prof to January 12 @ 9:15-9:30am.
+
+Next Meeting: Friday, January 23 @ 10:30am
