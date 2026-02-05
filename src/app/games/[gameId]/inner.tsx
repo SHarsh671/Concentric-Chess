@@ -254,6 +254,15 @@ export default function GamePage({
             <li>Click the destination again (green highlight) to confirm the move</li>
           </ol>
         </div>
+
+        <Button
+          onClick={() => setShowRules(true)}
+          variant="outline"
+          className="flex items-center gap-2 bg-indigo-50 hover:bg-indigo-100 border-indigo-300 text-indigo-700 mt-4"
+        >
+          <HelpCircle size={20} />
+          Rules
+        </Button>
       </div>
 
       <RulesDialog isOpen={showRules} onClose={() => setShowRules(false)} />
