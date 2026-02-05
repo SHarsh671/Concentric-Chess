@@ -33,6 +33,13 @@ export type ServerMsg =
         };
     }
     | {
+        type: "draw_offer";
+        data: {
+            whiteDrawOffer: number;
+            blackDrawOffer: number;
+        }
+    }
+    | {
         type: "sync";
         data: {
             game: Game;
@@ -49,13 +56,13 @@ export type ClientMsg =
         };
     }
     | {
-        type: "resign";
-    }
-    | {
         type: "accept";
     }
     | {
         type: "sync_request";
+    }
+    | {
+        type: "resign";
     }
     | {
         type: "draw";

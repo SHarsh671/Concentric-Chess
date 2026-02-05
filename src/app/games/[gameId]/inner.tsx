@@ -38,10 +38,11 @@ export default function GamePage({
   };
 
   useEffect(() => {
+    console.log("Game updated:", game);
     gameRef.current = game;
   }, [game]);
   useEffect(() => {
-    ws.connect(game.id);
+    ws.connect(game.id, true);
     ws.setListener((message) => {
       switch (message.type) {
         case "move":
@@ -56,6 +57,7 @@ export default function GamePage({
               setMoves((prevMoves) => {
                 return [...prevMoves, move];
               });
+              console.log("Move received:", move);
               setGame((prevGame) => ({
                 ...prevGame,
                 nextMove: message.data.nextMove,
@@ -68,6 +70,7 @@ export default function GamePage({
           break;
         case "aborted":
           {
+            console.log("Game aborted");
             setGame((prevGame) => ({
               ...prevGame,
               status: "aborted",
@@ -77,6 +80,7 @@ export default function GamePage({
           break;
         case "accepted":
           {
+            console.log("Game accepted");
             setGame((prevGame) => {
               return {
                 ...prevGame,
@@ -90,6 +94,7 @@ export default function GamePage({
           break;
         case "game_over":
           {
+            console.log("Game over:", message.data.result);
             setGame((prevGame) => ({
               ...prevGame,
               status: message.data.result,
@@ -97,9 +102,14 @@ export default function GamePage({
           }
           break;
         case "sync": {
+          console.log("Syncing game state");
           setGame(message.data.game);
           setMoves(message.data.moves);
           break;
+        }
+        case "draw_offer": {
+          console.log("Draw offer updated");
+          setGame((game) => ({ ...game, ...message.data }));
         }
       }
     });
