@@ -313,6 +313,9 @@ export class GameObject extends DurableObject<CloudflareEnv> {
                 console.log("No piece at from position");
                 return;
               }
+              if ((piece.color == "wht" && turn == "black") || (piece.color == "blk" && turn == "white")) {
+                return;
+              }
               const pseudoLegalMoves = generatePseudoLegalMovesForPiece(
                 piece,
                 pieces,

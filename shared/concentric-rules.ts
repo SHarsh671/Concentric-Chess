@@ -329,8 +329,8 @@ export function computePieceState(moves: Move[]): RulesPiece[] {
   const pieces: RulesPiece[] = initialPieces.map((p) => ({ ...p }));
 
   for (const move of moves) {
-    const from = move.from_square as CellId;
-    const to = move.to_square as CellId;
+    const from = move.fromSquare as CellId;
+    const to = move.toSquare as CellId;
 
     const piece = pieces.find((p) => p.position === from);
     if (!piece) continue;
