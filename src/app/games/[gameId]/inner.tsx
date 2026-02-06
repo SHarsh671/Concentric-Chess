@@ -220,7 +220,7 @@ export default function GamePage({
       <div className="relative w-[30%] h-[70%] top-[15%] left-1/36 border-2">
         <div className="flex w-full h-1/5">
           <div className="relative w-1/3 h-1/2 top-1/4 left-1/18 border-gray-400 border-2 rounded-2xl bg-gray-200 text-center text-[37px] text-black overflow-auto"><Timer timeLeft={timer[0]}></Timer></div>
-          <div className="relative w-1/3 h-1/2 top-1/4 left-5/18 border-gray-800 border-2 rounded-2xl bg-gray-600 text-center text-[37px] text-white font-mono overflow-auto"><Timer timeLeft={timer[1]}/></div>
+          <div className="relative w-1/3 h-1/2 top-1/4 left-5/18 border-gray-800 border-2 rounded-2xl bg-gray-600 text-center text-[37px] text-white overflow-auto"><Timer timeLeft={timer[1]}/></div>
         </div>
         <div className="relative flex flex-col-reverse w-18/20 mx-auto h-3/5 border-2 columns-1 overflow-y-auto">
           {moves.toReversed().map((m) => {
