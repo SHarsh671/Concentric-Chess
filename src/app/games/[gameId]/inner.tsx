@@ -7,6 +7,8 @@ import { Game, Move } from "shared";
 import "client-only";
 import Board from "@/components/piece/board";
 import Image from "next/image";
+import RulesDialog from "@/components/piece/rules-dialog";
+import { HelpCircle } from "lucide-react";
 
 export default function GamePage({
   game: initialGame,
@@ -17,10 +19,11 @@ export default function GamePage({
   moves: Move[];
   playerId: string | undefined;
 }) {
-  // TODO: need to branch early if the game is deleted or completed (should not connect the websocket)
   const [game, setGame] = useState(initialGame);
   const ws = GameSocket.get();
   const [moves, setMoves] = useState(initialMoves);
+  const [showRules, setShowRules] = useState(false);
+  
   const gameRef = useRef(game);
   const onMove = (from: string, to: string) => {
     console.log("Sending move:", { from, to });
@@ -33,6 +36,7 @@ export default function GamePage({
       },
     });
   };
+  
   useEffect(() => {
     gameRef.current = game;
   }, [game]);
@@ -177,6 +181,7 @@ export default function GamePage({
   if (game.whiteAccepted === 0 || game.blackAccepted === 0) {
     return <>Waiting for opponent to accept the game...</>;
   }
+  
   return (
     <div className="flex w-full">
       <div>
@@ -235,6 +240,17 @@ export default function GamePage({
           <Button className="relative w-2/5 h-1/2 top-1/4 left-4/30 border-orange-400 border-2 rounded-2xl bg-orange-300 text-center text-5xl text-gray-100 overflow-auto" onClick={() => ws.send({ type: "resign" })}>Resign</Button>
         </div>
       </div>
+
+      <div className="bg-blue-50 border-2 border-blue-300 rounded-lg p-4 max-w-[900px] text-sm text-blue-800">
+        <p className="font-semibold mb-1">💡 How to move:</p>
+        <ol className="list-decimal list-inside space-y-1">
+          <li>Click a piece to select it (yellow highlight)</li>
+          <li>Click a legal destination cell (blue highlight)</li>
+          <li>Click the destination again (green highlight) to confirm the move</li>
+        </ol>
+      </div>
+
+      <RulesDialog isOpen={showRules} onClose={() => setShowRules(false)} />
     </div>
   );
 }

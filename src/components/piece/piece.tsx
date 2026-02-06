@@ -20,39 +20,22 @@ export default function Piece({
   isSelected,
   position,
 }: PieceProps) {
-  return (
-    <>
-      <Image
-        src={`/pieces/${type}-${color}.png`}
-        alt={`${color} ${type}`}
-        width={64}
-        height={64}
-        className={`absolute pointer-events-none size-piece ${position} cursor-pointer`}
-        draggable={false}
-        style={{
-          // transform: 'translate(-50%, -50%)',
-          zIndex: 10,
-          filter: isSelected ? "drop-shadow(0 0 10px yellow)" : "none",
-          scale: isSelected ? "1.1" : "1",
-        }}
-        onClick={(e) => {
-          e.stopPropagation();
-          onClick?.();
-        }}
-      />
-    </>
-  );
+  // Scale factor to match the 900px board size
+  const scaleFactor = 900 / 1730;
+  const scaledX = x * scaleFactor;
+  const scaledY = y * scaleFactor;
 
   return (
     <div
-      className="absolute pointer-events-auto cursor-pointer transition-all duration-200"
+      className="absolute cursor-pointer transition-all duration-200"
       style={{
-        left: `${x}px`,
-        top: `${y}px`,
-        transform: "translate(-50%, -50%)",
+        left: `${scaledX}px`,
+        top: `${scaledY}px`,
+        transform: 'translate(-50%, -50%)',
         zIndex: 10,
         filter: isSelected ? "drop-shadow(0 0 10px yellow)" : "none",
         scale: isSelected ? "1.1" : "1",
+        pointerEvents: 'auto',
       }}
       onClick={(e) => {
         e.stopPropagation();
@@ -62,8 +45,8 @@ export default function Piece({
       <Image
         src={`/pieces/${type}-${color}.png`}
         alt={`${color} ${type}`}
-        width={40}
-        height={40}
+        width={64}
+        height={64}
         className="pointer-events-none"
         draggable={false}
       />
