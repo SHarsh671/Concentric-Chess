@@ -1,6 +1,18 @@
 // shared/concentric-rules.ts
+//
+// Concentric Circle Chess rules engine (graph-based).
+//
+// IMPORTANT:
+// - This file is imported by BOTH the Next.js frontend and the Cloudflare worker.
+// - Do not use DOM APIs here.
+// - Do not import UI components here.
+//
+// Design:
+// - Board topology + semantics live in shared/concentric-graph.ts (single source of truth).
+// - This file only implements movement rules on top of that graph.
 
-import { VALID_GRID, isValidCell } from "./concentric-grid";
+import { CONCENTRIC_GRAPH, CELL_TAGS, CellId as GraphCellId, CellTag } from "./concentric-graph";
+import { Move } from "./schema";
 
 export type Side = "wht" | "blk";
 
@@ -13,7 +25,7 @@ export type PieceType =
   | "prince"
   | "pawn";
 
-export type CellId = string; // e.g. "r7c4"
+export type CellId = GraphCellId;
 
 export interface RulesPiece {
   type: PieceType;
@@ -21,239 +33,322 @@ export interface RulesPiece {
   position: CellId;
 }
 
+function pieceAt(pieces: RulesPiece[], cell: CellId): RulesPiece | undefined {
+  return pieces.find((p) => p.position === cell);
+}
+
+function isEnemy(occ: RulesPiece | undefined, color: Side): boolean {
+  return !!occ && occ.color !== color;
+}
+
+function hasTag(cell: CellId, tag: CellTag): boolean {
+  return CELL_TAGS[cell]?.includes(tag) ?? false;
+}
+
 function parseCell(cell: CellId): { r: number; c: number } {
-  const rMatch = cell.match(/r(\d+)/);
-  const cMatch = cell.match(/c(\d+)/);
-  if (!rMatch || !cMatch) {
-    throw new Error(`Invalid cell id: ${cell}`);
-  }
-  return {
-    r: parseInt(rMatch[1], 10),
-    c: parseInt(cMatch[1], 10),
-  };
-}
-
-function makeCell(r: number, c: number): CellId {
-  return `r${r}c${c}`;
-}
-
-function cellOccupied(
-  pieces: RulesPiece[],
-  r: number,
-  c: number
-): RulesPiece | undefined {
-  if (!isValidCell(r, c)) return undefined;
-  const id = makeCell(r, c);
-  return pieces.find((p) => p.position === id);
+  const m = cell.match(/^r(\d+)c(\d+)$/);
+  if (!m) throw new Error(`Invalid cell id: ${cell}`);
+  return { r: Number(m[1]), c: Number(m[2]) };
 }
 
 /* -------------------------------------------------------
-   BASIC MOVE HELPERS
+   KING / PRINCE
 -------------------------------------------------------- */
 
-function addStepIfFreeOrCapture(
-  moves: CellId[],
-  pieces: RulesPiece[],
-  from: { r: number; c: number },
-  dr: number,
-  dc: number,
-  color: Side
-) {
-  const r = from.r + dr;
-  const c = from.c + dc;
-  if (!isValidCell(r, c)) return;
-  const occ = cellOccupied(pieces, r, c);
-  if (!occ || occ.color !== color) {
-    moves.push(makeCell(r, c));
+function kingStepMoves(pieces: RulesPiece[], from: CellId, color: Side): CellId[] {
+  const nbrs = new Set<CellId>([
+    ...CONCENTRIC_GRAPH.edgeNbrs[from],
+    ...CONCENTRIC_GRAPH.vertexNbrs[from],
+  ]);
+  const out: CellId[] = [];
+  for (const to of nbrs) {
+    const occ = pieceAt(pieces, to);
+    if (!occ || isEnemy(occ, color)) out.push(to);
   }
+  return out;
 }
 
-function rayMoves(
+function kingMoves(pieces: RulesPiece[], from: CellId, color: Side): CellId[] {
+  // NOTE: We currently implement the king's 1-step movement.
+  // The ruleset includes a special first-move 2-cell option; that can be layered later
+  // once we implement check detection and "intermediary cell not threatened" logic.
+  return kingStepMoves(pieces, from, color);
+}
+
+function princeMoves(pieces: RulesPiece[], from: CellId, color: Side): CellId[] {
+  // Prince moves like a king (not subject to check rules elsewhere).
+  return kingStepMoves(pieces, from, color);
+}
+
+/* -------------------------------------------------------
+   RAY HELPERS (ROOK/BISHOP/QUEEN)
+-------------------------------------------------------- */
+
+function rayFrom(
   pieces: RulesPiece[],
-  from: { r: number; c: number },
-  directions: Array<[number, number]>,
-  color: Side
+  prev: CellId,
+  first: CellId,
+  color: Side,
+  nextMap: Record<CellId, Record<CellId, CellId | null>>,
 ): CellId[] {
-  const moves: CellId[] = [];
-  for (const [dr, dc] of directions) {
-    let r = from.r + dr;
-    let c = from.c + dc;
-    while (isValidCell(r, c)) {
-      const occ = cellOccupied(pieces, r, c);
-      const id = makeCell(r, c);
-      if (occ) {
-        if (occ.color !== color) moves.push(id);
-        break;
-      } else {
-        moves.push(id);
+  const out: CellId[] = [];
+  let p = prev;
+  let cur = first;
+
+  while (true) {
+    const occ = pieceAt(pieces, cur);
+    if (!occ) {
+      out.push(cur);
+    } else {
+      if (isEnemy(occ, color)) out.push(cur);
+      break;
+    }
+    const nxt = nextMap[cur]?.[p] ?? null;
+    if (!nxt) break;
+
+    // loop guard
+    if (nxt === prev) break;
+
+    p = cur;
+    cur = nxt;
+  }
+
+  return out;
+}
+
+function rookMoves(pieces: RulesPiece[], from: CellId, color: Side): CellId[] {
+  const out: CellId[] = [];
+  for (const first of CONCENTRIC_GRAPH.edgeNbrs[from]) {
+    out.push(...rayFrom(pieces, from, first, color, CONCENTRIC_GRAPH.edgeNext));
+  }
+  return Array.from(new Set(out));
+}
+
+function bishopMoves(pieces: RulesPiece[], from: CellId, color: Side): CellId[] {
+  const out = new Set<CellId>();
+
+  const isHinge = (cell: CellId) =>
+    hasTag(cell, "crescent") || hasTag(cell, "halfMoon") || hasTag(cell, "twin");
+
+  for (const first of CONCENTRIC_GRAPH.vertexNbrs[from]) {
+    const ray = rayFrom(pieces, from, first, color, CONCENTRIC_GRAPH.vertexNext);
+    for (const sq of ray) out.add(sq);
+
+    // Bishop "swing": if we pass through a hinge cell, allow branching once from that hinge.
+    // We implement this as: whenever we reach a hinge along a diagonal ray (before being blocked),
+    // add rays starting in any other diagonal direction from that hinge.
+    let prev = from;
+    let cur = first;
+
+    while (true) {
+      const occ = pieceAt(pieces, cur);
+      const blocked = !!occ;
+
+      if (isHinge(cur)) {
+        for (const altFirst of CONCENTRIC_GRAPH.vertexNbrs[cur]) {
+          if (altFirst === prev) continue;
+          const branch = rayFrom(pieces, cur, altFirst, color, CONCENTRIC_GRAPH.vertexNext);
+          for (const sq of branch) out.add(sq);
+        }
       }
-      r += dr;
-      c += dc;
+
+      if (blocked) break;
+      const next = CONCENTRIC_GRAPH.vertexNext[cur]?.[prev] ?? null;
+      if (!next || next === from) break;
+      prev = cur;
+      cur = next;
     }
   }
-  return moves;
+
+  return Array.from(out);
+}
+
+function queenMoves(pieces: RulesPiece[], from: CellId, color: Side): CellId[] {
+  return Array.from(new Set<CellId>([
+    ...rookMoves(pieces, from, color),
+    ...bishopMoves(pieces, from, color),
+  ]));
 }
 
 /* -------------------------------------------------------
-   PIECE MOVE GENERATION (INITIAL VERSION)
-   - No check / checkmate
-   - No bishop swinging
-   - No Berolina mode
+   KNIGHT
 -------------------------------------------------------- */
 
-function kingLikeMoves(
-  pieces: RulesPiece[],
-  from: CellId,
-  color: Side
-): CellId[] {
-  const { r, c } = parseCell(from);
-  const moves: CellId[] = [];
-  for (let dr = -1; dr <= 1; dr++) {
-    for (let dc = -1; dc <= 1; dc++) {
-      if (dr === 0 && dc === 0) continue;
-      addStepIfFreeOrCapture(moves, pieces, { r, c }, dr, dc, color);
+// Knight: edge->vertex OR vertex->edge (excluding backtracking).
+function knightMoves(pieces: RulesPiece[], from: CellId, color: Side): CellId[] {
+  const out = new Set<CellId>();
+  const add = (to: CellId) => {
+    const occ = pieceAt(pieces, to);
+    if (!occ || isEnemy(occ, color)) out.add(to);
+  };
+
+  for (const e1 of CONCENTRIC_GRAPH.edgeNbrs[from]) {
+    for (const v2 of CONCENTRIC_GRAPH.vertexNbrs[e1]) {
+      if (v2 === from) continue;
+      add(v2);
     }
   }
-  return moves;
-}
-
-function rookMoves(
-  pieces: RulesPiece[],
-  from: CellId,
-  color: Side
-): CellId[] {
-  const pos = parseCell(from);
-  // Edge neighbours: same row / same column
-  const dirs: Array<[number, number]> = [
-    [1, 0],  // up the board (towards higher row index)
-    [-1, 0], // down the board
-    [0, 1],  // right
-    [0, -1], // left
-  ];
-  return rayMoves(pieces, pos, dirs, color);
-}
-
-function bishopMoves(
-  pieces: RulesPiece[],
-  from: CellId,
-  color: Side
-): CellId[] {
-  const pos = parseCell(from);
-  // Vertex neighbours: diagonals
-  const dirs: Array<[number, number]> = [
-    [1, 1],
-    [1, -1],
-    [-1, 1],
-    [-1, -1],
-  ];
-  return rayMoves(pieces, pos, dirs, color);
-}
-
-function knightMoves(
-  pieces: RulesPiece[],
-  from: CellId,
-  color: Side
-): CellId[] {
-  const { r, c } = parseCell(from);
-  const moves: CellId[] = [];
-  const jumps: Array<[number, number]> = [
-    [2, 1],
-    [2, -1],
-    [-2, 1],
-    [-2, -1],
-    [1, 2],
-    [1, -2],
-    [-1, 2],
-    [-1, -2],
-  ];
-  for (const [dr, dc] of jumps) {
-    const rr = r + dr;
-    const cc = c + dc;
-    if (!isValidCell(rr, cc)) continue;
-    const occ = cellOccupied(pieces, rr, cc);
-    if (!occ || occ.color !== color) {
-      moves.push(makeCell(rr, cc));
-    }
-  }
-  return moves;
-}
-
-function pawnMoves(
-  pieces: RulesPiece[],
-  from: CellId,
-  color: Side
-): CellId[] {
-  const { r, c } = parseCell(from);
-  const moves: CellId[] = [];
-
-  // white moves r + 1, black moves r - 1.
-  const forward = color === "wht" ? 1 : -1;
-
-  // 1-step forward (non-capturing)
-  const fr = r + forward;
-  if (isValidCell(fr, c) && !cellOccupied(pieces, fr, c)) {
-    moves.push(makeCell(fr, c));
-  }
-
-  // Diagonal captures
-  for (const dc of [-1, 1]) {
-    const rr = r + forward;
-    const cc = c + dc;
-    if (!isValidCell(rr, cc)) continue;
-    const occ = cellOccupied(pieces, rr, cc);
-    if (occ && occ.color !== color) {
-      moves.push(makeCell(rr, cc));
+  for (const v1 of CONCENTRIC_GRAPH.vertexNbrs[from]) {
+    for (const e2 of CONCENTRIC_GRAPH.edgeNbrs[v1]) {
+      if (e2 === from) continue;
+      add(e2);
     }
   }
 
-  // (No 2-step first move yet, no Berolina mode yet)
-  return moves;
+  return Array.from(out);
+}
+
+/* -------------------------------------------------------
+   PAWNS (Berolina on crescents/half-moons)
+-------------------------------------------------------- */
+
+function forwardRowDelta(color: Side): number {
+  // White starts near r1 and moves toward increasing row index (towards r12).
+  return color === "wht" ? +1 : -1;
+}
+
+function forwardEdgeTargets(from: CellId, color: Side): CellId[] {
+  const { r: r0 } = parseCell(from);
+  const dr = forwardRowDelta(color);
+  return CONCENTRIC_GRAPH.edgeNbrs[from].filter((to) => parseCell(to).r === r0 + dr);
+}
+
+function forwardVertexTargets(from: CellId, color: Side): CellId[] {
+  const { r: r0 } = parseCell(from);
+  const dr = forwardRowDelta(color);
+  return CONCENTRIC_GRAPH.vertexNbrs[from].filter((to) => parseCell(to).r === r0 + dr);
+}
+
+function pawnMoves(pieces: RulesPiece[], from: CellId, color: Side): CellId[] {
+  const out: CellId[] = [];
+
+  const berolina = hasTag(from, "crescent") || hasTag(from, "halfMoon");
+
+  // Normal pawn: forward=edge, capture=vertex
+  // Berolina pawn: forward=vertex, capture=edge
+  const forward = berolina ? forwardVertexTargets(from, color) : forwardEdgeTargets(from, color);
+  const captures = berolina ? forwardEdgeTargets(from, color) : forwardVertexTargets(from, color);
+
+  // Forward (non-capture)
+  for (const to of forward) {
+    if (!pieceAt(pieces, to)) out.push(to);
+  }
+
+  // 2-step initial move (kept consistent with current debug start rows)
+  const { r } = parseCell(from);
+  const startRow = color === "wht" ? 4 : 9;
+  if (r === startRow) {
+    for (const step1 of forward) {
+      if (pieceAt(pieces, step1)) continue;
+      const step2s = berolina ? forwardVertexTargets(step1, color) : forwardEdgeTargets(step1, color);
+      for (const step2 of step2s) {
+        if (!pieceAt(pieces, step2)) out.push(step2);
+      }
+    }
+  }
+
+  // Captures
+  for (const to of captures) {
+    const occ = pieceAt(pieces, to);
+    if (occ && isEnemy(occ, color)) out.push(to);
+  }
+
+  return Array.from(new Set(out));
 }
 
 /* -------------------------------------------------------
    PUBLIC API
 -------------------------------------------------------- */
 
-/**
- * Generate pseudo-legal moves for a single piece on the given board.
- *
- * - Uses only movement rules (no check/checkmate yet).
- * - Uses rNcM grid and VALID_GRID.
- */
 export function generatePseudoLegalMovesForPiece(
   piece: RulesPiece,
-  allPieces: RulesPiece[]
+  allPieces: RulesPiece[],
 ): CellId[] {
   const { type, color, position } = piece;
 
   switch (type) {
     case "king":
-      return kingLikeMoves(allPieces, position, color);
-
+      return kingMoves(allPieces, position, color);
     case "prince":
-      // Initial engine: prince moves like a king
-      // (no 2-step forward yet, no special first-move logic)
-      return kingLikeMoves(allPieces, position, color);
-
+      return princeMoves(allPieces, position, color);
+    case "queen":
+      return queenMoves(allPieces, position, color);
     case "rook":
       return rookMoves(allPieces, position, color);
-
     case "bishop":
       return bishopMoves(allPieces, position, color);
-
-    case "queen":
-      return [
-        ...rookMoves(allPieces, position, color),
-        ...bishopMoves(allPieces, position, color),
-      ];
-
     case "knight":
       return knightMoves(allPieces, position, color);
-
     case "pawn":
       return pawnMoves(allPieces, position, color);
-
     default:
       return [];
   }
+}
+
+export const initialPieces: RulesPiece[] = [
+  // White pieces
+  { type: "rook", color: "wht", position: "r1c1" },
+  { type: "queen", color: "wht", position: "r2c1" },
+  { type: "rook", color: "wht", position: "r2c2" },
+  { type: "king", color: "wht", position: "r2c3" },
+  { type: "knight", color: "wht", position: "r3c1" },
+  { type: "bishop", color: "wht", position: "r3c2" },
+  { type: "prince", color: "wht", position: "r3c3" },
+  { type: "bishop", color: "wht", position: "r3c4" },
+  { type: "knight", color: "wht", position: "r3c5" },
+  { type: "pawn", color: "wht", position: "r4c1" },
+  { type: "pawn", color: "wht", position: "r4c2" },
+  { type: "pawn", color: "wht", position: "r4c3" },
+  { type: "pawn", color: "wht", position: "r4c4" },
+  { type: "pawn", color: "wht", position: "r4c5" },
+  { type: "pawn", color: "wht", position: "r4c6" },
+  { type: "pawn", color: "wht", position: "r4c7" },
+
+  // Black pieces
+  { type: "rook", color: "blk", position: "r12c1" },
+  { type: "queen", color: "blk", position: "r11c1" },
+  { type: "rook", color: "blk", position: "r11c2" },
+  { type: "king", color: "blk", position: "r11c3" },
+  { type: "knight", color: "blk", position: "r10c1" },
+  { type: "bishop", color: "blk", position: "r10c2" },
+  { type: "prince", color: "blk", position: "r10c3" },
+  { type: "bishop", color: "blk", position: "r10c4" },
+  { type: "knight", color: "blk", position: "r10c5" },
+  { type: "pawn", color: "blk", position: "r9c1" },
+  { type: "pawn", color: "blk", position: "r9c2" },
+  { type: "pawn", color: "blk", position: "r9c3" },
+  { type: "pawn", color: "blk", position: "r9c4" },
+  { type: "pawn", color: "blk", position: "r9c5" },
+  { type: "pawn", color: "blk", position: "r9c6" },
+  { type: "pawn", color: "blk", position: "r9c7" },
+];
+
+export function computePieceState(moves: Move[]): RulesPiece[] {
+  // deep copy
+  const pieces: RulesPiece[] = initialPieces.map((p) => ({ ...p }));
+
+  for (const move of moves) {
+    const from = move.from_square as CellId;
+    const to = move.to_square as CellId;
+
+    const piece = pieces.find((p) => p.position === from);
+    if (!piece) continue;
+
+    // capture
+    const capturedIndex = pieces.findIndex((p) => p.position === to);
+    if (capturedIndex !== -1) {
+      pieces.splice(capturedIndex, 1);
+    }
+
+    // move
+    piece.position = to;
+
+    // promotion
+    if (move.promotion) {
+      piece.type = move.promotion as PieceType;
+    }
+  }
+
+  return pieces;
 }
