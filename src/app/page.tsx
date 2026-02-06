@@ -10,7 +10,7 @@ export default function Home() {
       {/* Hero Section */}
       <section className="relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-b from-orange-500/10 to-transparent" />
-        
+
         <div className="container mx-auto px-4 py-20 lg:py-32">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             {/* Left: Text Content */}
@@ -20,18 +20,16 @@ export default function Home() {
                   Historic Chess Variants Online
                 </span>
               </div>
-              
+
               <h1 className="text-5xl lg:text-7xl font-bold leading-tight">
                 Play Chess on a{" "}
                 <span className="text-orange-500">Circular Board</span>
               </h1>
-              
+
               <p className="text-xl text-slate-300 leading-relaxed">
-                Experience two centuries-old chess variants featuring unique pieces, 
-                circular boards, and new strategic possibilities. Challenge friends or 
-                play online against players worldwide.
+                  Featuring two original variants, Concentric Chess and Archimedes Spiral Chess, designed within the last year for modern online play.
               </p>
-              
+
               <div className="flex flex-wrap gap-4 pt-4">
                 <Button asChild size="lg" className="bg-orange-500 hover:bg-orange-600 text-white text-lg px-8 py-6">
                   <Link href="/play">
@@ -39,7 +37,7 @@ export default function Home() {
                     Play Now
                   </Link>
                 </Button>
-                
+
                 <Button asChild size="lg" variant="outline" className="bg-white text-slate-900 border-white hover:bg-slate-100 text-lg px-8 py-6">
                   <Link href="/rules">
                     <BookOpen className="mr-2 h-5 w-5" />
@@ -47,7 +45,7 @@ export default function Home() {
                   </Link>
                 </Button>
               </div>
-              
+
               <div className="flex gap-8 pt-6 text-sm text-slate-400">
                 <div>
                   <div className="text-2xl font-bold text-white">72</div>
@@ -63,7 +61,7 @@ export default function Home() {
                 </div>
               </div>
             </div>
-            
+
             {/* Right: Board Image */}
             <div className="relative">
               <div className="absolute inset-0 bg-orange-500/20 blur-3xl rounded-full" />
@@ -90,10 +88,10 @@ export default function Home() {
               Why Play Concentric Chess?
             </h2>
             <p className="text-xl text-slate-400 max-w-2xl mx-auto">
-              Discover what makes these historic variants unique and challenging
+              Discover what makes these original variants unique and challenging
             </p>
           </div>
-          
+
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
             {/* Feature 1 */}
             <Card className="bg-slate-800/50 border-slate-700 hover:border-orange-500/50 transition-colors">
@@ -107,7 +105,7 @@ export default function Home() {
                 </p>
               </CardContent>
             </Card>
-            
+
             {/* Feature 2 */}
             <Card className="bg-slate-800/50 border-slate-700 hover:border-orange-500/50 transition-colors">
               <CardContent className="p-6 text-center space-y-4">
@@ -116,11 +114,11 @@ export default function Home() {
                 </div>
                 <h3 className="text-xl font-bold text-white">Special Pieces</h3>
                 <p className="text-slate-400">
-                  Prince pieces immune to check, Berolina pawns with diagonal movement, and the King's initial leap
+                  Prince pieces immune to check, Berolina pawns with diagonal movement, and the King&apos;s initial leap
                 </p>
               </CardContent>
             </Card>
-            
+
             {/* Feature 3 */}
             <Card className="bg-slate-800/50 border-slate-700 hover:border-orange-500/50 transition-colors">
               <CardContent className="p-6 text-center space-y-4">
@@ -133,16 +131,16 @@ export default function Home() {
                 </p>
               </CardContent>
             </Card>
-            
+
             {/* Feature 4 */}
             <Card className="bg-slate-800/50 border-slate-700 hover:border-orange-500/50 transition-colors">
               <CardContent className="p-6 text-center space-y-4">
                 <div className="w-16 h-16 bg-purple-500/20 rounded-full flex items-center justify-center mx-auto">
                   <BookOpen className="h-8 w-8 text-purple-500" />
                 </div>
-                <h3 className="text-xl font-bold text-white">Historic Variants</h3>
+                <h3 className="text-xl font-bold text-white">Original Variants</h3>
                 <p className="text-slate-400">
-                  Based on centuries-old Concentric Chess and Archimedes Spiral Chess—now available for modern online play
+                  Based on Original Concentric Chess and Archimedes Spiral Chess, now available for online play
                 </p>
               </CardContent>
             </Card>
@@ -161,7 +159,7 @@ export default function Home() {
               Two unique chess variants, each with their own strategic depth
             </p>
           </div>
-          
+
           <div className="grid lg:grid-cols-2 gap-8 max-w-6xl mx-auto">
             {/* Concentric Chess */}
             <Card className="bg-slate-800/50 border-slate-700 overflow-hidden hover:border-orange-500/50 transition-all hover:scale-105">
@@ -178,7 +176,7 @@ export default function Home() {
                 <div className="p-6 space-y-4">
                   <h3 className="text-2xl font-bold text-white">Concentric Chess</h3>
                   <p className="text-slate-400">
-                    Classic circular board with 72 cells arranged in concentric rings. 
+                    Classic circular board with 72 cells arranged in concentric rings.
                     Features crescents, half-moons, and twin cells that create unique movement patterns.
                   </p>
                   <Button asChild className="w-full bg-orange-500 hover:bg-orange-600 text-white">
@@ -189,7 +187,7 @@ export default function Home() {
                 </div>
               </CardContent>
             </Card>
-            
+
             {/* Archimedes Chess */}
             <Card className="bg-slate-800/50 border-slate-700 overflow-hidden hover:border-blue-500/50 transition-all hover:scale-105">
               <CardContent className="p-0">
@@ -205,7 +203,7 @@ export default function Home() {
                 <div className="p-6 space-y-4">
                   <h3 className="text-2xl font-bold text-white">Archimedes Spiral Chess</h3>
                   <p className="text-slate-400">
-                    Spiral board layout with unique geometry. Based on the Archimedes spiral, 
+                    Spiral board layout with unique geometry. Based on the Archimedes spiral,
                     offering even more complex strategic possibilities.
                   </p>
                   <Button asChild className="w-full bg-slate-600 hover:bg-slate-700 text-white" disabled>
@@ -231,7 +229,7 @@ export default function Home() {
               Start playing in under a minute
             </p>
           </div>
-          
+
           <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
             {/* Step 1 */}
             <div className="text-center space-y-4">
@@ -243,7 +241,7 @@ export default function Home() {
                 Sign up in seconds with email or play as a guest
               </p>
             </div>
-            
+
             {/* Step 2 */}
             <div className="text-center space-y-4">
               <div className="w-20 h-20 bg-orange-500 rounded-full flex items-center justify-center mx-auto text-3xl font-bold text-white">
@@ -254,7 +252,7 @@ export default function Home() {
                 Play locally, invite a friend, or join matchmaking
               </p>
             </div>
-            
+
             {/* Step 3 */}
             <div className="text-center space-y-4">
               <div className="w-20 h-20 bg-orange-500 rounded-full flex items-center justify-center mx-auto text-3xl font-bold text-white">
@@ -272,23 +270,23 @@ export default function Home() {
       {/* Final CTA Section */}
       <section className="py-32 relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-t from-orange-500/10 to-transparent" />
-        
+
         <div className="container mx-auto px-4 text-center relative z-10">
           <h2 className="text-4xl lg:text-6xl font-bold text-white mb-6">
             Ready to Experience Chess<br />Like Never Before?
           </h2>
           <p className="text-xl text-slate-300 mb-10 max-w-2xl mx-auto">
-            Join players discovering new strategies on circular boards. 
+            Join players discovering new strategies on circular boards.
             Free to play, endless possibilities.
           </p>
-          
+
           <div className="flex flex-wrap gap-4 justify-center">
             <Button asChild size="lg" className="bg-orange-500 hover:bg-orange-600 text-white text-lg px-10 py-7">
               <Link href="/signup">
                 Sign Up Free
               </Link>
             </Button>
-            
+
             <Button asChild size="lg" variant="outline" className="bg-white text-slate-900 border-white hover:bg-slate-100 text-lg px-10 py-7">
               <Link href="/play">
                 Play as Guest

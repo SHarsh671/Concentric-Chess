@@ -1,4 +1,4 @@
-Date: January 16 @ 10:30am
+Date: January 23 @ 10:30am
 Agenda:
 - Check in on progress since last meeting (concentric chess and design document).
 

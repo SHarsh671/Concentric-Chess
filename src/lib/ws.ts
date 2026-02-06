@@ -8,6 +8,11 @@ export class GameSocket {
   private socket: WebSocket | null = null;
   private gameId: string | null = null;
   private listener: ((message: ServerMsg) => void) | null = null;
+  private rand: number;
+
+  constructor() {
+    this.rand = Math.random();
+  }
 
   public static get(): GameSocket {
     if (this.instance === null) {
@@ -16,18 +21,22 @@ export class GameSocket {
     return this.instance;
   }
 
-  public connect(gameId: string | null) {
+  public connect(gameId: string | null, initialSync: boolean = false) {
+    console.log("CONNECTING TO WEBSOCKET", gameId, this.rand, this.gameId);
     if (this.gameId === gameId) {
       return;
     }
     if (gameId === null) {
+      console.log("DISCONNECTING FROM WEBSOCKET");
       this.disconnect();
       return;
     }
     if (this.socket) {
+      console.log("HERE");
       this.disconnect();
     }
     this.gameId = gameId;
+    console.log(this.gameId === gameId);
     if (window.location.origin.startsWith("http://localhost")) {
       this.socket = new WebSocket(`ws://localhost:8787/do/games/${gameId}/ws`);
     } else {
@@ -35,6 +44,12 @@ export class GameSocket {
         `wss://capstone.mrvillage.dev/do/games/${gameId}/ws`,
       );
     }
+    console.log(this.socket);
+    this.socket.onopen = () => {
+      if (initialSync) {
+        this.send({ type: "sync_request" });
+      }
+    };
     this.socket.onmessage = (event) => {
       this.processMessage(event.data);
     };
@@ -49,6 +64,11 @@ export class GameSocket {
 
   public disconnect() {
     if (this.socket) {
+      const socket = this.socket;
+      socket.onopen = () => {
+        console.log("CLOSING");
+        socket.close();
+      };
       if (this.socket.readyState === WebSocket.OPEN) {
         this.socket.close();
       }

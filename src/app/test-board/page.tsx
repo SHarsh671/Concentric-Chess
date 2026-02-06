@@ -7,8 +7,19 @@ import RulesDialog from "@/components/piece/rules-dialog";
 import { HelpCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
+interface NewMove {
+  id: string;
+  gameId: string;
+  playerId: string;
+  fromSquare: string;
+  toSquare: string;
+  moveNumber: number;
+  promotion: null;
+  createdAt: string;
+}
+
 export default function TestBoardPage() {
-  const [moves, setMoves] = useState([]);
+  const [moves, setMoves] = useState<NewMove[]>([]);
   const [showRules, setShowRules] = useState(false);
   const [moveCount, setMoveCount] = useState(1);
 
@@ -22,6 +33,7 @@ export default function TestBoardPage() {
       toSquare: to,
       moveNumber: moveCount,
       promotion: null,
+      createdAt: new Date().toISOString(),
     };
     setMoves([...moves, newMove]);
     setMoveCount(moveCount + 1);
@@ -33,7 +45,7 @@ export default function TestBoardPage() {
         <div className="text-lg font-semibold">
           Testing Concentric Chess - Move #{moveCount}
         </div>
-        
+
         <Button
           onClick={() => setShowRules(true)}
           variant="outline"
