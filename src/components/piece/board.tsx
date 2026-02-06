@@ -190,7 +190,7 @@ export default function Board({
         strokeWidth: 6,
       };
     }
-    
+
     // Selected piece highlight (yellow)
     if (cellId === boardState.selectedCell) {
       return {
@@ -200,17 +200,17 @@ export default function Board({
         strokeWidth: 6,
       };
     }
-    
+
     // Legal moves highlight (light blue)
     if (boardState.legalMoves.includes(cellId)) {
       return {
-        fill: "#4DA6FF",
-        fillOpacity: 0.4,
+        fill: "#ebe850",
+        fillOpacity: 0.8,
         stroke: "#000000",
         strokeWidth: 4,
       };
     }
-    
+
     return {
       fill: "transparent",
       fillOpacity: 0,
