@@ -1,0 +1,45 @@
+Date: February 6th @ 10:00am (in-person)
+Agenda:
+- Assign tasks for finishing concentric chess.
+
+Attendees:
+- Josef
+- Carter
+- Skyler
+- Harshmeet
+- Harkirat
+- Sparsh
+- Roland
+
+Discussion:
+- To do (due February 23rd)
+  - Polish:
+    - Go over all the move pieces and fix any off by one errors. (JOSEF)
+    X- Fix piece centering. (CARTER)
+    - Center buttons/timers in the GAME sidebar/help stuff on the sidebar is haphazardly thrown together. (ROLAND/SKYLER)
+    - New board notation (make sure it uses that in the sidebar). (JOSEF/CARTER)
+    - Mesh homepage and LEFT sidebar styles. (ROLAND/SKYLER)
+    - Look at next move highlighting to make more intuitive. (HARKIRAT)
+    - Polish the SVG and use that for rendering instead of the image. (JOSEF)
+  - Archimedean:
+    - Board layout. (CARTER)
+    - Textual rules. (HARSHMEET)
+    - Rules engine. (SPARSH)
+  - Random things (for later):
+    - Move pagination.
+    - Rating.
+    - Keyboard shortcuts.
+    - Themes.
+  - Bugs/feedback from Dr Rapoport:
+    - Fix refresh animations when moving and removing pieces
+    - List of captured pieces
+      - Net material
+    - Undo
+    - Other draw conditions
+    - Allow spectating and stuff when not signed in.
+    - Double check going straight to a link to a game that's not for a specific player.
+    - Missing full set of pieces for invite game.
+    - Spectators/opposite player can't get to the confirm step for moves.
+  
+Next meeting: Friday, February 13th @ 10:30am
+
