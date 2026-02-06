@@ -15,14 +15,20 @@ export async function verifySession(session?: string): Promise<Session | null> {
   if (!token) {
     return null;
   }
-  return (
-    (await db().query.sessionsTable.findFirst({
-      where: t.and(
+  const results = await db()
+    .select()
+    .from(sessionsTable)
+    .where(
+      t.and(
         t.eq(sessionsTable.token, token),
         t.gt(sessionsTable.expiresAt, new Date().toISOString()),
       ),
-    })) ?? null
-  );
+    )
+    .limit(1);
+  if (results.length === 0) {
+    return null;
+  }
+  return results[0];
 }
 
 export async function hashPassword(password: string): Promise<string> {

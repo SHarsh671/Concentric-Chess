@@ -1,31 +1,55 @@
 "use client";
 
 import { ServerMsg, ClientMsg } from "shared";
+import "client-only";
 
 export class GameSocket {
   private static instance: GameSocket | null = null;
   private socket: WebSocket | null = null;
   private gameId: string | null = null;
   private listener: ((message: ServerMsg) => void) | null = null;
+  private rand: number;
 
-  public static get(gameId: string): GameSocket {
+  constructor() {
+    this.rand = Math.random();
+  }
+
+  public static get(): GameSocket {
     if (this.instance === null) {
       this.instance = new GameSocket();
-    }
-    if (this.instance.gameId !== gameId) {
-      this.instance.connect(gameId);
     }
     return this.instance;
   }
 
-  public connect(gameId: string) {
+  public connect(gameId: string | null, initialSync: boolean = false) {
+    console.log("CONNECTING TO WEBSOCKET", gameId, this.rand, this.gameId);
+    if (this.gameId === gameId) {
+      return;
+    }
+    if (gameId === null) {
+      console.log("DISCONNECTING FROM WEBSOCKET");
+      this.disconnect();
+      return;
+    }
     if (this.socket) {
-      this.socket.close();
+      console.log("HERE");
+      this.disconnect();
     }
     this.gameId = gameId;
-    this.socket = new WebSocket(
-      `${window.location.origin.replace("http", "ws")}/games/${gameId}/ws`,
-    );
+    console.log(this.gameId === gameId);
+    if (window.location.origin.startsWith("http://localhost")) {
+      this.socket = new WebSocket(`ws://localhost:8787/do/games/${gameId}/ws`);
+    } else {
+      this.socket = new WebSocket(
+        `wss://capstone.mrvillage.dev/do/games/${gameId}/ws`,
+      );
+    }
+    console.log(this.socket);
+    this.socket.onopen = () => {
+      if (initialSync) {
+        this.send({ type: "sync_request" });
+      }
+    };
     this.socket.onmessage = (event) => {
       this.processMessage(event.data);
     };
@@ -40,7 +64,14 @@ export class GameSocket {
 
   public disconnect() {
     if (this.socket) {
-      this.socket.close();
+      const socket = this.socket;
+      socket.onopen = () => {
+        console.log("CLOSING");
+        socket.close();
+      };
+      if (this.socket.readyState === WebSocket.OPEN) {
+        this.socket.close();
+      }
       this.socket = null;
       this.gameId = null;
     }
@@ -53,10 +84,11 @@ export class GameSocket {
     }
   }
 
-  public sendMessage(message: ClientMsg) {
+  public send(message: ClientMsg) {
     if (this.socket && this.socket.readyState === WebSocket.OPEN) {
       this.socket.send(JSON.stringify(message));
     } else {
+      console.log(this.socket);
       throw new Error("WebSocket is not connected.");
     }
   }
@@ -64,8 +96,4 @@ export class GameSocket {
   public setListener(listener: ((message: ServerMsg) => void) | null) {
     this.listener = listener;
   }
-}
-
-export function useGameSocket(gameId: string): GameSocket {
-  return GameSocket.get(gameId);
 }

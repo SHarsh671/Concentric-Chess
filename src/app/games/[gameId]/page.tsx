@@ -1,5 +1,6 @@
 import { db } from "@/lib/db";
 import Game from "./inner";
+import { getSession } from "@/lib/auth";
 
 export default async function GamePage({
   params,
@@ -15,12 +16,14 @@ export default async function GamePage({
   }
   const moves = await db().query.movesTable.findMany({
     where: (movesTable, { eq }) => eq(movesTable.gameId, game.id),
-    orderBy: (movesTable, { asc }) => [asc(movesTable.move_number)],
+    orderBy: (movesTable, { asc }) => [asc(movesTable.moveNumber)],
   });
+  const session = await getSession();
+  console.log(game.status);
 
   return (
-    <div className="p-4">
-      <Game game={game} moves={moves} />
+    <div className="flex p-4">
+      <Game game={game} moves={moves} playerId={session?.playerId} />
     </div>
   );
 }

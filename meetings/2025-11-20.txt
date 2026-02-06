@@ -1,0 +1,25 @@
+Date: November 20 @ 11:00am
+Agenda:
+- Review progress on project features.
+- Plan video presentation and assign tasks.
+
+Attendees:
+- Josef
+- Carter
+- Sparsh
+- Roland
+- Skyler
+- Harshmeet (late)
+Missing:
+- Harkirat
+
+Discussion:
+- Progress on proof of concept:
+  - Josef completed matchmaking, invitations, and integrated the frontend and backend for move storage, retrieval, and propagation.
+  - Carter, Harshmeet, and Harkirat completed the SVG click overlay, board and piece display, and state-specific rendering of pieces.
+  - Sparsh completed initial rules for basic pieces.
+  - Skyler implemented move storage functions.
+- Video presentation:
+  - Sparsh created a PowerPoint for the presentation.
+  - Sparsh did the voiceover, Josef ran the demo.
+- Set up poll for scheduling a regular meeting during class time.

@@ -1,4 +1,4 @@
-import { Gamepad, Book, History, Settings } from "lucide-react";
+import { Gamepad, Book, History, Settings, FlaskConical } from "lucide-react";
 
 import * as React from "react";
 
@@ -34,6 +34,11 @@ const data = [
     title: "Rules",
     url: "/rules",
     icon: Book,
+  },
+  {
+    title: "Test Board",
+    url: "/test-board",
+    icon: FlaskConical,
   },
 ];
 
@@ -100,7 +105,7 @@ export async function AppShell({
             <SidebarTrigger />
           </div>
         </header>
-        <div className="flex flex-1 flex-col gap-4 px-4 pb-2 md:pt-2">
+        <div className="flex flex-1 flex-col gap-4 px-4 pb-2 md:pt-2 min-h-screen">
           {children}
         </div>
       </SidebarInset>
