@@ -27,9 +27,7 @@ export default function Home() {
               </h1>
 
               <p className="text-xl text-slate-300 leading-relaxed">
-                Experience two centuries-old chess variants featuring unique pieces,
-                circular boards, and new strategic possibilities. Challenge friends or
-                play online against players worldwide.
+                  Featuring two original variants, Concentric Chess and Archimedes Spiral Chess, designed within the last year for modern online play.
               </p>
 
               <div className="flex flex-wrap gap-4 pt-4">
@@ -90,7 +88,7 @@ export default function Home() {
               Why Play Concentric Chess?
             </h2>
             <p className="text-xl text-slate-400 max-w-2xl mx-auto">
-              Discover what makes these historic variants unique and challenging
+              Discover what makes these original variants unique and challenging
             </p>
           </div>
 
@@ -140,9 +138,9 @@ export default function Home() {
                 <div className="w-16 h-16 bg-purple-500/20 rounded-full flex items-center justify-center mx-auto">
                   <BookOpen className="h-8 w-8 text-purple-500" />
                 </div>
-                <h3 className="text-xl font-bold text-white">Historic Variants</h3>
+                <h3 className="text-xl font-bold text-white">Original Variants</h3>
                 <p className="text-slate-400">
-                  Based on centuries-old Concentric Chess and Archimedes Spiral Chess—now available for modern online play
+                  Based on Original Concentric Chess and Archimedes Spiral Chess, now available for online play
                 </p>
               </CardContent>
             </Card>
