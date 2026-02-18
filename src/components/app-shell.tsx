@@ -50,22 +50,22 @@ export async function AppShell({
   return (
     <SidebarProvider>
       <Sidebar className="border-r-0">
-        <SidebarHeader className="py-0 pt-2">
+        <SidebarHeader className="py-2 pt-2">
           <Link className="flex h-10 items-center px-1 gap-2" href="/">
             <div className="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-7 items-center justify-center rounded-md">
               <Gamepad className="size-5" />
             </div>
-            <span className="truncate font-medium">Concentric Chess</span>
+            <span className="truncate font-bold">Concentric Chess</span>
           </Link>
         </SidebarHeader>
         <SidebarContent className="px-2">
-          <SidebarMenu>
+          <SidebarMenu className="gap-2">
             {data.map((item) => (
               <SidebarMenuItem key={item.title}>
                 <SidebarMenuButton asChild>
                   <Link href={item.url}>
-                    <item.icon />
-                    <span>{item.title}</span>
+                    <item.icon className="size-6" />
+                    <span className="text-base">{item.title}</span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
@@ -105,7 +105,7 @@ export async function AppShell({
             <SidebarTrigger />
           </div>
         </header>
-        <div className="flex flex-1 flex-col gap-4 px-4 pb-2 md:pt-2 min-h-screen">
+        <div className="flex flex-1 flex-col min-h-screen">
           {children}
         </div>
       </SidebarInset>
