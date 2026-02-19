@@ -9,6 +9,7 @@ import Board from "@/components/piece/board";
 import Image from "next/image";
 import RulesDialog from "@/components/piece/rules-dialog";
 import { HelpCircle } from "lucide-react";
+import { toNotation } from "@/lib/utils";
 
 export default function GamePage({
   game: initialGame,
@@ -237,7 +238,7 @@ export default function GamePage({
           {moves.toReversed().map((m) => {
             const turn = Math.floor((m.moveNumber - 1) / 2) + 1;
             const mover = m.moveNumber % 2 == 1 ? "w" : "b";
-            return <p key={m.id}>{turn}{mover}. {m.fromSquare}-{m.toSquare}</p>
+            return <p key={m.id}>{turn}{mover}. {toNotation(m.fromSquare)}-{toNotation(m.toSquare)}</p>
           })}
         </div>
         {/* TODO: i assume the schema for the draw/resign is incomplete and needs to be finished */}

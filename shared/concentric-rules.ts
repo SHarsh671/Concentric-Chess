@@ -89,13 +89,13 @@ function rayFrom(
   prev: CellId,
   first: CellId,
   color: Side,
-  nextMap: Record<CellId, Record<CellId, CellId | null>>,
+  nextMap: Record<CellId, Partial<Record<CellId, CellId | null>>>,
 ): CellId[] {
   const out: CellId[] = [];
   let p = prev;
   let cur = first;
 
-  while (true) {
+  while (!out.includes(cur)) {
     const occ = pieceAt(pieces, cur);
     if (!occ) {
       out.push(cur);
@@ -127,38 +127,45 @@ function rookMoves(pieces: RulesPiece[], from: CellId, color: Side): CellId[] {
 function bishopMoves(pieces: RulesPiece[], from: CellId, color: Side): CellId[] {
   const out = new Set<CellId>();
 
-  const isHinge = (cell: CellId) =>
-    hasTag(cell, "crescent") || hasTag(cell, "halfMoon") || hasTag(cell, "twin");
-
   for (const first of CONCENTRIC_GRAPH.vertexNbrs[from]) {
     const ray = rayFrom(pieces, from, first, color, CONCENTRIC_GRAPH.vertexNext);
-    for (const sq of ray) out.add(sq);
-
-    // Bishop "swing": if we pass through a hinge cell, allow branching once from that hinge.
-    // We implement this as: whenever we reach a hinge along a diagonal ray (before being blocked),
-    // add rays starting in any other diagonal direction from that hinge.
-    let prev = from;
-    let cur = first;
-
-    while (true) {
-      const occ = pieceAt(pieces, cur);
-      const blocked = !!occ;
-
-      if (isHinge(cur)) {
-        for (const altFirst of CONCENTRIC_GRAPH.vertexNbrs[cur]) {
-          if (altFirst === prev) continue;
-          const branch = rayFrom(pieces, cur, altFirst, color, CONCENTRIC_GRAPH.vertexNext);
-          for (const sq of branch) out.add(sq);
-        }
-      }
-
-      if (blocked) break;
-      const next = CONCENTRIC_GRAPH.vertexNext[cur]?.[prev] ?? null;
-      if (!next || next === from) break;
-      prev = cur;
-      cur = next;
+    for (const sq of ray) {
+      out.add(sq);
     }
   }
+
+  // const isHinge = (cell: CellId) =>
+  //   hasTag(cell, "crescent") || hasTag(cell, "halfMoon") || hasTag(cell, "twin");
+  //
+  // for (const first of CONCENTRIC_GRAPH.vertexNbrs[from]) {
+  //   const ray = rayFrom(pieces, from, first, color, CONCENTRIC_GRAPH.vertexNext);
+  //   for (const sq of ray) out.add(sq);
+  //
+  //   // Bishop "swing": if we pass through a hinge cell, allow branching once from that hinge.
+  //   // We implement this as: whenever we reach a hinge along a diagonal ray (before being blocked),
+  //   // add rays starting in any other diagonal direction from that hinge.
+  //   let prev = from;
+  //   let cur = first;
+  //
+  //   while (true) {
+  //     const occ = pieceAt(pieces, cur);
+  //     const blocked = !!occ;
+  //
+  //     if (isHinge(cur)) {
+  //       for (const altFirst of CONCENTRIC_GRAPH.vertexNbrs[cur]) {
+  //         if (altFirst === prev) continue;
+  //         const branch = rayFrom(pieces, cur, altFirst, color, CONCENTRIC_GRAPH.vertexNext);
+  //         for (const sq of branch) out.add(sq);
+  //       }
+  //     }
+  //
+  //     if (blocked) break;
+  //     const next = CONCENTRIC_GRAPH.vertexNext[cur]?.[prev] ?? null;
+  //     if (!next || next === from) break;
+  //     prev = cur;
+  //     cur = next;
+  //   }
+  // }
 
   return Array.from(out);
 }

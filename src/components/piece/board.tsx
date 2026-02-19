@@ -278,4 +278,22 @@ export default function Board({
         })}
     </>
   );
+  // {spaces.map((s) => {
+  //   return (
+  //     <span
+  //       key={s.id}
+  //       className={`size-piece ${s.id}`}
+  //       style={{
+  //         position: "absolute",
+  //         // fontSize: "10px",
+  //         transform: "translate(20%, 30%)",
+  //         fontWeight: "bold",
+  //         pointerEvents: "none",
+  //         color: "#fff",
+  //       }}
+  //     >
+  //       {toNotation(s.id) || s.id}
+  //     </span>
+  //   );
+  // })}
 }

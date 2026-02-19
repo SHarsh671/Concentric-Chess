@@ -295,7 +295,7 @@ export class GameObject extends DurableObject<CloudflareEnv> {
       switch (msg.type) {
         case "move":
           const turn = game.nextMove % 2 === 1 ? "white" : "black";
-          if (turn === msg.data.side && game.status === "ongoing") {
+          if (turn === msg.data.side && game.status === "ongoing" && msg.data.from != msg.data.to) {
             console.log("Processing move:", msg.data);
             if (
               (msg.data.side === "white" &&
