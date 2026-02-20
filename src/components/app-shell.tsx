@@ -62,7 +62,7 @@ export async function AppShell({
           <SidebarMenu className="gap-2">
             {data.map((item) => (
               <SidebarMenuItem key={item.title}>
-                <SidebarMenuButton asChild>
+                <SidebarMenuButton asChild className="h-9 px-2.5">
                   <Link href={item.url}>
                     <item.icon className="size-6" />
                     <span className="text-base">{item.title}</span>
