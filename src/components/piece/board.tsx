@@ -246,7 +246,6 @@ export default function Board({
                   !boardState.legalMoves.includes(s.id)
                 ) {
                   e.currentTarget.setAttribute("fill", "#f533e5ff");
-                  e.currentTarget.setAttribute("fill-opacity", "1");
                 }
               }}
               onMouseLeave={(e) => {
@@ -254,8 +253,7 @@ export default function Board({
                   !boardState.selectedPiece &&
                   !boardState.legalMoves.includes(s.id)
                 ) {
-                  e.currentTarget.setAttribute("fill", "transparent");
-                  e.currentTarget.setAttribute("fill-opacity", "0");
+                  e.currentTarget.setAttribute("fill", style.fill);
                 }
               }}
             />
