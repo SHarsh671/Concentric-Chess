@@ -213,7 +213,7 @@ export default function Board({
     }
 
     return {
-      fill: CONCENTRIC_GRAPH.color[cellId] === "dark" ? "#1d1816" : "#f3f1f1",
+      fill: CONCENTRIC_GRAPH.color[cellId] === "dark" ? "#473c39" : "#f3f1f1",
       fillOpacity: 1,
       stroke: "#000000",
       strokeWidth: 4,
