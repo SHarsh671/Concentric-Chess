@@ -62,7 +62,7 @@ for (let r = 1; r <= 12; r++) {
         // if we have an odd number of points, then the middle one we want to ignore since it's 865 and is the crescent intersecting again
         const right = line[c + (line.length % 2)];
         const radius = (7 - r) * 100;
-        const y = 865 + radius;
+        const y = 765 + radius;
         const d = `M ${left} ${y} A ${radius} ${radius} 0 0 0 ${right} ${y} Z`;
         tiles.push({ id: `r${r}c${c}`, d });
       } else {
@@ -71,7 +71,7 @@ for (let r = 1; r <= 12; r++) {
         // if we have an odd number of points, then the middle one we want to ignore since it's 865 and is the crescent intersecting again
         const right = line[c + (line.length % 2)];
         const radius = (r - 6) * 100;
-        const y = 1065 - radius;
+        const y = 965 - radius;
         const d = `M ${left} ${y} A ${radius} ${radius} 0 0 1 ${right} ${y} Z`;
         tiles.push({ id: `r${r}c${c}`, d });
       }
@@ -97,8 +97,8 @@ for (let r = 1; r <= 12; r++) {
         : [600 - (numCols - c + 1) * 100, 600 - (numCols - c) * 100];
       const leftArcSweep = isLeft ? 0 : 1;
       const rightArcSweep = isLeft ? 1 : 0;
-      const topY = 1565 - r * 100;
-      const bottomY = 1665 - r * 100;
+      const topY = 1465 - r * 100;
+      const bottomY = 1565 - r * 100;
       const d = `M ${topLeft} ${topY} A ${leftArcRadius} ${leftArcRadius} 0 0 ${leftArcSweep} ${bottomLeft} ${bottomY} L ${bottomRight} ${bottomY} A ${rightArcRadius} ${rightArcRadius} 0 0 ${rightArcSweep} ${topRight} ${topY} Z`;
       tiles.push({ id: `r${r}c${c}`, d });
     }
