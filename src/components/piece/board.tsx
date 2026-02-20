@@ -11,6 +11,7 @@ import {
   Side,
 } from "shared/concentric-rules";
 import { Move } from "shared";
+import { CONCENTRIC_GRAPH } from "../../../shared/concentric-graph";
 
 type Space = {
   id: string;
@@ -185,7 +186,7 @@ export default function Board({
     if (cellId === boardState.pendingMove) {
       return {
         fill: "#00FF00",
-        fillOpacity: 0.6,
+        fillOpacity: 1,
         stroke: "#00CC00",
         strokeWidth: 6,
       };
@@ -195,7 +196,7 @@ export default function Board({
     if (cellId === boardState.selectedCell) {
       return {
         fill: "#FFD700",
-        fillOpacity: 0.7,
+        fillOpacity: 1,
         stroke: "#000000",
         strokeWidth: 6,
       };
@@ -205,17 +206,17 @@ export default function Board({
     if (boardState.legalMoves.includes(cellId)) {
       return {
         fill: "#ebe850",
-        fillOpacity: 0.8,
+        fillOpacity: 1,
         stroke: "#000000",
         strokeWidth: 4,
       };
     }
 
     return {
-      fill: "transparent",
-      fillOpacity: 0,
-      stroke: "black",
-      strokeWidth: 10,
+      fill: CONCENTRIC_GRAPH.color[cellId] === "dark" ? "#1d1816" : "#f3f1f1",
+      fillOpacity: 1,
+      stroke: "#000000",
+      strokeWidth: 4,
     };
   };
 
