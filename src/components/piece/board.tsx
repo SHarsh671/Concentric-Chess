@@ -52,7 +52,7 @@ export default function Board({
   }, [moves]);
 
   useEffect(() => {
-    fetch("/cc/ccboard.svg")
+    fetch("/as/asboard.svg")
       .then((res) => res.text())
       .then((svgText) => {
         const parser = new DOMParser();
@@ -222,8 +222,8 @@ export default function Board({
   return (
     <>
       <svg
-        viewBox="0 0 1730 1730"
-        className="absolute top-[-1px] left-[0px] w-[900px] h-[900px]"
+        viewBox="0 0 1370 1370"
+        className="absolute top-[132px] left-[107px] w-[900px] h-[900px]"
       >
         {spaces.map((s) => {
           const style = getCellStyle(s.id);

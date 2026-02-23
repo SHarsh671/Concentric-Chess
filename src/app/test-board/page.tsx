@@ -46,7 +46,7 @@ export default function TestBoardPage() {
 
       <div className="relative w-[900px] h-[900px] border-2 shadow-lg">
         <Image
-          src="/cc/ccboard.png"
+          src="/as/asboard2.png"
           alt="Chess board"
           width={900}
           height={900}
