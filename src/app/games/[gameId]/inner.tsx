@@ -8,6 +8,7 @@ import "client-only";
 import Board from "@/components/piece/board";
 import Image from "next/image";
 import RulesDialog from "@/components/piece/rules-dialog";
+import SpiralRulesDialog from "@/components/piece/spiral-rules-dialog";
 import { HelpCircle } from "lucide-react";
 
 export default function GamePage({
@@ -23,6 +24,7 @@ export default function GamePage({
   const ws = GameSocket.get();
   const [moves, setMoves] = useState(initialMoves);
   const [showRules, setShowRules] = useState(false);
+  const [showSpiralRules, setShowSpiralRules] = useState(false);
 
   const gameRef = useRef(game);
   const onMove = (from: string, to: string) => {
@@ -41,6 +43,7 @@ export default function GamePage({
     console.log("Game updated:", game);
     gameRef.current = game;
   }, [game]);
+
   useEffect(() => {
     ws.connect(game.id, true);
     ws.setListener((message) => {
@@ -54,9 +57,7 @@ export default function GamePage({
               );
               ws.send({ type: "sync_request" });
             } else {
-              setMoves((prevMoves) => {
-                return [...prevMoves, move];
-              });
+              setMoves((prevMoves) => [...prevMoves, move]);
               console.log("Move received:", move);
               setGame((prevGame) => ({
                 ...prevGame,
@@ -69,48 +70,34 @@ export default function GamePage({
           }
           break;
         case "aborted":
-          {
-            console.log("Game aborted");
-            setGame((prevGame) => ({
-              ...prevGame,
-              status: "aborted",
-              deletedAt: new Date().toISOString(),
-            }));
-          }
+          setGame((prevGame) => ({
+            ...prevGame,
+            status: "aborted",
+            deletedAt: new Date().toISOString(),
+          }));
           break;
         case "accepted":
-          {
-            console.log("Game accepted");
-            setGame((prevGame) => {
-              return {
-                ...prevGame,
-                whitePlayerId: message.data.whitePlayerId,
-                blackPlayerId: message.data.blackPlayerId,
-                whiteAccepted: 1,
-                blackAccepted: 1,
-              };
-            });
-          }
+          setGame((prevGame) => ({
+            ...prevGame,
+            whitePlayerId: message.data.whitePlayerId,
+            blackPlayerId: message.data.blackPlayerId,
+            whiteAccepted: 1,
+            blackAccepted: 1,
+          }));
           break;
         case "game_over":
-          {
-            console.log("Game over:", message.data.result);
-            setGame((prevGame) => ({
-              ...prevGame,
-              status: message.data.result,
-            }));
-          }
+          setGame((prevGame) => ({
+            ...prevGame,
+            status: message.data.result,
+          }));
           break;
-        case "sync": {
-          console.log("Syncing game state");
+        case "sync":
           setGame(message.data.game);
           setMoves(message.data.moves);
           break;
-        }
-        case "draw_offer": {
-          console.log("Draw offer updated");
+        case "draw_offer":
           setGame((game) => ({ ...game, ...message.data }));
-        }
+          break;
       }
     });
     return () => {
@@ -118,6 +105,7 @@ export default function GamePage({
       ws.disconnect();
     };
   }, [game.id]);
+
   const timeSinceLastMove =
     Date.now() - new Date(game.lastMoveAt || game.createdAt!).getTime();
   const [timer, setTimer] = useState([
@@ -132,6 +120,7 @@ export default function GamePage({
         : null
       : game.blackTimeLeft,
   ]);
+
   useEffect(() => {
     let interval: NodeJS.Timeout;
     if (game.status === "ongoing") {
@@ -139,7 +128,6 @@ export default function GamePage({
         const timeSinceLastMove =
           Date.now() - new Date(game.lastMoveAt || game.createdAt!).getTime();
         if (game.nextMove % 2 === 1) {
-          // White to move
           setTimer([
             game.whiteTimeLeft !== null
               ? Math.max(0, game.whiteTimeLeft - timeSinceLastMove)
@@ -147,7 +135,6 @@ export default function GamePage({
             game.blackTimeLeft,
           ]);
         } else {
-          // Black to move
           setTimer([
             game.whiteTimeLeft,
             game.blackTimeLeft !== null
@@ -169,24 +156,14 @@ export default function GamePage({
     game.createdAt,
   ]);
 
-  if (!game) {
-    return <>Game not found</>;
-  }
-  if (game.status === "aborted") {
-    return <>Game aborted</>;
-  }
-  if (game.deletedAt) {
-    return <>Game not found</>;
-  }
+  if (!game) return <>Game not found</>;
+  if (game.status === "aborted") return <>Game aborted</>;
+  if (game.deletedAt) return <>Game not found</>;
   if (game.blackPlayerId === playerId && game.blackAccepted === 0) {
-    return (
-      <Button onClick={() => ws.send({ type: "accept" })}>Accept Game</Button>
-    );
+    return <Button onClick={() => ws.send({ type: "accept" })}>Accept Game</Button>;
   }
   if (game.whitePlayerId === playerId && game.whiteAccepted === 0) {
-    return (
-      <Button onClick={() => ws.send({ type: "accept" })}>Accept Game</Button>
-    );
+    return <Button onClick={() => ws.send({ type: "accept" })}>Accept Game</Button>;
   }
   if (game.whiteAccepted === 0 || game.blackAccepted === 0) {
     return <>Waiting for opponent to accept the game...</>;
@@ -211,7 +188,6 @@ export default function GamePage({
         . It is {game.nextMove % 2 === 1 ? "White's" : "Black's"} turn.
         <br />
         <div className="relative w-[900px] h-[900px] border-2">
-          {/* Background board image */}
           <Image
             src="/cc/ccboard.png"
             alt="Chess board"
@@ -220,61 +196,93 @@ export default function GamePage({
             className="absolute top-0 left-0"
             priority
           />
-
-          {/* Overlay: SVG cells + pieces */}
           <div className="absolute top-0 left-0 w-full h-full">
             <Board moves={moves} onMove={onMove} />
           </div>
         </div>
       </div>
-      {/* game sidebar */}
+
+      {/* Sidebar */}
       <div className="relative w-[30%] h-[70%] left-1/36 border-2 mt-[24px]">
+        {/* Timers */}
         <div className="flex w-full h-1/5">
-          <div className="relative w-1/3 h-1/2 top-1/4 left-1/18 border-gray-400 border-2 rounded-2xl bg-gray-200 text-center text-[37px] text-black overflow-auto"><Timer timeLeft={timer[0]}></Timer></div>
-          <div className="relative w-1/3 h-1/2 top-1/4 left-5/18 border-gray-800 border-2 rounded-2xl bg-gray-600 text-center text-[37px] text-white overflow-auto"><Timer timeLeft={timer[1]} /></div>
+          <div className="relative w-1/3 h-1/2 top-1/4 left-1/18 border-gray-400 border-2 rounded-2xl bg-gray-200 text-center text-[37px] text-black overflow-auto">
+            <Timer timeLeft={timer[0]} />
+          </div>
+          <div className="relative w-1/3 h-1/2 top-1/4 left-5/18 border-gray-800 border-2 rounded-2xl bg-gray-600 text-center text-[37px] text-white overflow-auto">
+            <Timer timeLeft={timer[1]} />
+          </div>
         </div>
+
+        {/* Move list */}
         <div className="relative flex flex-col-reverse w-18/20 mx-auto h-3/5 border-2 columns-1 overflow-y-auto">
           {moves.toReversed().map((m) => {
             const turn = Math.floor((m.moveNumber - 1) / 2) + 1;
-            const mover = m.moveNumber % 2 == 1 ? "w" : "b";
-            return <p key={m.id}>{turn}{mover}. {m.fromSquare}-{m.toSquare}</p>
+            const mover = m.moveNumber % 2 === 1 ? "w" : "b";
+            return (
+              <p key={m.id}>
+                {turn}{mover}. {m.fromSquare}-{m.toSquare}
+              </p>
+            );
           })}
         </div>
-        {/* TODO: i assume the schema for the draw/resign is incomplete and needs to be finished */}
+
+        {/* Draw / Resign */}
         <div className="flex w-full h-1/5">
-          <Button className="relative w-2/5 h-1/2 top-1/4 left-1/15 border-orange-400 border-2 rounded-2xl bg-orange-300 text-center text-5xl text-gray-100 overflow-auto" onClick={() => ws.send({ type: "draw" })}>Draw</Button>
-          <Button className="relative w-2/5 h-1/2 top-1/4 left-4/30 border-orange-400 border-2 rounded-2xl bg-orange-300 text-center text-5xl text-gray-100 overflow-auto" onClick={() => ws.send({ type: "resign" })}>Resign</Button>
+          <Button
+            className="relative w-2/5 h-1/2 top-1/4 left-1/15 border-orange-400 border-2 rounded-2xl bg-orange-300 text-center text-5xl text-gray-100 overflow-auto"
+            onClick={() => ws.send({ type: "draw" })}
+          >
+            Draw
+          </Button>
+          <Button
+            className="relative w-2/5 h-1/2 top-1/4 left-4/30 border-orange-400 border-2 rounded-2xl bg-orange-300 text-center text-5xl text-gray-100 overflow-auto"
+            onClick={() => ws.send({ type: "resign" })}
+          >
+            Resign
+          </Button>
         </div>
 
-        <div className="bg-blue-50 border-2 border-blue-300 rounded-lg p-4 max-w-[900px] text-sm text-blue-800 mt-[24px]">
-          <p className="font-semibold mb-1">💡 How to move:</p>
+        {/* How to move hint */}
+        <div className="bg-gray-50 border-2 border-gray-300 rounded-lg p-4 max-w-[900px] text-sm text-gray-700 mt-[24px]">
+          <p className="font-semibold mb-1">♟ How to move:</p>
           <ol className="list-decimal list-inside space-y-1">
-            <li>Click a piece to select it (yellow highlight)</li>
-            <li>Click a legal destination cell (blue highlight)</li>
-            <li>Click the destination again (green highlight) to confirm the move</li>
+            <li>Click a piece — available squares highlight <span className="font-semibold text-yellow-600">yellow</span></li>
+            <li>Hover a destination — it turns <span className="font-semibold" style={{ color: "#4ade80" }}>light green</span></li>
+            <li>Click to lock it — it turns <span className="font-semibold" style={{ color: "#16a34a" }}>dark green</span></li>
+            <li>Click again to confirm the move</li>
           </ol>
         </div>
 
-        <Button
-          onClick={() => setShowRules(true)}
-          variant="outline"
-          className="flex items-center gap-2 bg-indigo-50 hover:bg-indigo-100 border-indigo-300 text-indigo-700 mt-4"
-        >
-          <HelpCircle size={20} />
-          Rules
-        </Button>
+        {/* Rules buttons */}
+        <div className="flex gap-2 mt-4">
+          <Button
+            onClick={() => setShowRules(true)}
+            variant="outline"
+            className="flex items-center gap-2 border-gray-800 text-gray-800 hover:bg-gray-100"
+          >
+            <HelpCircle size={18} />
+            Circle Rules
+          </Button>
+          <Button
+            onClick={() => setShowSpiralRules(true)}
+            variant="outline"
+            className="flex items-center gap-2 border-gray-800 text-gray-800 hover:bg-gray-100"
+          >
+            <HelpCircle size={18} />
+            Spiral Rules
+          </Button>
+        </div>
       </div>
 
       <RulesDialog isOpen={showRules} onClose={() => setShowRules(false)} />
+      <SpiralRulesDialog isOpen={showSpiralRules} onClose={() => setShowSpiralRules(false)} />
     </div>
   );
 }
 
-// should be a pretty HTML thing showing minutes:seconds or "unlimited"
 function Timer({ timeLeft }: { timeLeft: number | null }) {
-  if (timeLeft === null) {
-    return "unlimited";
-  }
+  if (timeLeft === null) return <>unlimited</>;
   const seconds = Math.floor(timeLeft / 1000);
   const minutes = Math.floor(seconds / 60);
   const remainingSeconds = seconds % 60;
