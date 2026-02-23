@@ -1,6 +1,7 @@
 import { Gamepad, Book, History, Settings, FlaskConical } from "lucide-react";
 
 import * as React from "react";
+import { cn } from "@/lib/utils";
 
 import {
   Sidebar,
@@ -60,16 +61,30 @@ export async function AppShell({
         </SidebarHeader>
         <SidebarContent className="px-2">
           <SidebarMenu className="gap-2">
-            {data.map((item) => (
-              <SidebarMenuItem key={item.title}>
-                <SidebarMenuButton asChild className="h-9 px-2.5">
-                  <Link href={item.url}>
-                    <item.icon className="size-6" />
-                    <span className="text-base">{item.title}</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            ))}
+            {data.map((item) => {
+              const blendIntoSidebar = ["Play", "History", "Rules", "Test Board"].includes(
+                item.title,
+              );
+
+              return (
+                <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton
+                    asChild
+                    className={cn(
+                      "h-9 px-2.5",
+                      blendIntoSidebar
+                        ? "bg-transparent hover:bg-transparent text-white hover:text-white data-[active=true]:bg-transparent"
+                        : "",
+                    )}
+                  >
+                    <Link href={item.url}>
+                      <item.icon className="size-6" />
+                      <span className="text-base">{item.title}</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              );
+            })}
           </SidebarMenu>
           {session ? (
             <SidebarMenu className="mt-auto pb-2">
