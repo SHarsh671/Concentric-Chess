@@ -27,15 +27,16 @@ export default function Piece({
 
   return (
     <div
-      className="absolute cursor-pointer transition-all duration-200"
+      // className="absolute cursor-pointer transition-all duration-200"
+      className={`absolute cursor-pointer pointer-events-none size-piece ${position.concat('a')}`}
       style={{
-        left: `${scaledX}px`,
-        top: `${scaledY}px`,
-        transform: 'translate(-50%, -50%)',
-        zIndex: 10,
+        // left: `${scaledX}px`,
+        // top: `${scaledY}px`,
+        // transform: 'translate(-50%, -50%)',
+        // zIndex: 10,
         filter: isSelected ? "drop-shadow(0 0 10px yellow)" : "none",
         scale: isSelected ? "1.1" : "1",
-        pointerEvents: 'auto',
+        pointerEvents: 'none',
       }}
       onClick={(e) => {
         e.stopPropagation();
