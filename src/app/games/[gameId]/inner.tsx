@@ -205,7 +205,7 @@ export default function GamePage({
       </div>
       <div className="relative w-[900px] h-[900px] border-2">
         <Image
-          src="/cc/ccboard.png"
+          src="/as/asboard2.png"
           alt="Chess board"
           width={900}
           height={900}
@@ -228,7 +228,7 @@ export default function GamePage({
       </div>
 
       <RulesDialog isOpen={showRules} onClose={() => setShowRules(false)} />
-    </div>
+    </>
   );
 }
 
