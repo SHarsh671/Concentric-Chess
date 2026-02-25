@@ -38,6 +38,20 @@ export default function GamePage({
     });
   };
 
+  const groupedMoves: Record<number, { w?: typeof moves[0]; b?: typeof moves[0] }> = {};
+
+  moves.forEach((m) => {
+    const turn = Math.floor((m.moveNumber - 1) / 2) + 1;
+    const mover = m.moveNumber % 2 === 1 ? "w" : "b";
+
+    if (!groupedMoves[turn]) groupedMoves[turn] = {};
+    groupedMoves[turn][mover] = m;
+  });
+
+  const sortedTurns = Object.keys(groupedMoves)
+    .map(Number)
+    .sort((a, b) => b - a);
+
   useEffect(() => {
     console.log("Game updated:", game);
     gameRef.current = game;
@@ -225,39 +239,35 @@ export default function GamePage({
       {/* game sidebar */}
       <div className="relative w-[30%] h-[70%] left-1/36 border-2 mt-[24px]">
         <div className="flex w-full h-1/5">
-          <div className="relative w-1/3 h-1/2 top-1/4 left-1/18 border-gray-400 border-2 rounded-2xl bg-gray-200 text-center text-[37px] text-black overflow-auto">
-            <Timer timeLeft={timer[0]}></Timer>
-          </div>
-          <div className="relative w-1/3 h-1/2 top-1/4 left-5/18 border-gray-800 border-2 rounded-2xl bg-gray-600 text-center text-[37px] text-white overflow-auto">
-            <Timer timeLeft={timer[1]} />
-          </div>
+          <div className="relative w-1/3 h-1/2 top-1/4 left-1/18 border-gray-400 border-2 rounded-2xl bg-gray-200 text-center text-[37px] text-black"><Timer timeLeft={timer[0]}></Timer></div>
+          <div className="relative w-1/3 h-1/2 top-1/4 left-5/18 border-gray-800 border-2 rounded-2xl bg-gray-600 text-center text-[37px] text-white"><Timer timeLeft={timer[1]}></Timer></div>
         </div>
-        <div className="relative flex flex-col-reverse w-18/20 mx-auto h-3/5 border-2 columns-1 overflow-y-auto">
-          {moves.toReversed().map((m) => {
-            const turn = Math.floor((m.moveNumber - 1) / 2) + 1;
-            const mover = m.moveNumber % 2 == 1 ? "w" : "b";
+        <div className="relative flex flex-col w-18/20 mx-auto h-3/5 border-2 rounded-md overflow-y-auto">
+          {sortedTurns.map((turn) => {
+            const move = groupedMoves[turn];
+
             return (
-              <p key={m.id}>
-                {turn}
-                {mover}. {toNotation(m.fromSquare)}-{toNotation(m.toSquare)}
-              </p>
+              <div
+                key={turn}
+                className="grid grid-cols-[40px_1fr_1fr] items-center px-2 py-1 hover:bg-muted/40"
+              >
+                <span className="font-semibold">{turn}.</span>
+
+                <span>
+                  {move.w && `${toNotation(move.w.fromSquare)}-${toNotation(move.w.toSquare)}`}
+                </span>
+
+                <span>
+                  {move.b && `${move.b.fromSquare}-${move.b.toSquare}`}
+                </span>
+              </div>
             );
           })}
         </div>
         {/* TODO: i assume the schema for the draw/resign is incomplete and needs to be finished */}
         <div className="flex w-full h-1/5">
-          <Button
-            className="relative w-2/5 h-1/2 top-1/4 left-1/15 border-orange-400 border-2 rounded-2xl bg-orange-300 text-center text-5xl text-gray-100 overflow-auto"
-            onClick={() => ws.send({ type: "draw" })}
-          >
-            Draw
-          </Button>
-          <Button
-            className="relative w-2/5 h-1/2 top-1/4 left-4/30 border-orange-400 border-2 rounded-2xl bg-orange-300 text-center text-5xl text-gray-100 overflow-auto"
-            onClick={() => ws.send({ type: "resign" })}
-          >
-            Resign
-          </Button>
+          <Button className="relative w-2/5 h-1/2 top-1/3 left-1/15 border-orange-400 border-2 rounded-2xl bg-orange-300 text-center text-xl text-orange-900" onClick={() => ws.send({ type: "draw" })}>Draw</Button>
+          <Button className="relative w-2/5 h-1/2 top-1/3 left-4/30 border-orange-400 border-2 rounded-2xl bg-orange-300 text-center text-xl text-orange-900" onClick={() => ws.send({ type: "resign" })}>Resign</Button>
         </div>
 
         <div className="bg-blue-50 border-2 border-blue-300 rounded-lg p-4 max-w-[900px] text-sm text-blue-800 mt-[24px]">
