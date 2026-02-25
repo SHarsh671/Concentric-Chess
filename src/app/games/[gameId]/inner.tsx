@@ -9,6 +9,7 @@ import Board from "@/components/piece/board";
 import Image from "next/image";
 import RulesDialog from "@/components/piece/rules-dialog";
 import { HelpCircle } from "lucide-react";
+import { toNotation } from "@/lib/utils";
 
 export default function GamePage({
   game: initialGame,
@@ -212,29 +213,23 @@ export default function GamePage({
         {game.status === "white_win" && <div>White wins!</div>}
         {game.status === "black_win" && <div>Black wins!</div>}
         {game.status === "draw" && <div>Draw!</div>}
-        {game.status === "white_resign" && <div>White resigns. Black wins!</div>}
-        {game.status === "black_resign" && <div>Black resigns. White wins!</div>}
+        {game.status === "white_resign" && (
+          <div>White resigns. Black wins!</div>
+        )}
+        {game.status === "black_resign" && (
+          <div>Black resigns. White wins!</div>
+        )}
         You are{" "}
         {game.whitePlayerId === playerId && game.blackPlayerId === playerId
           ? "both players"
           : game.whitePlayerId === playerId
-            ? "White"
-            : game.blackPlayerId === playerId
-              ? "Black"
-              : "a spectator"}
+          ? "White"
+          : game.blackPlayerId === playerId
+          ? "Black"
+          : "a spectator"}
         . It is {game.nextMove % 2 === 1 ? "White's" : "Black's"} turn.
         <br />
         <div className="relative w-[900px] h-[900px] border-2">
-          {/* Background board image */}
-          <Image
-            src="/cc/ccboard.png"
-            alt="Chess board"
-            width={900}
-            height={900}
-            className="absolute top-0 left-0"
-            priority
-          />
-
           {/* Overlay: SVG cells + pieces */}
           <div className="absolute top-0 left-0 w-full h-full">
             <Board moves={moves} onMove={onMove} />
@@ -259,7 +254,7 @@ export default function GamePage({
                 <span className="font-semibold">{turn}.</span>
 
                 <span>
-                  {move.w && `${move.w.fromSquare}-${move.w.toSquare}`}
+                  {move.w && `${toNotation(move.w.fromSquare)}-${toNotation(move.w.toSquare)}`}
                 </span>
 
                 <span>
@@ -280,7 +275,9 @@ export default function GamePage({
           <ol className="list-decimal list-inside space-y-1">
             <li>Click a piece to select it (yellow highlight)</li>
             <li>Click a legal destination cell (blue highlight)</li>
-            <li>Click the destination again (green highlight) to confirm the move</li>
+            <li>
+              Click the destination again (green highlight) to confirm the move
+            </li>
           </ol>
         </div>
 
@@ -295,7 +292,7 @@ export default function GamePage({
       </div>
 
       <RulesDialog isOpen={showRules} onClose={() => setShowRules(false)} />
-    </div>
+    </>
   );
 }
 

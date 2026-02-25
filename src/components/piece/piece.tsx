@@ -35,7 +35,7 @@ export default function Piece({
         // zIndex: 10,
         filter: isSelected ? "drop-shadow(0 0 10px yellow)" : "none",
         scale: isSelected ? "1.1" : "1",
-        pointerEvents: 'auto',
+        pointerEvents: 'none',
       }}
       onClick={(e) => {
         e.stopPropagation();

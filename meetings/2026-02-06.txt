@@ -42,4 +42,3 @@ Discussion:
     - Spectators/opposite player can't get to the confirm step for moves.
   
 Next meeting: Friday, February 13th @ 10:30am
-

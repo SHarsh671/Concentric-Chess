@@ -11,6 +11,7 @@ import {
   Side,
 } from "shared/concentric-rules";
 import { Move } from "shared";
+import { CONCENTRIC_GRAPH } from "../../../shared/concentric-graph";
 
 type Space = {
   id: string;
@@ -52,7 +53,7 @@ export default function Board({
   }, [moves]);
 
   useEffect(() => {
-    fetch("/cc/ccboard.svg")
+    fetch("/as/asboard.svg")
       .then((res) => res.text())
       .then((svgText) => {
         const parser = new DOMParser();
@@ -185,7 +186,7 @@ export default function Board({
     if (cellId === boardState.pendingMove) {
       return {
         fill: "#00FF00",
-        fillOpacity: 0.6,
+        fillOpacity: 1,
         stroke: "#00CC00",
         strokeWidth: 6,
       };
@@ -195,7 +196,7 @@ export default function Board({
     if (cellId === boardState.selectedCell) {
       return {
         fill: "#FFD700",
-        fillOpacity: 0.7,
+        fillOpacity: 1,
         stroke: "#000000",
         strokeWidth: 6,
       };
@@ -205,25 +206,25 @@ export default function Board({
     if (boardState.legalMoves.includes(cellId)) {
       return {
         fill: "#ebe850",
-        fillOpacity: 0.8,
+        fillOpacity: 1,
         stroke: "#000000",
         strokeWidth: 4,
       };
     }
 
     return {
-      fill: "transparent",
-      fillOpacity: 0,
-      stroke: "black",
-      strokeWidth: 10,
+      fill: CONCENTRIC_GRAPH.color[cellId] === "dark" ? "#473c39" : "#f3f1f1",
+      fillOpacity: 1,
+      stroke: "#000000",
+      strokeWidth: 4,
     };
   };
 
   return (
     <>
       <svg
-        viewBox="0 0 1730 1730"
-        className="absolute top-[-1px] left-[0px] w-[900px] h-[900px]"
+        viewBox="0 0 1370 1370"
+        className="absolute top-[132px] left-[107px] w-[900px] h-[900px]"
       >
         {spaces.map((s) => {
           const style = getCellStyle(s.id);
@@ -245,7 +246,6 @@ export default function Board({
                   !boardState.legalMoves.includes(s.id)
                 ) {
                   e.currentTarget.setAttribute("fill", "#f533e5ff");
-                  e.currentTarget.setAttribute("fill-opacity", "1");
                 }
               }}
               onMouseLeave={(e) => {
@@ -253,8 +253,7 @@ export default function Board({
                   !boardState.selectedPiece &&
                   !boardState.legalMoves.includes(s.id)
                 ) {
-                  e.currentTarget.setAttribute("fill", "transparent");
-                  e.currentTarget.setAttribute("fill-opacity", "0");
+                  e.currentTarget.setAttribute("fill", style.fill);
                 }
               }}
             />
@@ -278,4 +277,22 @@ export default function Board({
         })}
     </>
   );
+  // {spaces.map((s) => {
+  //   return (
+  //     <span
+  //       key={s.id}
+  //       className={`size-piece ${s.id}`}
+  //       style={{
+  //         position: "absolute",
+  //         // fontSize: "10px",
+  //         transform: "translate(20%, 30%)",
+  //         fontWeight: "bold",
+  //         pointerEvents: "none",
+  //         color: "#fff",
+  //       }}
+  //     >
+  //       {toNotation(s.id) || s.id}
+  //     </span>
+  //   );
+  // })}
 }
