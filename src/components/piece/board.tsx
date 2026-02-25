@@ -11,6 +11,7 @@ import {
   Side,
 } from "shared/concentric-rules";
 import { Move } from "shared";
+import { CONCENTRIC_GRAPH } from "../../../shared/concentric-graph";
 
 type Space = {
   id: string;
@@ -54,7 +55,7 @@ export default function Board({
   }, [moves]);
 
   useEffect(() => {
-    fetch("/cc/ccboard.svg")
+    fetch("/as/asboard.svg")
       .then((res) => res.text())
       .then((svgText) => {
         const parser = new DOMParser();
@@ -185,32 +186,37 @@ export default function Board({
   const getCellStyle = (cellId: string) => {
     // Dark green — locked pending move (first click, waiting for confirm)
     if (cellId === boardState.pendingMove) {
-      return { fill: "#16a34a", fillOpacity: 0.75, stroke: "#14532d", strokeWidth: 6 };
+      return { fill: "#16a34a", fillOpacity: 1, stroke: "#14532d", strokeWidth: 6 };
     }
 
     // Selected piece — yellow
     if (cellId === boardState.selectedCell) {
-      return { fill: "#FFD700", fillOpacity: 0.75, stroke: "#000", strokeWidth: 6 };
+      return { fill: "#FFD700", fillOpacity: 1, stroke: "#000", strokeWidth: 6 };
     }
 
     // Light green — hovering a legal square
     if (cellId === boardState.hoveredMove) {
-      return { fill: "#4ade80", fillOpacity: 0.75, stroke: "#16a34a", strokeWidth: 5 };
+      return { fill: "#4ade80", fillOpacity: 1, stroke: "#16a34a", strokeWidth: 5 };
     }
 
     // Yellow-ish tint — available legal moves
     if (boardState.legalMoves.includes(cellId)) {
-      return { fill: "#ebe850", fillOpacity: 0.65, stroke: "#000", strokeWidth: 3 };
+      return { fill: "#ebe850", fillOpacity: 1, stroke: "#000", strokeWidth: 3 };
     }
 
-    return { fill: "transparent", fillOpacity: 0, stroke: "black", strokeWidth: 10 };
+    return {
+      fill: CONCENTRIC_GRAPH.color[cellId] === "dark" ? "#473c39" : "#f3f1f1",
+      fillOpacity: 1,
+      stroke: "#000000",
+      strokeWidth: 4,
+    };
   };
 
   return (
     <>
       <svg
-        viewBox="0 0 1730 1730"
-        className="absolute top-[-1px] left-[0px] w-[900px] h-[900px]"
+        viewBox="0 0 1370 1370"
+        className="absolute top-[132px] left-[107px] w-[900px] h-[900px]"
       >
         {spaces.map((s) => {
           const style = getCellStyle(s.id);
@@ -235,15 +241,15 @@ export default function Board({
                 // Generic hover glow for non-selected, non-legal cells
                 if (!boardState.selectedPiece && !isLegal && s.id !== boardState.selectedCell) {
                   e.currentTarget.setAttribute("fill", "#f533e5ff");
-                  e.currentTarget.setAttribute("fill-opacity", "1");
                 }
               }}
               onMouseLeave={(e) => {
                 handleCellHover(s.id, false);
-
-                if (!boardState.selectedPiece && !isLegal && s.id !== boardState.selectedCell) {
-                  e.currentTarget.setAttribute("fill", "transparent");
-                  e.currentTarget.setAttribute("fill-opacity", "0");
+                if (
+                  !boardState.selectedPiece &&
+                  !boardState.legalMoves.includes(s.id)
+                ) {
+                  e.currentTarget.setAttribute("fill", style.fill);
                 }
               }}
             />
@@ -267,4 +273,22 @@ export default function Board({
         })}
     </>
   );
+  // {spaces.map((s) => {
+  //   return (
+  //     <span
+  //       key={s.id}
+  //       className={`size-piece ${s.id}`}
+  //       style={{
+  //         position: "absolute",
+  //         // fontSize: "10px",
+  //         transform: "translate(20%, 30%)",
+  //         fontWeight: "bold",
+  //         pointerEvents: "none",
+  //         color: "#fff",
+  //       }}
+  //     >
+  //       {toNotation(s.id) || s.id}
+  //     </span>
+  //   );
+  // })}
 }
