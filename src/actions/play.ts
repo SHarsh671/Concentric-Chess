@@ -179,7 +179,7 @@ export async function play(_prevState: PlayState | null, formData: FormData) {
           const res = await fetch(
             process.env.NODE_ENV === "development"
               ? `http://localhost:8787/do/games/${waitingGame.id}/accept`
-              : `https://your-production-domain.com/do/games/${waitingGame.id}/accept`,
+              : `https://capstone.mrvillage.dev/do/games/${waitingGame.id}/accept`,
             {
               method: "POST",
               headers: {
@@ -256,11 +256,7 @@ export async function play(_prevState: PlayState | null, formData: FormData) {
         .limit(1)
         .then((rows) => rows[0]);
       if (existingGame) {
-        return {
-          variant,
-          mode,
-          error: "You are already in the matchmaking queue.",
-        };
+        return redirect(`/games/${existingGame.id}`);
       }
       // otherwise, create a new game
       const gameId = crypto.randomUUID();

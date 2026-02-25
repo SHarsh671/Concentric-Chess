@@ -27,8 +27,7 @@ export default function Piece({
 
   return (
     <div
-      // className="absolute cursor-pointer transition-all duration-200"
-      className={`absolute cursor-pointer pointer-events-none size-piece ${position.concat('a')}`}
+      className={`absolute cursor-pointer transition-all duration-200 size-piece ${position}`}
       style={{
         // left: `${scaledX}px`,
         // top: `${scaledY}px`,
@@ -48,7 +47,8 @@ export default function Piece({
         alt={`${color} ${type}`}
         width={64}
         height={64}
-        className="pointer-events-none"
+        className={`pointer-events-none`}
+        // className={`pointer-events-none size-piece absolute ${position}`}
         draggable={false}
       />
     </div>

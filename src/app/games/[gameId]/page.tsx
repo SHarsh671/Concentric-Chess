@@ -19,9 +19,10 @@ export default async function GamePage({
     orderBy: (movesTable, { asc }) => [asc(movesTable.moveNumber)],
   });
   const session = await getSession();
+  console.log(game.status);
 
   return (
-    <div className="p-4">
+    <div className="flex p-4">
       <Game game={game} moves={moves} playerId={session?.playerId} />
     </div>
   );
