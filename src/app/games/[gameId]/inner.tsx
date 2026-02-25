@@ -282,7 +282,7 @@ export default function GamePage({
       </div>
 
       <RulesDialog isOpen={showRules} onClose={() => setShowRules(false)} />
-    </div>
+    </>
   );
 }
 
