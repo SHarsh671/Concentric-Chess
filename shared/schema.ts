@@ -120,6 +120,26 @@ export const GAME_VARIANTS = [
     name: "Concentric (Unlimited)",
     time: null,
   },
+  {
+    variant: "archimedean-rapid",
+    name: "Archimedean Rapid (10m)",
+    time: 10 * 60 * 1000,
+  },
+  {
+    variant: "archimedean-blitz",
+    name: "Archimedean Blitz (3m)",
+    time: 3 * 60 * 1000,
+  },
+  {
+    variant: "archimedean-bullet",
+    name: "Archimedean Bullet (1m)",
+    time: 1 * 60 * 1000,
+  },
+  {
+    variant: "archimedean-unlimited",
+    name: "Archimedean (Unlimited)",
+    time: null,
+  },
 ] as {
   variant: GameVariant;
   name: string;
@@ -133,5 +153,13 @@ export type GameVariant =
   // 3m
   | "concentric-blitz"
   // 1m
-  | "concentric-bullet";
+  | "concentric-bullet"
+  // unlimited
+  | "archimedean-unlimited"
+  // 10m
+  | "archimedean-rapid"
+  // 3m
+  | "archimedean-blitz"
+  // 1m
+  | "archimedean-bullet";
 export type Side = "white" | "black";

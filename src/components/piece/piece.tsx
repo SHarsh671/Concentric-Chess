@@ -27,7 +27,7 @@ export default function Piece({
 
   return (
     <div
-      className={`absolute cursor-pointer transition-all duration-200 size-piece ${position}`}
+      className={`absolute cursor-pointer transition-all duration-200 size-piece ${position.concat("a")}`}
       style={{
         // left: `${scaledX}px`,
         // top: `${scaledY}px`,

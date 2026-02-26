@@ -215,8 +215,8 @@ export default function Board({
   return (
     <>
       <svg
-        viewBox="0 0 1370 1370"
-        className="absolute top-[132px] left-[107px] w-[900px] h-[900px]"
+        viewBox="0 0 1730 1730"
+        className="absolute w-[900px] h-[900px]"
       >
         {spaces.map((s) => {
           const style = getCellStyle(s.id);
@@ -272,23 +272,25 @@ export default function Board({
           );
         })}
     </>
+    // {
+    //   spaces.map((s) => {
+    //     return (
+    //       <span
+    //         key={s.id}
+    //         className={`size-piece ${s.id}a`}
+    //         style={{
+    //           position: "absolute",
+    //           // fontSize: "10px",
+    //           transform: "translate(20%, 30%)",
+    //           fontWeight: "bold",
+    //           pointerEvents: "none",
+    //           color: "#000",
+    //         }}
+    //       >
+    //         {s.id}
+    //       </span>
+    //     );
+    //   })
+    // }
   );
-  // {spaces.map((s) => {
-  //   return (
-  //     <span
-  //       key={s.id}
-  //       className={`size-piece ${s.id}`}
-  //       style={{
-  //         position: "absolute",
-  //         // fontSize: "10px",
-  //         transform: "translate(20%, 30%)",
-  //         fontWeight: "bold",
-  //         pointerEvents: "none",
-  //         color: "#fff",
-  //       }}
-  //     >
-  //       {toNotation(s.id) || s.id}
-  //     </span>
-  //   );
-  // })}
 }
