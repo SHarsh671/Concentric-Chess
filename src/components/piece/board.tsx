@@ -29,9 +29,17 @@ type BoardState = {
 export default function Board({
   moves,
   onMove,
+  viewerSide,
+  currentTurn,
+  isSpectator,
+  canControlBoth,
 }: {
   moves: Move[];
   onMove: (from: string, to: string) => void;
+  viewerSide: Side | undefined;    // "white" | "black" | undefined
+  currentTurn: Side;               // whose turn it is
+  isSpectator: boolean;
+  canControlBoth: boolean;
 }) {
   const [spaces, setSpaces] = useState<Space[]>([]);
   const [boardState, setBoardState] = useState<BoardState>({
@@ -109,6 +117,11 @@ export default function Board({
   };
 
   const handleCellClick = (cellId: string) => {
+    if (isSpectator) return;
+    if (!canControlBoth && viewerSide !== currentTurn) {
+      return;
+    }
+
     console.log("Cell clicked:", cellId);
 
     // If there's a pending move and clicking the same cell, confirm the move
@@ -137,6 +150,17 @@ export default function Board({
     const pieceAtCell = boardState.pieces.find((p) => p.position === cellId);
 
     if (pieceAtCell) {
+      // Spectators cannot select
+      if (isSpectator) return;
+
+      // Must be correct turn (unless controlling both)
+      if (!canControlBoth && viewerSide !== currentTurn) return;
+
+      // Determine which color this user is allowed to control right now
+      const allowedColor = canControlBoth ? currentTurn : viewerSide;
+
+      if (pieceAtCell.color !== allowedColor) return;
+      
       // If clicking the already selected piece, deselect it
       if (pieceAtCell === boardState.selectedPiece) {
         setBoardState((prev) => ({
@@ -171,6 +195,10 @@ export default function Board({
   };
 
   const handlePieceClick = (piece: PieceProps) => {
+    if (isSpectator) return;
+    if (viewerSide !== currentTurn) return;
+    if (piece.color !== viewerSide) return;
+
     handleCellClick(piece.position);
   };
 
