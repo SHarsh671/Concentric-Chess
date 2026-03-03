@@ -250,6 +250,7 @@ export async function play(_prevState: PlayState | null, formData: FormData) {
               t.eq(schema.gamesTable.blackPlayerId, session.playerId),
             ),
             t.eq(schema.gamesTable.status, "ongoing"),
+            t.eq(schema.gamesTable.variant, variant),
             t.isNull(schema.gamesTable.deletedAt),
           ),
         )

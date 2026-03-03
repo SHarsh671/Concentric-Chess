@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Piece, { PieceProps } from "./piece";
+import Piece from "./piece";
 import {
   computePieceState,
   generatePseudoLegalMovesForPiece,
@@ -19,8 +19,8 @@ type Space = {
 };
 
 type BoardState = {
-  pieces: PieceProps[];
-  selectedPiece: PieceProps | null;
+  pieces: RulesPiece[];
+  selectedPiece: RulesPiece | null;
   selectedCell: string | null;
   legalMoves: string[];
   hoveredMove: string | null;   // light green — hovering a legal square
@@ -30,9 +30,19 @@ type BoardState = {
 export default function Board({
   moves,
   onMove,
+  viewerSide,
+  currentTurn,
+  isSpectator,
+  canControlBoth,
+  variant,
 }: {
   moves: Move[];
   onMove: (from: string, to: string) => void;
+  viewerSide: Side | undefined;    // "white" | "black" | undefined
+  currentTurn: Side;               // whose turn it is
+  isSpectator: boolean;
+  canControlBoth: boolean;
+  variant: "concentric" | "archimedean";
 }) {
   const [spaces, setSpaces] = useState<Space[]>([]);
   const [boardState, setBoardState] = useState<BoardState>({
@@ -55,7 +65,8 @@ export default function Board({
   }, [moves]);
 
   useEffect(() => {
-    fetch("/as/asboard.svg")
+    fetch(variant === "concentric" ? "/cc/ccboard.svg" :
+      "/as/asboard.svg")
       .then((res) => res.text())
       .then((svgText) => {
         const parser = new DOMParser();
@@ -85,7 +96,7 @@ export default function Board({
     return { x: 0, y: 0 };
   };
 
-  const calculateLegalMoves = (piece: PieceProps): string[] => {
+  const calculateLegalMoves = (piece: RulesPiece): string[] => {
     const rulesPieces: RulesPiece[] = boardState.pieces.map((p) => ({
       type: p.type as PieceType,
       color: p.color as Side,
@@ -100,6 +111,11 @@ export default function Board({
   };
 
   const handleCellClick = (cellId: string) => {
+    if (isSpectator) return;
+    if (!canControlBoth && viewerSide !== currentTurn) {
+      return;
+    }
+
     console.log("Cell clicked:", cellId);
 
     // ── Confirm pending move ──────────────────────────────────────────────
@@ -130,6 +146,18 @@ export default function Board({
     const pieceAtCell = boardState.pieces.find((p) => p.position === cellId);
 
     if (pieceAtCell) {
+      // Spectators cannot select
+      if (isSpectator) return;
+
+      // Must be correct turn (unless controlling both)
+      if (!canControlBoth && viewerSide !== currentTurn) return;
+
+      // Determine which color this user is allowed to control right now
+      const allowedColor = canControlBoth ? currentTurn : viewerSide;
+
+      if (pieceAtCell.color !== allowedColor) return;
+
+      // If clicking the already selected piece, deselect it
       if (pieceAtCell === boardState.selectedPiece) {
         // Deselect
         setBoardState((prev) => ({
@@ -178,7 +206,11 @@ export default function Board({
     }
   };
 
-  const handlePieceClick = (piece: PieceProps) => {
+  const handlePieceClick = (piece: RulesPiece) => {
+    if (isSpectator) return;
+    if (viewerSide !== currentTurn) return;
+    if (piece.color !== viewerSide) return;
+
     handleCellClick(piece.position);
   };
 
@@ -258,7 +290,7 @@ export default function Board({
       </svg>
 
       {/* board's midline */}
-      <div className="absolute pointer-events-none h-[0.5%] w-[75.4%] top-[50%] left-[12.5%] bg-black"></div>
+      {variant === "archimedean" && <div className="absolute pointer-events-auto h-[0.5%] w-[75.4%] top-[50%] left-[12.5%] bg-black"></div>}
 
       {piecesReady &&
         boardState.pieces.map((piece, idx) => {
@@ -271,6 +303,7 @@ export default function Board({
               y={center.y}
               onClick={() => handlePieceClick(piece)}
               isSelected={boardState.selectedPiece === piece}
+              variant={variant}
             />
           );
         })}

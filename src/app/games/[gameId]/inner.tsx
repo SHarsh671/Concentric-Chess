@@ -184,6 +184,32 @@ export default function GamePage({
     return <>Waiting for opponent to accept the game...</>;
   }
 
+  const isWhite = game.whitePlayerId === playerId;
+  const isBlack = game.blackPlayerId === playerId;
+
+  const isSpectator = !isWhite && !isBlack;
+  const canControlBoth = isWhite && isBlack;
+
+  // ONLY use viewerSide when exactly one side
+  const viewerSide =
+    isWhite && !isBlack
+      ? "wht"
+      : isBlack && !isWhite
+        ? "blk"
+        : undefined; // ← not null
+  const currentTurn = game.nextMove % 2 === 1 ? "wht" : "blk";
+
+  console.log({
+    viewerSide,
+    currentTurn,
+    isSpectator,
+    canControlBoth,
+    playerId,
+    whitePlayerId: game.whitePlayerId,
+    blackPlayerId: game.blackPlayerId,
+    nextMove: game.nextMove,
+  });
+
   return (
     <div className="flex w-full">
       <div className="flex flex-col items-center space-y-4">
@@ -200,16 +226,24 @@ export default function GamePage({
         {game.whitePlayerId === playerId && game.blackPlayerId === playerId
           ? "both players"
           : game.whitePlayerId === playerId
-          ? "White"
-          : game.blackPlayerId === playerId
-          ? "Black"
-          : "a spectator"}
+            ? "White"
+            : game.blackPlayerId === playerId
+              ? "Black"
+              : "a spectator"}
         . It is {game.nextMove % 2 === 1 ? "White's" : "Black's"} turn.
         <br />
         <div className="relative w-[900px] h-[900px] border-2">
           {/* Overlay: SVG cells + pieces */}
           <div className="absolute top-0 left-0 w-full h-full">
-            <Board moves={moves} onMove={onMove} />
+            <Board
+              moves={moves}
+              onMove={onMove}
+              viewerSide={viewerSide}
+              currentTurn={currentTurn}
+              isSpectator={isSpectator}
+              canControlBoth={canControlBoth}
+              variant={game.variant.split("-")[0] as "concentric" | "archimedean"}
+            />
           </div>
         </div>
       </div>
