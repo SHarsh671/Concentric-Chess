@@ -24,6 +24,19 @@ const lines = [
 const { intersect, shape } = require("svg-intersections");
 const fs = require("fs");
 
+const isArchimedean = process.argv.includes("--archimedean");
+
+function computeOffset(r) {
+  if (!isArchimedean) {
+    return 0;
+  }
+  if (r <= 6) {
+    return 50;
+  } else {
+    return -50;
+  }
+}
+
 function getNumCols(row) {
   row = row >= 7 ? 13 - row : row;
   return 1 + 2 * (row - 1);
@@ -47,6 +60,7 @@ lineIntersections.reverse();
 const tiles = [];
 
 for (let r = 1; r <= 12; r++) {
+  const offset = computeOffset(r);
   const numCols = getNumCols(r);
   const center = Math.ceil(getNumCols(r) / 2);
   for (let c = 1; c <= numCols; c++) {
@@ -58,9 +72,9 @@ for (let r = 1; r <= 12; r++) {
     if (c == center) {
       if (isBottom) {
         const line = lineIntersections[r - 1];
-        const left = line[c - 1];
+        const left = line[c - 1] + computeOffset(r);
         // if we have an odd number of points, then the middle one we want to ignore since it's 865 and is the crescent intersecting again
-        const right = line[c + (line.length % 2)];
+        const right = line[c + (line.length % 2)] + computeOffset(r);
         const radius = (7 - r) * 100;
         const y = 765 + radius;
         const d = `M ${left} ${y} A ${radius} ${radius} 0 0 0 ${right} ${y} Z`;
@@ -72,7 +86,7 @@ for (let r = 1; r <= 12; r++) {
         const right = line[c + (line.length % 2)];
         const radius = (r - 6) * 100;
         const y = 965 - radius;
-        const d = `M ${left} ${y} A ${radius} ${radius} 0 0 1 ${right} ${y} Z`;
+        const d = `M ${left + offset} ${y} A ${radius} ${radius} 0 0 1 ${right + offset} ${y} Z`;
         tiles.push({ id: `r${r}c${c}`, d });
       }
     } else {
@@ -99,7 +113,7 @@ for (let r = 1; r <= 12; r++) {
       const rightArcSweep = isLeft ? 1 : 0;
       const topY = 1465 - r * 100;
       const bottomY = 1565 - r * 100;
-      const d = `M ${topLeft} ${topY} A ${leftArcRadius} ${leftArcRadius} 0 0 ${leftArcSweep} ${bottomLeft} ${bottomY} L ${bottomRight} ${bottomY} A ${rightArcRadius} ${rightArcRadius} 0 0 ${rightArcSweep} ${topRight} ${topY} Z`;
+      const d = `M ${topLeft + offset} ${topY} A ${leftArcRadius} ${leftArcRadius} 0 0 ${leftArcSweep} ${bottomLeft + offset} ${bottomY} L ${bottomRight + offset} ${bottomY} A ${rightArcRadius} ${rightArcRadius} 0 0 ${rightArcSweep} ${topRight + offset} ${topY} Z`;
       tiles.push({ id: `r${r}c${c}`, d });
     }
   }
@@ -110,6 +124,11 @@ const svg = `<svg viewBox="0 0 1730 1730" style="position: absolute; top: -1px; 
       `<path id="${tile.id}" d="${tile.d}" fill="none" stroke="#000" stroke-width="5"/>`,
   )
   .join("")}</svg>`;
-fs.writeFileSync("concentric_board.svg", svg);
 const html = `<html><body><div style="position: relative; width: 900px; height: 900px;">${svg}</div></body></html>`;
-fs.writeFileSync("concentric_board.html", html);
+if (isArchimedean) {
+  fs.writeFileSync("archimedean_board.svg", svg);
+  fs.writeFileSync("archimedean_board.html", html);
+} else {
+  fs.writeFileSync("concentric_board.svg", svg);
+  fs.writeFileSync("concentric_board.html", html);
+}

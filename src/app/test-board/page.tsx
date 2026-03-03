@@ -4,6 +4,7 @@ import { useState } from "react";
 import Board from "@/components/piece/board";
 import Image from "next/image";
 import RulesDialog from "@/components/piece/rules-dialog";
+import SpiralRulesDialog from "@/components/piece/spiral-rules-dialog";
 import { HelpCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -21,6 +22,7 @@ interface NewMove {
 export default function TestBoardPage() {
   const [moves, setMoves] = useState<NewMove[]>([]);
   const [showRules, setShowRules] = useState(false);
+  const [showSpiralRules, setShowSpiralRules] = useState(false);
   const [moveCount, setMoveCount] = useState(1);
 
   const handleMove = (from: string, to: string) => {
@@ -46,41 +48,51 @@ export default function TestBoardPage() {
           Testing Concentric Chess - Move #{moveCount}
         </div>
 
-        <Button
-          onClick={() => setShowRules(true)}
-          variant="outline"
-          className="flex items-center gap-2 bg-indigo-50 hover:bg-indigo-100 border-indigo-300 text-indigo-700"
-        >
-          <HelpCircle size={20} />
-          Rules
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            onClick={() => setShowRules(true)}
+            variant="outline"
+            className="flex items-center gap-2 border-gray-800 text-gray-800 hover:bg-gray-100"
+          >
+            <HelpCircle size={18} />
+            Circle Rules
+          </Button>
+          <Button
+            onClick={() => setShowSpiralRules(true)}
+            variant="outline"
+            className="flex items-center gap-2 border-gray-800 text-gray-800 hover:bg-gray-100"
+          >
+            <HelpCircle size={18} />
+            Spiral Rules
+          </Button>
+        </div>
       </div>
 
       <div className="relative w-[900px] h-[900px] border-2 shadow-lg">
         <Image
-          src="/cc/ccboard.png"
+          src="/as/asboard2.png"
           alt="Chess board"
           width={900}
           height={900}
           className="absolute top-0 left-0"
           priority
         />
-
         <div className="absolute top-0 left-0 w-full h-full">
           <Board moves={moves} onMove={handleMove} />
         </div>
       </div>
 
-      <div className="bg-blue-50 border-2 border-blue-300 rounded-lg p-4 max-w-[900px] text-sm text-blue-800">
-        <p className="font-semibold mb-2">How to move:</p>
+      <div className="bg-gray-50 border-2 border-gray-300 rounded-lg p-4 max-w-[900px] text-sm text-gray-700">
+        <p className="font-semibold mb-2">♟ How to move:</p>
         <ol className="list-decimal list-inside space-y-1">
-          <li>Click a piece to select it (yellow highlight)</li>
-          <li>Click a legal destination cell (blue highlight shows options)</li>
-          <li>Click the destination again (turns green) to confirm the move</li>
+          <li>Click a piece — available squares highlight <span className="font-semibold text-yellow-600">yellow</span></li>
+          <li>Hover a destination — turns <span className="font-semibold" style={{ color: "#4ade80" }}>light green</span></li>
+          <li>Click to lock — turns <span className="font-semibold" style={{ color: "#16a34a" }}>dark green</span></li>
+          <li>Click again to confirm the move</li>
         </ol>
       </div>
 
-      <div className="bg-green-50 border-2 border-green-300 rounded-lg p-4 max-w-[900px] text-sm">
+      <div className="bg-green-50 border-2 border-green-300 rounded-lg p-4 max-w-[900px] w-full text-sm">
         <p className="font-semibold mb-1">Move History:</p>
         {moves.length === 0 ? (
           <p className="text-gray-500 italic">No moves yet</p>
@@ -96,6 +108,7 @@ export default function TestBoardPage() {
       </div>
 
       <RulesDialog isOpen={showRules} onClose={() => setShowRules(false)} />
+      <SpiralRulesDialog isOpen={showSpiralRules} onClose={() => setShowSpiralRules(false)} />
     </div>
   );
 }

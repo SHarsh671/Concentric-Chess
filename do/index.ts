@@ -15,7 +15,7 @@ export class GameObject extends DurableObject<CloudflareEnv> {
     WebSocket,
     {
       gameId: string;
-      playerId: string;
+      playerId: string | null;
     }
   >;
   lock: Lock = new Lock();
@@ -54,7 +54,7 @@ export class GameObject extends DurableObject<CloudflareEnv> {
       const gameId = request.url.match(URL_PATTERN)?.[1] as string;
       await this.ctx.storage.put("id", gameId);
       const sessionToken = cookie["session_token"] ?? "";
-      const session = await this.db
+      const sessions = await this.db
         .select()
         .from(sessionsTable)
         .where(
@@ -63,11 +63,8 @@ export class GameObject extends DurableObject<CloudflareEnv> {
             t.gt(sessionsTable.expiresAt, new Date().toISOString()),
           ),
         )
-        .limit(1)
-        .then((rows) => rows[0]);
-      if (!session) {
-        return new Response("Unauthorized", { status: 401 });
-      }
+        .limit(1);
+      const session = sessions.length > 0 ? sessions[0] : null;
       const game = await this.getGame(gameId);
       if (!game) {
         return new Response("Game not found", { status: 404 });
@@ -90,6 +87,7 @@ export class GameObject extends DurableObject<CloudflareEnv> {
 
         // reset disconnection timestamps
         if (
+          session &&
           session.playerId === game.whitePlayerId &&
           game.whiteDisconnectedAt
         ) {
@@ -99,6 +97,7 @@ export class GameObject extends DurableObject<CloudflareEnv> {
             .where(t.eq(schema.gamesTable.id, game.id));
         }
         if (
+          session &&
           session.playerId === game.blackPlayerId &&
           game.blackDisconnectedAt
         ) {
@@ -113,17 +112,17 @@ export class GameObject extends DurableObject<CloudflareEnv> {
 
         this.ctx.acceptWebSocket(server);
 
-        server.serializeAttachment({ gameId, playerId: session.playerId });
+        server.serializeAttachment({ gameId, playerId: session?.playerId || null });
         this.sockets.set(server, {
           gameId,
-          playerId: session.playerId,
+          playerId: session?.playerId || null,
         });
 
         return new Response(null, {
           status: 101,
           webSocket: client,
         });
-      } else if (request.url.endsWith("/accept")) {
+      } else if (request.url.endsWith("/accept") && session) {
         const now = new Date();
         // first, check if the player is part of the game
         if (session.playerId === game.whitePlayerId) {
@@ -235,6 +234,16 @@ export class GameObject extends DurableObject<CloudflareEnv> {
         await this.broadcastToGame(game.id, { type: "aborted" });
         return;
       }
+      if (
+        (game.whiteDisconnectedAt && !game.blackAccepted) ||
+        (game.blackDisconnectedAt && !game.whiteAccepted)
+      ) {
+        await this.db
+          .update(schema.gamesTable)
+          .set({ deletedAt: now.toISOString(), status: "aborted" })
+          .where(t.eq(schema.gamesTable.id, game.id));
+        await this.broadcastToGame(game.id, { type: "aborted" });
+      }
       if (game.lastMoveAt === null) {
         return;
       }
@@ -294,6 +303,9 @@ export class GameObject extends DurableObject<CloudflareEnv> {
       }
       switch (msg.type) {
         case "move":
+          if (!socketInfo.playerId) {
+            break;
+          }
           const turn = game.nextMove % 2 === 1 ? "white" : "black";
           if (turn === msg.data.side && game.status === "ongoing" && msg.data.from != msg.data.to) {
             console.log("Processing move:", msg.data);
@@ -393,6 +405,9 @@ export class GameObject extends DurableObject<CloudflareEnv> {
           }
           break;
         case "accept":
+          if (!socketInfo.playerId) {
+            break;
+          }
           if (socketInfo.playerId === game.whitePlayerId && !game.whiteAccepted) {
             await this.db
               .update(schema.gamesTable)
@@ -431,6 +446,9 @@ export class GameObject extends DurableObject<CloudflareEnv> {
           });
           break;
         case "resign":
+          if (!socketInfo.playerId) {
+            break;
+          }
           if (socketInfo.playerId !== game.whitePlayerId && socketInfo.playerId !== game.blackPlayerId) {
             return;
           }
@@ -449,6 +467,9 @@ export class GameObject extends DurableObject<CloudflareEnv> {
           });
           break;
         case "draw":
+          if (!socketInfo.playerId) {
+            break;
+          }
           if (socketInfo.playerId !== game.whitePlayerId && socketInfo.playerId !== game.blackPlayerId) {
             return;
           }
@@ -491,6 +512,42 @@ export class GameObject extends DurableObject<CloudflareEnv> {
             }
           }
           break;
+        case "undo":
+          if (!socketInfo.playerId) {
+            break;
+          }
+          if (socketInfo.playerId !== game.whitePlayerId && socketInfo.playerId !== game.blackPlayerId) {
+            return;
+          }
+          if (game.status !== "ongoing") {
+            return;
+          }
+          const lastMove = await this.db.query.movesTable.findFirst({
+            where: t.eq(schema.movesTable.gameId, game.id),
+            orderBy: (movesTable, { desc }) => [desc(movesTable.moveNumber)],
+          });
+          if (!lastMove) {
+            return;
+          }
+          if (lastMove.playerId !== socketInfo.playerId) {
+            return;
+          }
+          await this.db
+            .delete(schema.movesTable)
+            .where(t.eq(schema.movesTable.id, lastMove.id));
+          await this.db
+            .update(schema.gamesTable)
+            .set({ nextMove: game.nextMove - 1 })
+            .where(t.eq(schema.gamesTable.id, game.id));
+          const movesAfterUndo = await getMovesForGame(this.db, game.id);
+          await this.broadcastToGame(game.id, {
+            type: "sync",
+            data: {
+              game: { ...game, nextMove: game.nextMove - 1 },
+              moves: movesAfterUndo,
+            },
+          });
+          break
       }
     } finally {
       this.lock.release();
@@ -534,13 +591,10 @@ export class GameObject extends DurableObject<CloudflareEnv> {
         (game.whiteDisconnectedAt && !game.blackAccepted) ||
         (game.blackDisconnectedAt && !game.whiteAccepted)
       ) {
-        await this.db
-          .update(schema.gamesTable)
-          .set({ deletedAt: now, status: "aborted" })
-          .where(t.eq(schema.gamesTable.id, game.id));
-        await this.broadcastToGame(game.id, { type: "aborted" });
+        this.ctx.storage.setAlarm(Date.now() + 30000); // 30 seconds to reconnect
       }
       if (game.whitePlayerId === game.blackPlayerId && game.whiteDisconnectedAt) {
+        console.log("Local game disconnected, setting alarm to abort");
         this.ctx.storage.setAlarm(Date.now() + 30000); // 30 seconds to reconnect
       }
     } finally {

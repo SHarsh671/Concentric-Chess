@@ -23,7 +23,8 @@ type BoardState = {
   selectedPiece: PieceProps | null;
   selectedCell: string | null;
   legalMoves: string[];
-  pendingMove: string | null; // The destination cell waiting for confirmation
+  hoveredMove: string | null;   // light green — hovering a legal square
+  pendingMove: string | null;   // dark green  — clicked once, waiting to confirm
 };
 
 export default function Board({
@@ -47,6 +48,7 @@ export default function Board({
     selectedPiece: null,
     selectedCell: null,
     legalMoves: [],
+    hoveredMove: null,
     pendingMove: null,
   });
   const [piecesReady, setPiecesReady] = useState(false);
@@ -54,44 +56,35 @@ export default function Board({
   useEffect(() => {
     console.log("Moves received:", moves);
     setPiecesReady(true);
-    setBoardState((prev) => {
-      const updatedPieces: PieceProps[] = computePieceState(moves);
-      return { ...prev, pieces: updatedPieces };
-    });
+    setBoardState((prev) => ({
+      ...prev,
+      pieces: computePieceState(moves),
+    }));
   }, [moves]);
 
   useEffect(() => {
-    fetch("/cc/ccboard.svg")
+    fetch("/as/asboard.svg")
       .then((res) => res.text())
       .then((svgText) => {
         const parser = new DOMParser();
         const doc = parser.parseFromString(svgText, "image/svg+xml");
         const pathNodes = Array.from(doc.querySelectorAll("path"));
-
-        const extracted = pathNodes.map((node) => ({
-          id: node.id || crypto.randomUUID(),
-          d: node.getAttribute("d") || "",
-        }));
-
-        setSpaces(extracted);
+        setSpaces(
+          pathNodes.map((node) => ({
+            id: node.id || crypto.randomUUID(),
+            d: node.getAttribute("d") || "",
+          })),
+        );
       });
   }, []);
 
   const getCellCenter = (cellId: string): { x: number; y: number } => {
-    const space = spaces.find((s) => s.id === cellId);
-    if (!space) return { x: 0, y: 0 };
-
     if (typeof window !== "undefined") {
-      const pathElement = document.getElementById(
-        cellId,
-      ) as SVGPathElement | null;
-      if (pathElement && pathElement.getBBox) {
+      const el = document.getElementById(cellId) as SVGPathElement | null;
+      if (el?.getBBox) {
         try {
-          const bbox = pathElement.getBBox();
-          return {
-            x: bbox.x + bbox.width / 2,
-            y: bbox.y + bbox.height / 2,
-          };
+          const bbox = el.getBBox();
+          return { x: bbox.x + bbox.width / 2, y: bbox.y + bbox.height / 2 };
         } catch (e) {
           console.error("Error getting bbox for", cellId, e);
         }
@@ -106,13 +99,11 @@ export default function Board({
       color: p.color as Side,
       position: p.position,
     }));
-
     const rulesPiece: RulesPiece = {
       type: piece.type as PieceType,
       color: piece.color as Side,
       position: piece.position,
     };
-
     return generatePseudoLegalMovesForPiece(rulesPiece, rulesPieces);
   };
 
@@ -124,7 +115,7 @@ export default function Board({
 
     console.log("Cell clicked:", cellId);
 
-    // If there's a pending move and clicking the same cell, confirm the move
+    // ── Confirm pending move ──────────────────────────────────────────────
     if (boardState.pendingMove === cellId && boardState.selectedPiece) {
       onMove(boardState.selectedPiece.position, cellId);
       setBoardState((prev) => ({
@@ -132,21 +123,23 @@ export default function Board({
         selectedPiece: null,
         selectedCell: null,
         legalMoves: [],
+        hoveredMove: null,
         pendingMove: null,
       }));
       return;
     }
 
-    // If a piece is selected and this is a legal move, set as pending
+    // ── Lock a legal move as pending (first click on destination) ─────────
     if (boardState.selectedPiece && boardState.legalMoves.includes(cellId)) {
       setBoardState((prev) => ({
         ...prev,
         pendingMove: cellId,
+        hoveredMove: null,
       }));
       return;
     }
 
-    // Check if clicked cell has a piece
+    // ── Select / deselect a piece ─────────────────────────────────────────
     const pieceAtCell = boardState.pieces.find((p) => p.position === cellId);
 
     if (pieceAtCell) {
@@ -163,33 +156,49 @@ export default function Board({
       
       // If clicking the already selected piece, deselect it
       if (pieceAtCell === boardState.selectedPiece) {
+        // Deselect
         setBoardState((prev) => ({
           ...prev,
           selectedPiece: null,
           selectedCell: null,
           legalMoves: [],
+          hoveredMove: null,
           pendingMove: null,
         }));
       } else {
-        // Select this piece
+        // Select new piece
         const legalMoves = calculateLegalMoves(pieceAtCell);
         setBoardState((prev) => ({
           ...prev,
           selectedPiece: pieceAtCell,
           selectedCell: cellId,
           legalMoves,
+          hoveredMove: null,
           pendingMove: null,
         }));
-        console.log("Piece selected:", pieceAtCell, "Legal moves:", legalMoves);
+        console.log("Selected:", pieceAtCell, "Moves:", legalMoves);
       }
     } else {
-      // Clicking empty non-legal cell deselects everything
+      // Click on empty non-legal cell — deselect
       setBoardState((prev) => ({
         ...prev,
         selectedPiece: null,
         selectedCell: null,
         legalMoves: [],
+        hoveredMove: null,
         pendingMove: null,
+      }));
+    }
+  };
+
+  const handleCellHover = (cellId: string, entering: boolean) => {
+    // Only care about hovering legal move squares when a piece is selected
+    // and no move is locked yet
+    if (!boardState.selectedPiece || boardState.pendingMove) return;
+    if (boardState.legalMoves.includes(cellId)) {
+      setBoardState((prev) => ({
+        ...prev,
+        hoveredMove: entering ? cellId : prev.hoveredMove === cellId ? null : prev.hoveredMove,
       }));
     }
   };
@@ -202,42 +211,26 @@ export default function Board({
     handleCellClick(piece.position);
   };
 
-  const getCellStyle = (
-    cellId: string,
-  ): {
-    fill: string;
-    fillOpacity: number;
-    stroke: string;
-    strokeWidth: number;
-  } => {
-    // Pending move highlight (green for confirmation)
+  // ── Cell colour logic ─────────────────────────────────────────────────────
+  const getCellStyle = (cellId: string) => {
+    // Dark green — locked pending move (first click, waiting for confirm)
     if (cellId === boardState.pendingMove) {
-      return {
-        fill: "#00FF00",
-        fillOpacity: 1,
-        stroke: "#00CC00",
-        strokeWidth: 6,
-      };
+      return { fill: "#16a34a", fillOpacity: 1, stroke: "#14532d", strokeWidth: 6 };
     }
 
-    // Selected piece highlight (yellow)
+    // Selected piece — yellow
     if (cellId === boardState.selectedCell) {
-      return {
-        fill: "#FFD700",
-        fillOpacity: 1,
-        stroke: "#000000",
-        strokeWidth: 6,
-      };
+      return { fill: "#FFD700", fillOpacity: 1, stroke: "#000", strokeWidth: 6 };
     }
 
-    // Legal moves highlight (light blue)
+    // Light green — hovering a legal square
+    if (cellId === boardState.hoveredMove) {
+      return { fill: "#4ade80", fillOpacity: 1, stroke: "#16a34a", strokeWidth: 5 };
+    }
+
+    // Yellow-ish tint — available legal moves
     if (boardState.legalMoves.includes(cellId)) {
-      return {
-        fill: "#ebe850",
-        fillOpacity: 1,
-        stroke: "#000000",
-        strokeWidth: 4,
-      };
+      return { fill: "#ebe850", fillOpacity: 1, stroke: "#000", strokeWidth: 3 };
     }
 
     return {
@@ -252,10 +245,13 @@ export default function Board({
     <>
       <svg
         viewBox="0 0 1730 1730"
-        className="absolute top-[-1px] left-[0px] w-[900px] h-[900px]"
+        className="absolute w-[900px] h-[900px]"
       >
         {spaces.map((s) => {
           const style = getCellStyle(s.id);
+          const isLegal = boardState.legalMoves.includes(s.id);
+          const hasPendingMove = !!boardState.pendingMove;
+
           return (
             <path
               key={s.id}
@@ -266,17 +262,18 @@ export default function Board({
               stroke={style.stroke}
               strokeWidth={style.strokeWidth}
               strokeOpacity={0}
-              style={{ cursor: "pointer" }}
+              style={{ cursor: isLegal || boardState.pieces.some(p => p.position === s.id) ? "pointer" : "default" }}
               onClick={() => handleCellClick(s.id)}
               onMouseEnter={(e) => {
-                if (
-                  !boardState.selectedPiece &&
-                  !boardState.legalMoves.includes(s.id)
-                ) {
+                handleCellHover(s.id, true);
+
+                // Generic hover glow for non-selected, non-legal cells
+                if (!boardState.selectedPiece && !isLegal && s.id !== boardState.selectedCell) {
                   e.currentTarget.setAttribute("fill", "#f533e5ff");
                 }
               }}
               onMouseLeave={(e) => {
+                handleCellHover(s.id, false);
                 if (
                   !boardState.selectedPiece &&
                   !boardState.legalMoves.includes(s.id)
@@ -288,6 +285,9 @@ export default function Board({
           );
         })}
       </svg>
+
+      {/* board's midline */}
+      <div id="mybox" className="absolute pointer-events-auto h-[0.5%] w-[75.4%] top-[50%] left-[12.5%] bg-black"></div>
 
       {piecesReady &&
         boardState.pieces.map((piece, idx) => {
@@ -304,23 +304,25 @@ export default function Board({
           );
         })}
     </>
+    // {
+    //   spaces.map((s) => {
+    //     return (
+    //       <span
+    //         key={s.id}
+    //         className={`size-piece ${s.id}a`}
+    //         style={{
+    //           position: "absolute",
+    //           // fontSize: "10px",
+    //           transform: "translate(20%, 30%)",
+    //           fontWeight: "bold",
+    //           pointerEvents: "none",
+    //           color: "#000",
+    //         }}
+    //       >
+    //         {s.id}
+    //       </span>
+    //     );
+    //   })
+    // }
   );
-  // {spaces.map((s) => {
-  //   return (
-  //     <span
-  //       key={s.id}
-  //       className={`size-piece ${s.id}`}
-  //       style={{
-  //         position: "absolute",
-  //         // fontSize: "10px",
-  //         transform: "translate(20%, 30%)",
-  //         fontWeight: "bold",
-  //         pointerEvents: "none",
-  //         color: "#fff",
-  //       }}
-  //     >
-  //       {toNotation(s.id) || s.id}
-  //     </span>
-  //   );
-  // })}
 }

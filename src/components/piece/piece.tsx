@@ -27,7 +27,7 @@ export default function Piece({
 
   return (
     <div
-      className={`absolute cursor-pointer transition-all duration-200 size-piece ${position}`}
+      className={`absolute cursor-pointer transition-all duration-200 size-piece ${position.concat("a")}`}
       style={{
         // left: `${scaledX}px`,
         // top: `${scaledY}px`,
@@ -35,7 +35,7 @@ export default function Piece({
         // zIndex: 10,
         filter: isSelected ? "drop-shadow(0 0 10px yellow)" : "none",
         scale: isSelected ? "1.1" : "1",
-        pointerEvents: 'auto',
+        pointerEvents: 'none',
       }}
       onClick={(e) => {
         e.stopPropagation();

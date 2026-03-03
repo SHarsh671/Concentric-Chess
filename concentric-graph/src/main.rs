@@ -334,17 +334,26 @@ fn get_vertex_next(row: usize, col: usize) -> HashMap<(usize, usize), (usize, us
     map
 }
 
-fn get_color(row: usize, col: usize) -> &'static str {
-    if row % 2 == 1 {
-        // odd rows start from dark
-        if col % 2 == 1 { "dark" } else { "light" }
+fn get_color(row: usize, col: usize, is_archimedean: bool) -> &'static str {
+    if !is_archimedean || row > 6 {
+        if row % 2 == 1 {
+            // odd rows start from dark
+            if col % 2 == 1 { "dark" } else { "light" }
+        } else {
+            // even rows start from light
+            if col % 2 == 1 { "light" } else { "dark" }
+        }
+    } else if row % 2 == 1 {
+        // odd archimedean bottom rows start from light
+        if col % 2 == 1 { "light" } else { "dark" }
     } else {
         // even rows start from light
-        if col % 2 == 1 { "light" } else { "dark" }
+        if col % 2 == 1 { "dark" } else { "light" }
     }
 }
 
 fn main() {
+    let is_archimedean = std::env::args().any(|arg| arg == "--archimedean");
     let mut edge_neighbors = HashMap::new();
     let mut vertex_neighbors = HashMap::new();
     let mut edge_next = HashMap::new();
@@ -356,8 +365,369 @@ fn main() {
             vertex_neighbors.insert((r, c), get_vertex_neighbors(r, c));
             edge_next.insert((r, c), get_edge_next(r, c));
             vertex_next.insert((r, c), get_vertex_next(r, c));
-            color_map.insert((r, c), get_color(r, c));
+            color_map.insert((r, c), get_color(r, c, is_archimedean));
         }
+    }
+
+    if is_archimedean {
+        // archimedean graph we want to remove everything about rows 6 and 7 and do those manually
+        for c in 1..=11 {
+            edge_neighbors.remove(&(6, c));
+            edge_neighbors.remove(&(7, c));
+            vertex_neighbors.remove(&(6, c));
+            vertex_neighbors.remove(&(7, c));
+            edge_next.remove(&(6, c));
+            edge_next.remove(&(7, c));
+            vertex_next.remove(&(6, c));
+            vertex_next.remove(&(7, c));
+        }
+        // (6, 1)
+        edge_neighbors.insert((6, 1), HashSet::from([(5, 1), (6, 2), (7, 2)]));
+        vertex_neighbors.insert((6, 1), HashSet::from([(5, 2), (7, 1), (7, 3)]));
+        edge_next.insert((6, 1), HashMap::from([((5, 1), (7, 2)), ((7, 2), (5, 1))]));
+        vertex_next.insert((6, 1), HashMap::from([((5, 2), (7, 1)), ((7, 1), (5, 2))]));
+        // (6, 2)
+        edge_neighbors.insert((6, 2), HashSet::from([(5, 2), (6, 1), (6, 3), (7, 3)]));
+        vertex_neighbors.insert((6, 2), HashSet::from([(5, 1), (5, 3), (7, 2), (7, 4)]));
+        edge_next.insert(
+            (6, 2),
+            HashMap::from([
+                ((5, 2), (7, 3)),
+                ((7, 3), (5, 2)),
+                ((6, 1), (6, 3)),
+                ((6, 3), (6, 1)),
+            ]),
+        );
+        vertex_next.insert(
+            (6, 2),
+            HashMap::from([
+                ((5, 1), (7, 4)),
+                ((7, 4), (5, 1)),
+                ((5, 3), (7, 2)),
+                ((7, 2), (5, 3)),
+            ]),
+        );
+        // (6, 3)
+        edge_neighbors.insert((6, 3), HashSet::from([(5, 3), (6, 2), (6, 4), (7, 4)]));
+        vertex_neighbors.insert((6, 3), HashSet::from([(5, 2), (5, 4), (7, 3), (7, 5)]));
+        edge_next.insert(
+            (6, 3),
+            HashMap::from([
+                ((5, 3), (7, 4)),
+                ((7, 4), (5, 3)),
+                ((6, 2), (6, 4)),
+                ((6, 4), (6, 2)),
+            ]),
+        );
+        vertex_next.insert(
+            (6, 3),
+            HashMap::from([
+                ((5, 2), (7, 5)),
+                ((7, 5), (5, 2)),
+                ((5, 4), (7, 3)),
+                ((7, 3), (5, 4)),
+            ]),
+        );
+        // (6, 4)
+        edge_neighbors.insert((6, 4), HashSet::from([(5, 4), (6, 3), (6, 5), (7, 5)]));
+        vertex_neighbors.insert((6, 4), HashSet::from([(5, 3), (5, 5), (7, 4), (7, 6)]));
+        edge_next.insert(
+            (6, 4),
+            HashMap::from([
+                ((5, 4), (7, 5)),
+                ((7, 5), (5, 4)),
+                ((6, 3), (6, 5)),
+                ((6, 5), (6, 3)),
+            ]),
+        );
+        vertex_next.insert(
+            (6, 4),
+            HashMap::from([
+                ((5, 3), (7, 6)),
+                ((7, 6), (5, 3)),
+                ((5, 5), (7, 4)),
+                ((7, 4), (5, 5)),
+            ]),
+        );
+        // (6, 5)
+        edge_neighbors.insert((6, 5), HashSet::from([(5, 5), (6, 4), (6, 6), (7, 6)]));
+        vertex_neighbors.insert((6, 5), HashSet::from([(5, 4), (6, 7), (7, 5)]));
+        edge_next.insert(
+            (6, 5),
+            HashMap::from([
+                ((5, 5), (7, 6)),
+                ((7, 6), (5, 5)),
+                ((6, 4), (6, 6)),
+                ((6, 6), (6, 4)),
+            ]),
+        );
+        vertex_next.insert((6, 5), HashMap::from([((6, 7), (7, 5)), ((7, 5), (6, 7))]));
+        // (6, 6)
+        edge_neighbors.insert((6, 6), HashSet::from([(6, 5), (6, 7), (7, 7)]));
+        vertex_neighbors.insert((6, 6), HashSet::from([(5, 5), (7, 6), (7, 8)]));
+        edge_next.insert((6, 6), HashMap::from([((6, 5), (6, 7)), ((6, 7), (6, 5))]));
+        vertex_next.insert((6, 6), HashMap::from([((5, 5), (7, 6)), ((7, 6), (5, 5))]));
+        // (6, 7)
+        edge_neighbors.insert((6, 7), HashSet::from([(5, 5), (6, 6), (6, 8), (7, 8)]));
+        vertex_neighbors.insert((6, 7), HashSet::from([(6, 5), (5, 6), (7, 7), (7, 9)]));
+        edge_next.insert(
+            (6, 7),
+            HashMap::from([
+                ((5, 5), (7, 8)),
+                ((7, 8), (5, 5)),
+                ((6, 6), (6, 8)),
+                ((6, 8), (6, 6)),
+            ]),
+        );
+        vertex_next.insert(
+            (6, 7),
+            HashMap::from([
+                ((6, 5), (7, 9)),
+                ((7, 9), (6, 5)),
+                ((5, 6), (7, 7)),
+                ((7, 7), (5, 6)),
+            ]),
+        );
+        // (6, 8)
+        edge_neighbors.insert((6, 8), HashSet::from([(5, 6), (6, 7), (6, 9), (7, 9)]));
+        vertex_neighbors.insert((6, 8), HashSet::from([(5, 5), (5, 7), (7, 8), (7, 10)]));
+        edge_next.insert(
+            (6, 8),
+            HashMap::from([
+                ((5, 6), (7, 9)),
+                ((7, 9), (5, 6)),
+                ((6, 7), (6, 9)),
+                ((6, 9), (6, 7)),
+            ]),
+        );
+        vertex_next.insert(
+            (6, 8),
+            HashMap::from([
+                ((5, 5), (7, 10)),
+                ((7, 10), (5, 5)),
+                ((5, 7), (7, 8)),
+                ((7, 8), (5, 7)),
+            ]),
+        );
+        // (6, 9)
+        edge_neighbors.insert((6, 9), HashSet::from([(5, 7), (6, 8), (6, 10), (7, 10)]));
+        vertex_neighbors.insert((6, 9), HashSet::from([(5, 6), (5, 8), (7, 9), (7, 11)]));
+        edge_next.insert(
+            (6, 9),
+            HashMap::from([
+                ((5, 7), (7, 10)),
+                ((7, 10), (5, 7)),
+                ((6, 8), (6, 10)),
+                ((6, 10), (6, 8)),
+            ]),
+        );
+        vertex_next.insert(
+            (6, 9),
+            HashMap::from([
+                ((5, 6), (7, 11)),
+                ((7, 11), (5, 6)),
+                ((5, 8), (7, 9)),
+                ((7, 9), (5, 8)),
+            ]),
+        );
+        // (6, 10)
+        edge_neighbors.insert((6, 10), HashSet::from([(5, 8), (6, 9), (6, 11), (7, 11)]));
+        vertex_neighbors.insert((6, 10), HashSet::from([(5, 7), (5, 9), (7, 10)]));
+        edge_next.insert(
+            (6, 10),
+            HashMap::from([
+                ((5, 8), (7, 11)),
+                ((7, 11), (5, 8)),
+                ((6, 9), (6, 11)),
+                ((6, 11), (6, 9)),
+            ]),
+        );
+        vertex_next.insert(
+            (6, 10),
+            HashMap::from([((5, 9), (7, 10)), ((7, 10), (5, 9))]),
+        );
+        // (6, 11)
+        edge_neighbors.insert((6, 11), HashSet::from([(5, 9), (6, 10), (7, 1)]));
+        vertex_neighbors.insert((6, 11), HashSet::from([(5, 8), (7, 11)]));
+        edge_next.insert((6, 11), HashMap::from([((5, 9), (7, 1)), ((7, 1), (5, 9))]));
+        vertex_next.insert((6, 11), HashMap::new());
+
+        // (7, 1)
+        edge_neighbors.insert((7, 1), HashSet::from([(6, 11), (7, 2), (8, 1)]));
+        vertex_neighbors.insert((7, 1), HashSet::from([(6, 1), (8, 2)]));
+        edge_next.insert(
+            (7, 1),
+            HashMap::from([((6, 11), (8, 1)), ((8, 1), (6, 11))]),
+        );
+        vertex_next.insert((7, 1), HashMap::new());
+        // (7, 2)
+        edge_neighbors.insert((7, 2), HashSet::from([(6, 1), (7, 1), (7, 3), (8, 2)]));
+        vertex_neighbors.insert((7, 2), HashSet::from([(6, 2), (8, 1), (8, 3)]));
+        edge_next.insert(
+            (7, 2),
+            HashMap::from([
+                ((6, 1), (8, 2)),
+                ((8, 2), (6, 1)),
+                ((7, 1), (7, 3)),
+                ((7, 3), (7, 1)),
+            ]),
+        );
+        vertex_next.insert((7, 2), HashMap::from([((6, 2), (8, 1)), ((8, 1), (6, 2))]));
+        // (7, 3)
+        edge_neighbors.insert((7, 3), HashSet::from([(6, 2), (7, 2), (7, 4), (8, 3)]));
+        vertex_neighbors.insert((7, 3), HashSet::from([(6, 1), (6, 3), (8, 2), (8, 4)]));
+        edge_next.insert(
+            (7, 3),
+            HashMap::from([
+                ((6, 2), (8, 3)),
+                ((8, 3), (6, 2)),
+                ((7, 2), (7, 4)),
+                ((7, 4), (7, 2)),
+            ]),
+        );
+        vertex_next.insert(
+            (7, 3),
+            HashMap::from([
+                ((6, 1), (8, 4)),
+                ((8, 4), (6, 1)),
+                ((6, 3), (8, 2)),
+                ((8, 2), (6, 3)),
+            ]),
+        );
+        // (7, 4)
+        edge_neighbors.insert((7, 4), HashSet::from([(6, 3), (7, 3), (7, 5), (8, 4)]));
+        vertex_neighbors.insert((7, 4), HashSet::from([(6, 2), (6, 4), (8, 3), (8, 5)]));
+        edge_next.insert(
+            (7, 4),
+            HashMap::from([
+                ((6, 3), (8, 4)),
+                ((8, 4), (6, 3)),
+                ((7, 3), (7, 5)),
+                ((7, 5), (7, 3)),
+            ]),
+        );
+        vertex_next.insert(
+            (7, 4),
+            HashMap::from([
+                ((6, 2), (8, 5)),
+                ((8, 5), (6, 2)),
+                ((6, 4), (8, 3)),
+                ((8, 3), (6, 4)),
+            ]),
+        );
+        // (7, 5)
+        edge_neighbors.insert((7, 5), HashSet::from([(6, 4), (7, 4), (7, 6), (8, 5)]));
+        vertex_neighbors.insert((7, 5), HashSet::from([(6, 3), (6, 5), (8, 4), (7, 7)]));
+        edge_next.insert(
+            (7, 5),
+            HashMap::from([
+                ((6, 4), (8, 5)),
+                ((8, 5), (6, 4)),
+                ((7, 4), (7, 6)),
+                ((7, 6), (7, 4)),
+            ]),
+        );
+        vertex_next.insert(
+            (7, 5),
+            HashMap::from([
+                ((6, 3), (7, 7)),
+                ((7, 7), (6, 3)),
+                ((6, 5), (8, 4)),
+                ((8, 4), (6, 5)),
+            ]),
+        );
+        // (7, 6)
+        edge_neighbors.insert((7, 6), HashSet::from([(6, 5), (7, 5), (7, 7)]));
+        vertex_neighbors.insert((7, 6), HashSet::from([(6, 4), (6, 6), (8, 5)]));
+        edge_next.insert((7, 6), HashMap::from([((7, 5), (7, 7)), ((7, 7), (7, 5))]));
+        vertex_next.insert((7, 6), HashMap::from([((6, 6), (8, 5)), ((8, 5), (6, 6))]));
+        // (7, 7)
+        edge_neighbors.insert((7, 7), HashSet::from([(6, 6), (7, 6), (7, 8), (8, 5)]));
+        vertex_neighbors.insert((7, 7), HashSet::from([(7, 5), (6, 7), (8, 6)]));
+        edge_next.insert(
+            (7, 7),
+            HashMap::from([
+                ((6, 6), (8, 5)),
+                ((8, 5), (6, 6)),
+                ((7, 6), (7, 8)),
+                ((7, 8), (7, 6)),
+            ]),
+        );
+        vertex_next.insert((7, 7), HashMap::from([((7, 5), (6, 7)), ((6, 7), (7, 5))]));
+        // (7, 8)
+        edge_neighbors.insert((7, 8), HashSet::from([(6, 7), (7, 7), (7, 9), (8, 6)]));
+        vertex_neighbors.insert((7, 8), HashSet::from([(6, 6), (6, 8), (8, 5), (8, 7)]));
+        edge_next.insert(
+            (7, 8),
+            HashMap::from([
+                ((6, 7), (8, 6)),
+                ((8, 6), (6, 7)),
+                ((7, 7), (7, 9)),
+                ((7, 9), (7, 7)),
+            ]),
+        );
+        vertex_next.insert(
+            (7, 8),
+            HashMap::from([
+                ((6, 6), (8, 7)),
+                ((8, 7), (6, 6)),
+                ((6, 8), (8, 5)),
+                ((8, 5), (6, 8)),
+            ]),
+        );
+        // (7, 9)
+        edge_neighbors.insert((7, 9), HashSet::from([(6, 8), (7, 8), (7, 10), (8, 7)]));
+        vertex_neighbors.insert((7, 9), HashSet::from([(6, 7), (6, 9), (8, 6), (8, 8)]));
+        edge_next.insert(
+            (7, 9),
+            HashMap::from([
+                ((6, 8), (8, 7)),
+                ((8, 7), (6, 8)),
+                ((7, 8), (7, 10)),
+                ((7, 10), (7, 8)),
+            ]),
+        );
+        vertex_next.insert(
+            (7, 9),
+            HashMap::from([
+                ((6, 7), (8, 8)),
+                ((8, 8), (6, 7)),
+                ((6, 9), (8, 6)),
+                ((8, 6), (6, 9)),
+            ]),
+        );
+        // (7, 10)
+        edge_neighbors.insert((7, 10), HashSet::from([(6, 9), (7, 9), (7, 11), (8, 8)]));
+        vertex_neighbors.insert((7, 10), HashSet::from([(6, 8), (6, 10), (8, 7), (8, 9)]));
+        edge_next.insert(
+            (7, 10),
+            HashMap::from([
+                ((6, 9), (8, 8)),
+                ((8, 8), (6, 9)),
+                ((7, 9), (7, 11)),
+                ((7, 11), (7, 9)),
+            ]),
+        );
+        vertex_next.insert(
+            (7, 10),
+            HashMap::from([
+                ((6, 8), (8, 9)),
+                ((8, 9), (6, 8)),
+                ((6, 10), (8, 7)),
+                ((8, 7), (6, 10)),
+            ]),
+        );
+        // (7, 11)
+        edge_neighbors.insert((7, 11), HashSet::from([(6, 10), (7, 10), (8, 9)]));
+        vertex_neighbors.insert((7, 11), HashSet::from([(6, 9), (6, 11), (8, 8)]));
+        edge_next.insert(
+            (7, 11),
+            HashMap::from([((6, 10), (8, 9)), ((8, 9), (6, 10))]),
+        );
+        vertex_next.insert(
+            (7, 11),
+            HashMap::from([((6, 11), (8, 8)), ((8, 8), (6, 11))]),
+        );
     }
 
     let export = serde_json::json! {{
@@ -373,11 +743,19 @@ fn main() {
         "vertexNext": vertex_next.into_iter().map(|(k, v)| (id(k), v.into_iter().map(|(k, v)| (id(k), id(v))).collect::<HashMap<_, _>>())).collect::<HashMap<_, _>>(),
         "color": color_map.into_iter().map(|(k, v)| (id(k), v)).collect::<HashMap<_, _>>()
     }};
-    std::fs::write(
-        "src/graph.json",
-        serde_json::to_string_pretty(&export).unwrap(),
-    )
-    .unwrap();
+    if is_archimedean {
+        std::fs::write(
+            "src/archimedean_graph.json",
+            serde_json::to_string_pretty(&export).unwrap(),
+        )
+        .unwrap();
+    } else {
+        std::fs::write(
+            "src/concentric_graph.json",
+            serde_json::to_string_pretty(&export).unwrap(),
+        )
+        .unwrap();
+    }
 }
 
 #[cfg(test)]

@@ -1,0 +1,47 @@
+Date: February 13th @ 10:30am (online)
+Agenda:
+- Review outstanding tasks (due today).
+
+Attendees:
+- Josef
+- Carter
+- Skyler
+- Harshmeet
+- Roland
+- Sparsh
+- Harkirat
+
+Discussion:
+- Check ins:
+  - Josef: Completed work, will create nice Archimedean SVG and graph rules.
+  - Carter: Has rough Archimedean SVG, part way through aligning all the pieces to squares.
+  - Sparsh: Completed rules engine, will get SVG and graph by end of the week.
+  - Harshmeet/Harkirat: Completed work (updated rules/new archimedean rules), made move highlighting more intuitive.
+  - Skyler: Updating the game and homepage sidebar styles.
+  - Roland: Updated left sidebar styles (looking for feedback on ways to improve it further), will push game sidebar changes by end of the day.
+- New tasks (due March 6th @ 10:30am):
+  - Josef: Nice Archimedean SVG and graph, any new backend stuff to support archimedean, allow spectating when not signed in, reach out to Dr Rapoport for a meeting early next week, merge work together.
+  - Harshmeet: Modify home page styles and general theme to black and white.
+  - I gave up on formatting it like the above:
+    - Make UI and everything responsive so it works on different screen sizes (like mobile). (SKYLER)
+    - Fix refresh animations when moving and removing pieces (HARSHMEET)
+    - Double clicking leads to highlighting images. (HARSHMEET)
+    - List of captured pieces (HARSHMEET)
+      - Net material?
+    - Undo (JOSEF backend side, CARTER frontend)
+    - Draw conditions (SPARSH)
+    - Allow spectating and stuff when not signed in. (JOSEF)
+    - Implement check and checkmate. (SPARSH)
+    - Double check going straight to a link to a game that's not for a specific player. (JOSEF)
+    - Missing full set of pieces for invite game. (CARTER)
+    - Spectators/opposite player can't get to the confirm step for moves. (ROLAND)
+    - Move pagination (going forwards and backwards on a game, reviewing the replay). (HARKIRAT)
+    - Better way to know whose turn it is. (SKYLER)
+    - Questions for Dr Rapoport:
+      - What do you want for colors for the board? black/white? blue/green? custom themes?
+        - Confirm correct the rules
+      - Run through all the rules (rule pages, actual piece movements, tile connections) and confirm we got it all right.
+
+Next meeting: Thursday, February 26th after meeting with TA
+Meeting with TA: Thursday, February 26th @ 10:00am
+Meeting with instructor: Friday, March 6th @ 10:15am
