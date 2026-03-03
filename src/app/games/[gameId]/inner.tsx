@@ -195,8 +195,8 @@ export default function GamePage({
     isWhite && !isBlack
       ? "wht"
       : isBlack && !isWhite
-      ? "blk"
-      : undefined; // ← not null
+        ? "blk"
+        : undefined; // ← not null
   const currentTurn = game.nextMove % 2 === 1 ? "wht" : "blk";
 
   console.log({
@@ -226,10 +226,10 @@ export default function GamePage({
         {game.whitePlayerId === playerId && game.blackPlayerId === playerId
           ? "both players"
           : game.whitePlayerId === playerId
-          ? "White"
-          : game.blackPlayerId === playerId
-          ? "Black"
-          : "a spectator"}
+            ? "White"
+            : game.blackPlayerId === playerId
+              ? "Black"
+              : "a spectator"}
         . It is {game.nextMove % 2 === 1 ? "White's" : "Black's"} turn.
         <br />
         <div className="relative w-[900px] h-[900px] border-2">
@@ -240,8 +240,9 @@ export default function GamePage({
               onMove={onMove}
               viewerSide={viewerSide}
               currentTurn={currentTurn}
-              isSpectator={isSpectator} 
+              isSpectator={isSpectator}
               canControlBoth={canControlBoth}
+              variant={game.variant.split("-")[0] as "concentric" | "archimedean"}
             />
           </div>
         </div>

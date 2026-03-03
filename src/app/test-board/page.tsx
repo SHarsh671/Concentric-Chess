@@ -78,7 +78,7 @@ export default function TestBoardPage() {
           priority
         />
         <div className="absolute top-0 left-0 w-full h-full">
-          <Board moves={moves} onMove={handleMove} />
+          {/*<Board moves={moves} onMove={handleMove} variant="archimedean" />*/}
         </div>
       </div>
 
