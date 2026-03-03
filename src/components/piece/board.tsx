@@ -12,6 +12,7 @@ import {
 } from "shared/concentric-rules";
 import { Move } from "shared";
 import { CONCENTRIC_GRAPH } from "../../../shared/concentric-graph";
+import { ARCHIMEDEAN_GRAPH } from "shared/archimedean-rules";
 
 type Space = {
   id: string;
@@ -237,7 +238,7 @@ export default function Board({
     }
 
     return {
-      fill: CONCENTRIC_GRAPH.color[cellId] === "dark" ? "#473c39" : "#f3f1f1",
+      fill: (variant === "concentric" ? CONCENTRIC_GRAPH : ARCHIMEDEAN_GRAPH).color[cellId] === "dark" ? "#473c39" : "#f3f1f1",
       fillOpacity: 1,
       stroke: "#000000",
       strokeWidth: 4,
@@ -289,9 +290,6 @@ export default function Board({
         })}
       </svg>
 
-      {/* board's midline */}
-      {variant === "archimedean" && <div className="absolute pointer-events-auto h-[0.5%] w-[75.4%] top-[50%] left-[12.5%] bg-black"></div>}
-
       {piecesReady &&
         boardState.pieces.map((piece, idx) => {
           const center = getCellCenter(piece.position);
@@ -307,26 +305,27 @@ export default function Board({
             />
           );
         })}
+
     </>
-    // {
-    //   spaces.map((s) => {
-    //     return (
-    //       <span
-    //         key={s.id}
-    //         className={`size-piece ${s.id}a`}
-    //         style={{
-    //           position: "absolute",
-    //           // fontSize: "10px",
-    //           transform: "translate(20%, 30%)",
-    //           fontWeight: "bold",
-    //           pointerEvents: "none",
-    //           color: "#000",
-    //         }}
-    //       >
-    //         {s.id}
-    //       </span>
-    //     );
-    //   })
-    // }
   );
 }
+// {
+//   spaces.map((s) => {
+//     return (
+//       <span
+//         key={s.id}
+//         className={`size-piece ${s.id}a`}
+//         style={{
+//           position: "absolute",
+//           // fontSize: "10px",
+//           transform: "translate(20%, 30%)",
+//           fontWeight: "bold",
+//           pointerEvents: "none",
+//           color: "#000",
+//         }}
+//       >
+//         {s.id}
+//       </span>
+//     );
+//   })
+// }

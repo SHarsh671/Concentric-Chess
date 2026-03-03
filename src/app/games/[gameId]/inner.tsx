@@ -199,17 +199,6 @@ export default function GamePage({
         : undefined; // ← not null
   const currentTurn = game.nextMove % 2 === 1 ? "wht" : "blk";
 
-  console.log({
-    viewerSide,
-    currentTurn,
-    isSpectator,
-    canControlBoth,
-    playerId,
-    whitePlayerId: game.whitePlayerId,
-    blackPlayerId: game.blackPlayerId,
-    nextMove: game.nextMove,
-  });
-
   return (
     <div className="flex w-full">
       <div className="flex flex-col items-center space-y-4">
