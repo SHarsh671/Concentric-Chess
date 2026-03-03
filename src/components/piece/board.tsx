@@ -258,7 +258,7 @@ export default function Board({
       </svg>
 
       {/* board's midline */}
-      <div id="mybox" className="absolute pointer-events-auto h-[0.5%] w-[75.4%] top-[50%] left-[12.5%] bg-black"></div>
+      <div className="absolute pointer-events-none h-[0.5%] w-[75.4%] top-[50%] left-[12.5%] bg-black"></div>
 
       {piecesReady &&
         boardState.pieces.map((piece, idx) => {
