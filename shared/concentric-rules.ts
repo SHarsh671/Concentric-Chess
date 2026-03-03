@@ -331,7 +331,7 @@ export const initialPieces: RulesPiece[] = [
   { type: "pawn", color: "blk", position: "r9c7" },
 
   //fill board
-  //{ type: "queen", color: "blk", position: "r5c1"},
+  // { type: "queen", color: "blk", position: "r5c1"},
   // { type: "queen", color: "blk", position: "r5c2"},
   // { type: "queen", color: "blk", position: "r5c3"},
   // { type: "queen", color: "blk", position: "r5c4"},
