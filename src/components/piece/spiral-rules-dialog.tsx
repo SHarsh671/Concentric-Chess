@@ -39,8 +39,8 @@ export default function SpiralRulesDialog({
           <div className="flex items-center gap-3">
             {/* Spiral icon made from nested arcs */}
             <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
-              <path d="M18 2 C28 2, 34 8, 34 18 C34 28, 28 34, 18 34 C8 34, 4 28, 4 18 C4 10, 9 6, 18 6 C26 6, 30 12, 30 18 C30 24, 26 28, 18 28 C12 28, 10 24, 10 18 C10 14, 13 12, 18 12 C22 12, 24 15, 24 18" stroke="#aaa" strokeWidth="1.5" fill="none"/>
-              <path d="M18 15 C20 15, 22 16.5, 22 18 C22 20, 20 22, 18 22 C16 22, 14 20, 14 18 C14 16, 16 14, 18 14" stroke="#fff" strokeWidth="1.5" fill="none"/>
+              <path d="M18 2 C28 2, 34 8, 34 18 C34 28, 28 34, 18 34 C8 34, 4 28, 4 18 C4 10, 9 6, 18 6 C26 6, 30 12, 30 18 C30 24, 26 28, 18 28 C12 28, 10 24, 10 18 C10 14, 13 12, 18 12 C22 12, 24 15, 24 18" stroke="#aaa" strokeWidth="1.5" fill="none" />
+              <path d="M18 15 C20 15, 22 16.5, 22 18 C22 20, 20 22, 18 22 C16 22, 14 20, 14 18 C14 16, 16 14, 18 14" stroke="#fff" strokeWidth="1.5" fill="none" />
             </svg>
             <div>
               <div style={{ fontSize: "0.65rem", letterSpacing: "0.2em", color: "#aaa", textTransform: "uppercase" }}>
@@ -129,7 +129,7 @@ export default function SpiralRulesDialog({
               </table>
             </div>
             <div style={{ fontSize: "0.8rem", color: "#888", marginTop: "8px", fontStyle: "italic" }}>
-              Green cells follow the same pattern reflected. A "—" means no diagonal exists in that direction from that row.
+              Green cells follow the same pattern reflected. A &quot;—&quot; means no diagonal exists in that direction from that row.
             </div>
           </Section>
 
