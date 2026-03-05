@@ -547,18 +547,15 @@ fn main() {
             HashMap::from([((5, 9), (7, 10)), ((7, 10), (5, 9))]),
         );
         // (6, 11)
-        edge_neighbors.insert((6, 11), HashSet::from([(5, 9), (6, 10), (7, 1)]));
+        edge_neighbors.insert((6, 11), HashSet::from([(5, 9), (6, 10)]));
         vertex_neighbors.insert((6, 11), HashSet::from([(5, 8), (7, 11)]));
-        edge_next.insert((6, 11), HashMap::from([((5, 9), (7, 1)), ((7, 1), (5, 9))]));
+        edge_next.insert((6, 11), HashMap::new());
         vertex_next.insert((6, 11), HashMap::new());
 
         // (7, 1)
-        edge_neighbors.insert((7, 1), HashSet::from([(6, 11), (7, 2), (8, 1)]));
+        edge_neighbors.insert((7, 1), HashSet::from([(7, 2), (8, 1)]));
         vertex_neighbors.insert((7, 1), HashSet::from([(6, 1), (8, 2)]));
-        edge_next.insert(
-            (7, 1),
-            HashMap::from([((6, 11), (8, 1)), ((8, 1), (6, 11))]),
-        );
+        edge_next.insert((7, 1), HashMap::new());
         vertex_next.insert((7, 1), HashMap::new());
         // (7, 2)
         edge_neighbors.insert((7, 2), HashSet::from([(6, 1), (7, 1), (7, 3), (8, 2)]));

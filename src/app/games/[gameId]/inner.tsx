@@ -244,7 +244,7 @@ export default function GamePage({
           <div className="relative w-1/3 h-1/2 top-1/4 left-1/18 border-gray-400 border-2 rounded-2xl bg-gray-200 text-center text-[37px] text-black"><Timer timeLeft={timer[0]}></Timer></div>
           <div className="relative w-1/3 h-1/2 top-1/4 left-5/18 border-gray-800 border-2 rounded-2xl bg-gray-600 text-center text-[37px] text-white"><Timer timeLeft={timer[1]}></Timer></div>
         </div>
-        <div className="relative flex flex-col w-18/20 mx-auto h-3/5 border-2 rounded-md overflow-y-auto">
+        <div className="relative flex w-18/20 mx-auto h-3/5 border-2 rounded-md overflow-y-auto flex-col-reverse">
           {sortedTurns.map((turn) => {
             const move = groupedMoves[turn];
 
@@ -260,7 +260,7 @@ export default function GamePage({
                 </span>
 
                 <span>
-                  {move.b && `${move.b.fromSquare}-${move.b.toSquare}`}
+                  {move.b && `${toNotation(move.b.fromSquare)}-${toNotation(move.b.toSquare)}`}
                 </span>
               </div>
             );

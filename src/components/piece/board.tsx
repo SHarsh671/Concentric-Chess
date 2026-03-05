@@ -250,6 +250,12 @@ export default function Board({
       <svg
         viewBox="0 0 1730 1730"
         className="absolute w-[900px] h-[900px]"
+        // want to prevent highlighting cells on double click, but still allow text selection for debugging
+        onMouseDown={(e) => {
+          if (e.detail > 1) {
+            e.preventDefault();
+          }
+        }}
       >
         {spaces.map((s) => {
           const style = getCellStyle(s.id);
