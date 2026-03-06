@@ -114,7 +114,7 @@ export async function AppShell({
             <SidebarTrigger />
           </div>
         </header>
-        <div className="flex flex-1 flex-col gap-4 px-4 pb-2 md:pt-2 min-h-screen">
+        <div className="flex flex-1 flex-col min-h-screen">
           {children}
         </div>
       </SidebarInset>

@@ -9,6 +9,7 @@ import Board, { CapturedPiece } from "@/components/piece/board";
 import Image from "next/image";
 import RulesDialog from "@/components/piece/rules-dialog";
 import { HelpCircle } from "lucide-react";
+import { toNotation } from "@/lib/utils";
 
 export default function GamePage({
   game: initialGame,
@@ -38,6 +39,20 @@ export default function GamePage({
       },
     });
   };
+
+  const groupedMoves: Record<number, { w?: typeof moves[0]; b?: typeof moves[0] }> = {};
+
+  moves.forEach((m) => {
+    const turn = Math.floor((m.moveNumber - 1) / 2) + 1;
+    const mover = m.moveNumber % 2 === 1 ? "w" : "b";
+
+    if (!groupedMoves[turn]) groupedMoves[turn] = {};
+    groupedMoves[turn][mover] = m;
+  });
+
+  const sortedTurns = Object.keys(groupedMoves)
+    .map(Number)
+    .sort((a, b) => b - a);
 
   useEffect(() => {
     gameRef.current = game;
@@ -137,6 +152,21 @@ export default function GamePage({
   const whiteCaptured = capturedPieces.filter((p) => p.color === "wht");
   const blackCaptured = capturedPieces.filter((p) => p.color === "blk");
 
+  const isWhite = game.whitePlayerId === playerId;
+  const isBlack = game.blackPlayerId === playerId;
+
+  const isSpectator = !isWhite && !isBlack;
+  const canControlBoth = isWhite && isBlack;
+
+  // ONLY use viewerSide when exactly one side
+  const viewerSide =
+    isWhite && !isBlack
+      ? "wht"
+      : isBlack && !isWhite
+        ? "blk"
+        : undefined; // ← not null
+  const currentTurn = game.nextMove % 2 === 1 ? "wht" : "blk";
+
   return (
     <div className="flex w-full gap-4">
       {/* Captured pieces sidebar */}
@@ -188,8 +218,12 @@ export default function GamePage({
         {game.status === "white_win" && <div>White wins!</div>}
         {game.status === "black_win" && <div>Black wins!</div>}
         {game.status === "draw" && <div>Draw!</div>}
-        {game.status === "white_resign" && <div>White resigns. Black wins!</div>}
-        {game.status === "black_resign" && <div>Black resigns. White wins!</div>}
+        {game.status === "white_resign" && (
+          <div>White resigns. Black wins!</div>
+        )}
+        {game.status === "black_resign" && (
+          <div>Black resigns. White wins!</div>
+        )}
         You are{" "}
         {game.whitePlayerId === playerId && game.blackPlayerId === playerId
           ? "both players"
@@ -200,19 +234,21 @@ export default function GamePage({
               : "a spectator"}
         . It is {game.nextMove % 2 === 1 ? "White's" : "Black's"} turn.
         <div className="relative w-[900px] h-[900px] border-2">
-          <Image
-            src="/cc/ccboard.png"
-            alt="Chess board"
-            width={900}
-            height={900}
-            className="absolute top-0 left-0"
-            priority
-          />
+          {/* Overlay: SVG cells + pieces */}
           <div className="absolute top-0 left-0 w-full h-full">
-            <Board moves={moves} onMove={onMove} onCapturedPiecesChange={(pieces) => {
-              console.log("CAPTURED:", pieces);
-              setCapturedPieces(pieces);
-}} />
+            <Board
+              moves={moves}
+              onMove={onMove}
+              onCapturedPiecesChange={(pieces) => {
+                console.log("CAPTURED:", pieces);
+                setCapturedPieces(pieces);
+              }}
+              viewerSide={viewerSide}
+              currentTurn={currentTurn}
+              isSpectator={isSpectator}
+              canControlBoth={canControlBoth}
+              variant={game.variant.split("-")[0] as "concentric" | "archimedean"}
+            />
           </div>
         </div>
       </div>
@@ -220,33 +256,34 @@ export default function GamePage({
       {/* Game sidebar */}
       <div className="relative w-[30%] h-[70%] border-2 mt-[24px]">
         <div className="flex w-full h-1/5">
-          <div className="relative w-1/3 h-1/2 top-1/4 left-1/18 border-gray-400 border-2 rounded-2xl bg-gray-200 text-center text-[37px] text-black overflow-auto">
-            <Timer timeLeft={timer[0]} />
-          </div>
-          <div className="relative w-1/3 h-1/2 top-1/4 left-5/18 border-gray-800 border-2 rounded-2xl bg-gray-600 text-center text-[37px] text-white overflow-auto">
-            <Timer timeLeft={timer[1]} />
-          </div>
+          <div className="relative w-1/3 h-1/2 top-1/4 left-1/18 border-gray-400 border-2 rounded-2xl bg-gray-200 text-center text-[37px] text-black"><Timer timeLeft={timer[0]}></Timer></div>
+          <div className="relative w-1/3 h-1/2 top-1/4 left-5/18 border-gray-800 border-2 rounded-2xl bg-gray-600 text-center text-[37px] text-white"><Timer timeLeft={timer[1]}></Timer></div>
         </div>
-        <div className="relative flex flex-col-reverse w-18/20 mx-auto h-3/5 border-2 columns-1 overflow-y-auto">
-          {moves.toReversed().map((m) => {
-            const turn = Math.floor((m.moveNumber - 1) / 2) + 1;
-            const mover = m.moveNumber % 2 === 1 ? "w" : "b";
-            return <p key={m.id}>{turn}{mover}. {m.fromSquare}-{m.toSquare}</p>;
+        <div className="relative flex w-18/20 mx-auto h-3/5 border-2 rounded-md overflow-y-auto flex-col-reverse">
+          {sortedTurns.map((turn) => {
+            const move = groupedMoves[turn];
+
+            return (
+              <div
+                key={turn}
+                className="grid grid-cols-[40px_1fr_1fr] items-center px-2 py-1 hover:bg-muted/40"
+              >
+                <span className="font-semibold">{turn}.</span>
+
+                <span>
+                  {move.w && `${toNotation(move.w.fromSquare)}-${toNotation(move.w.toSquare)}`}
+                </span>
+
+                <span>
+                  {move.b && `${toNotation(move.b.fromSquare)}-${toNotation(move.b.toSquare)}`}
+                </span>
+              </div>
+            );
           })}
         </div>
         <div className="flex w-full h-1/5">
-          <Button
-            className="relative w-2/5 h-1/2 top-1/4 left-1/15 border-orange-400 border-2 rounded-2xl bg-orange-300 text-center text-5xl text-gray-100 overflow-auto"
-            onClick={() => ws.send({ type: "draw" })}
-          >
-            Draw
-          </Button>
-          <Button
-            className="relative w-2/5 h-1/2 top-1/4 left-4/30 border-orange-400 border-2 rounded-2xl bg-orange-300 text-center text-5xl text-gray-100 overflow-auto"
-            onClick={() => ws.send({ type: "resign" })}
-          >
-            Resign
-          </Button>
+          <Button className="relative w-2/5 h-1/2 top-1/3 left-1/15 border-orange-400 border-2 rounded-2xl bg-orange-300 text-center text-xl text-orange-900" onClick={() => ws.send({ type: "draw" })}>Draw</Button>
+          <Button className="relative w-2/5 h-1/2 top-1/3 left-4/30 border-orange-400 border-2 rounded-2xl bg-orange-300 text-center text-xl text-orange-900" onClick={() => ws.send({ type: "resign" })}>Resign</Button>
         </div>
         <div className="bg-blue-50 border-2 border-blue-300 rounded-lg p-4 max-w-[900px] text-sm text-blue-800 mt-[24px]">
           <p className="font-semibold mb-1">💡 How to move:</p>

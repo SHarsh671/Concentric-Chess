@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Piece, { PieceProps } from "./piece";
+import Piece from "./piece";
 import {
   computePieceState,
   generatePseudoLegalMovesForPiece,
@@ -11,6 +11,8 @@ import {
   Side,
 } from "shared/concentric-rules";
 import { Move } from "shared";
+import { CONCENTRIC_GRAPH } from "../../../shared/concentric-graph";
+import { ARCHIMEDEAN_GRAPH } from "shared/archimedean-rules";
 
 type Space = {
   id: string;
@@ -23,8 +25,8 @@ export type CapturedPiece = {
 };
 
 type BoardState = {
-  pieces: PieceProps[];
-  selectedPiece: PieceProps | null;
+  pieces: RulesPiece[];
+  selectedPiece: RulesPiece | null;
   selectedCell: string | null;
   legalMoves: string[];
   hoveredMove: string | null;
@@ -69,6 +71,19 @@ export default function Board({
   onCapturedPiecesChange?: (captured: CapturedPiece[]) => void;
   trackCapturedPieces?: boolean;
   isReplayMode?: boolean;
+  viewerSide,
+  currentTurn,
+  isSpectator,
+  canControlBoth,
+  variant,
+}: {
+  moves: Move[];
+  onMove: (from: string, to: string) => void;
+  viewerSide: Side | undefined;    // "white" | "black" | undefined
+  currentTurn: Side;               // whose turn it is
+  isSpectator: boolean;
+  canControlBoth: boolean;
+  variant: "concentric" | "archimedean";
 }) {
   const [spaces, setSpaces] = useState<Space[]>([]);
   const [boardState, setBoardState] = useState<BoardState>({
@@ -105,7 +120,8 @@ export default function Board({
   }, [moves]);
 
   useEffect(() => {
-    fetch("/cc/ccboard.svg")
+    fetch(variant === "concentric" ? "/cc/ccboard.svg" :
+      "/as/asboard.svg")
       .then((res) => res.text())
       .then((svgText) => {
         const parser = new DOMParser();
@@ -135,7 +151,7 @@ export default function Board({
     return { x: 0, y: 0 };
   };
 
-  const calculateLegalMoves = (piece: PieceProps): string[] => {
+  const calculateLegalMoves = (piece: RulesPiece): string[] => {
     const rulesPieces: RulesPiece[] = boardState.pieces.map((p) => ({
       type: p.type as PieceType,
       color: p.color as Side,
@@ -151,6 +167,12 @@ export default function Board({
 
   const handleCellClick = (cellId: string) => {
     if (isReplayMode) return;
+    if (isSpectator) return;
+    if (!canControlBoth && viewerSide !== currentTurn) {
+      return;
+    }
+
+    console.log("Cell clicked:", cellId);
 
     if (boardState.pendingMove === cellId && boardState.selectedPiece) {
       onMove(boardState.selectedPiece.position, cellId);
@@ -166,6 +188,18 @@ export default function Board({
     const pieceAtCell = boardState.pieces.find((p) => p.position === cellId);
 
     if (pieceAtCell) {
+      // Spectators cannot select
+      if (isSpectator) return;
+
+      // Must be correct turn (unless controlling both)
+      if (!canControlBoth && viewerSide !== currentTurn) return;
+
+      // Determine which color this user is allowed to control right now
+      const allowedColor = canControlBoth ? currentTurn : viewerSide;
+
+      if (pieceAtCell.color !== allowedColor) return;
+
+      // If clicking the already selected piece, deselect it
       if (pieceAtCell === boardState.selectedPiece) {
         setBoardState((prev) => ({
           ...prev,
@@ -209,23 +243,55 @@ export default function Board({
     }
   };
 
+  const handlePieceClick = (piece: RulesPiece) => {
+    if (isSpectator) return;
+    if (viewerSide !== currentTurn) return;
+    if (piece.color !== viewerSide) return;
+
+    handleCellClick(piece.position);
+  };
+
+  // ── Cell colour logic ─────────────────────────────────────────────────────
   const getCellStyle = (cellId: string) => {
-    if (cellId === boardState.pendingMove)
-      return { fill: "#16a34a", fillOpacity: 0.75, stroke: "#14532d", strokeWidth: 6 };
-    if (cellId === boardState.selectedCell)
-      return { fill: "#FFD700", fillOpacity: 0.75, stroke: "#000", strokeWidth: 6 };
-    if (cellId === boardState.hoveredMove)
-      return { fill: "#4ade80", fillOpacity: 0.75, stroke: "#16a34a", strokeWidth: 5 };
-    if (boardState.legalMoves.includes(cellId))
-      return { fill: "#ebe850", fillOpacity: 0.65, stroke: "#000", strokeWidth: 3 };
-    return { fill: "transparent", fillOpacity: 0, stroke: "black", strokeWidth: 10 };
+    // Dark green — locked pending move (first click, waiting for confirm)
+    if (cellId === boardState.pendingMove) {
+      return { fill: "#16a34a", fillOpacity: 1, stroke: "#14532d", strokeWidth: 6 };
+    }
+
+    // Selected piece — yellow
+    if (cellId === boardState.selectedCell) {
+      return { fill: "#FFD700", fillOpacity: 1, stroke: "#000", strokeWidth: 6 };
+    }
+
+    // Light green — hovering a legal square
+    if (cellId === boardState.hoveredMove) {
+      return { fill: "#4ade80", fillOpacity: 1, stroke: "#16a34a", strokeWidth: 5 };
+    }
+
+    // Yellow-ish tint — available legal moves
+    if (boardState.legalMoves.includes(cellId)) {
+      return { fill: "#ebe850", fillOpacity: 1, stroke: "#000", strokeWidth: 3 };
+    }
+
+    return {
+      fill: (variant === "concentric" ? CONCENTRIC_GRAPH : ARCHIMEDEAN_GRAPH).color[cellId] === "dark" ? "#473c39" : "#f3f1f1",
+      fillOpacity: 1,
+      stroke: "#000000",
+      strokeWidth: 4,
+    };
   };
 
   return (
     <>
       <svg
         viewBox="0 0 1730 1730"
-        className="absolute top-[-1px] left-[0px] w-[900px] h-[900px]"
+        className="absolute w-[900px] h-[900px]"
+        // want to prevent highlighting cells on double click, but still allow text selection for debugging
+        onMouseDown={(e) => {
+          if (e.detail > 1) {
+            e.preventDefault();
+          }
+        }}
       >
         {spaces.map((s) => {
           const style = getCellStyle(s.id);
@@ -253,15 +319,16 @@ export default function Board({
                 handleCellHover(s.id, true);
                 if (!boardState.selectedPiece && !isLegal && s.id !== boardState.selectedCell) {
                   e.currentTarget.setAttribute("fill", "#f533e5ff");
-                  e.currentTarget.setAttribute("fill-opacity", "1");
                 }
               }}
               onMouseLeave={(e) => {
                 if (isReplayMode) return;
                 handleCellHover(s.id, false);
-                if (!boardState.selectedPiece && !isLegal && s.id !== boardState.selectedCell) {
-                  e.currentTarget.setAttribute("fill", "transparent");
-                  e.currentTarget.setAttribute("fill-opacity", "0");
+                if (
+                  !boardState.selectedPiece &&
+                  !boardState.legalMoves.includes(s.id)
+                ) {
+                  e.currentTarget.setAttribute("fill", style.fill);
                 }
               }}
             />
@@ -280,9 +347,31 @@ export default function Board({
               y={center.y}
               onClick={() => handleCellClick(piece.position)}
               isSelected={boardState.selectedPiece === piece}
+              variant={variant}
             />
           );
         })}
+
     </>
   );
 }
+// {
+//   spaces.map((s) => {
+//     return (
+//       <span
+//         key={s.id}
+//         className={`size-piece ${s.id}a`}
+//         style={{
+//           position: "absolute",
+//           // fontSize: "10px",
+//           transform: "translate(20%, 30%)",
+//           fontWeight: "bold",
+//           pointerEvents: "none",
+//           color: "#000",
+//         }}
+//       >
+//         {s.id}
+//       </span>
+//     );
+//   })
+// }

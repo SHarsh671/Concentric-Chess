@@ -1,0 +1,27 @@
+Date: February 26th @ 10:30am (online)
+Agenda:
+- Review outstanding tasks.
+
+Attendees:
+- Josef
+- Carter
+- Harshmeet
+- Harkirat
+- Sparsh
+- Skyler
+Missing:
+- Roland
+
+Discussion:
+- No feedback from TA, all good.
+- Check ins:
+  - Josef: Completed work.
+  - Carter: Made progress, will adjust new archimedean SVG.
+  - Harshmeet: Made progress on captured pieces UI, will finish by end of next week.
+  - Harkirat: Had midterm, will be done by the end of next week.
+  - Sparsh: Made progress, will finish by the end of next week.
+  - Skyler: Been busy, will finish by the end of next week.
+
+Next meeting: Friday, March 6th after meeting with pro
+Meeting with TA: Thursday, February 26th @ 10:00am
+Meeting with instructor: Friday, March 6th @ 10:15am

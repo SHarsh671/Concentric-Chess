@@ -89,13 +89,13 @@ function rayFrom(
   prev: CellId,
   first: CellId,
   color: Side,
-  nextMap: Record<CellId, Record<CellId, CellId | null>>,
+  nextMap: Record<CellId, Partial<Record<CellId, CellId | null>>>,
 ): CellId[] {
   const out: CellId[] = [];
   let p = prev;
   let cur = first;
 
-  while (true) {
+  while (!out.includes(cur)) {
     const occ = pieceAt(pieces, cur);
     if (!occ) {
       out.push(cur);
@@ -127,38 +127,45 @@ function rookMoves(pieces: RulesPiece[], from: CellId, color: Side): CellId[] {
 function bishopMoves(pieces: RulesPiece[], from: CellId, color: Side): CellId[] {
   const out = new Set<CellId>();
 
-  const isHinge = (cell: CellId) =>
-    hasTag(cell, "crescent") || hasTag(cell, "halfMoon") || hasTag(cell, "twin");
-
   for (const first of CONCENTRIC_GRAPH.vertexNbrs[from]) {
     const ray = rayFrom(pieces, from, first, color, CONCENTRIC_GRAPH.vertexNext);
-    for (const sq of ray) out.add(sq);
-
-    // Bishop "swing": if we pass through a hinge cell, allow branching once from that hinge.
-    // We implement this as: whenever we reach a hinge along a diagonal ray (before being blocked),
-    // add rays starting in any other diagonal direction from that hinge.
-    let prev = from;
-    let cur = first;
-
-    while (true) {
-      const occ = pieceAt(pieces, cur);
-      const blocked = !!occ;
-
-      if (isHinge(cur)) {
-        for (const altFirst of CONCENTRIC_GRAPH.vertexNbrs[cur]) {
-          if (altFirst === prev) continue;
-          const branch = rayFrom(pieces, cur, altFirst, color, CONCENTRIC_GRAPH.vertexNext);
-          for (const sq of branch) out.add(sq);
-        }
-      }
-
-      if (blocked) break;
-      const next = CONCENTRIC_GRAPH.vertexNext[cur]?.[prev] ?? null;
-      if (!next || next === from) break;
-      prev = cur;
-      cur = next;
+    for (const sq of ray) {
+      out.add(sq);
     }
   }
+
+  // const isHinge = (cell: CellId) =>
+  //   hasTag(cell, "crescent") || hasTag(cell, "halfMoon") || hasTag(cell, "twin");
+  //
+  // for (const first of CONCENTRIC_GRAPH.vertexNbrs[from]) {
+  //   const ray = rayFrom(pieces, from, first, color, CONCENTRIC_GRAPH.vertexNext);
+  //   for (const sq of ray) out.add(sq);
+  //
+  //   // Bishop "swing": if we pass through a hinge cell, allow branching once from that hinge.
+  //   // We implement this as: whenever we reach a hinge along a diagonal ray (before being blocked),
+  //   // add rays starting in any other diagonal direction from that hinge.
+  //   let prev = from;
+  //   let cur = first;
+  //
+  //   while (true) {
+  //     const occ = pieceAt(pieces, cur);
+  //     const blocked = !!occ;
+  //
+  //     if (isHinge(cur)) {
+  //       for (const altFirst of CONCENTRIC_GRAPH.vertexNbrs[cur]) {
+  //         if (altFirst === prev) continue;
+  //         const branch = rayFrom(pieces, cur, altFirst, color, CONCENTRIC_GRAPH.vertexNext);
+  //         for (const sq of branch) out.add(sq);
+  //       }
+  //     }
+  //
+  //     if (blocked) break;
+  //     const next = CONCENTRIC_GRAPH.vertexNext[cur]?.[prev] ?? null;
+  //     if (!next || next === from) break;
+  //     prev = cur;
+  //     cur = next;
+  //   }
+  // }
 
   return Array.from(out);
 }
@@ -322,6 +329,51 @@ export const initialPieces: RulesPiece[] = [
   { type: "pawn", color: "blk", position: "r9c5" },
   { type: "pawn", color: "blk", position: "r9c6" },
   { type: "pawn", color: "blk", position: "r9c7" },
+
+  //fill board
+  // { type: "queen", color: "blk", position: "r5c1"},
+  // { type: "queen", color: "blk", position: "r5c2"},
+  // { type: "queen", color: "blk", position: "r5c3"},
+  // { type: "queen", color: "blk", position: "r5c4"},
+  // { type: "queen", color: "blk", position: "r5c5"},
+  // { type: "queen", color: "blk", position: "r5c6"},
+  // { type: "queen", color: "blk", position: "r5c7"},
+  // { type: "queen", color: "blk", position: "r5c8"},
+  // { type: "queen", color: "blk", position: "r5c9"},
+
+  // { type: "queen", color: "blk", position: "r6c1"},
+  // { type: "queen", color: "blk", position: "r6c2"},
+  // { type: "queen", color: "blk", position: "r6c3"},
+  // { type: "queen", color: "blk", position: "r6c4"},
+  // { type: "queen", color: "blk", position: "r6c5"},
+  // { type: "knight", color: "blk", position: "r6c6"},
+  // { type: "queen", color: "blk", position: "r6c7"},
+  // { type: "queen", color: "blk", position: "r6c8"},
+  // { type: "queen", color: "blk", position: "r6c9"},
+  // { type: "queen", color: "blk", position: "r6c10"},
+  // { type: "queen", color: "blk", position: "r6c11"},
+
+  // { type: "queen", color: "blk", position: "r7c1"},
+  // { type: "queen", color: "blk", position: "r7c2"},
+  // { type: "queen", color: "blk", position: "r7c3"},
+  // { type: "queen", color: "blk", position: "r7c4"},
+  // { type: "queen", color: "blk", position: "r7c5"},
+  // { type: "knight", color: "blk", position: "r7c6"},
+  // { type: "queen", color: "blk", position: "r7c7"},
+  // { type: "queen", color: "blk", position: "r7c8"},
+  // { type: "queen", color: "blk", position: "r7c9"},
+  // { type: "queen", color: "blk", position: "r7c10"},
+  // { type: "queen", color: "blk", position: "r7c11"},
+
+  // { type: "queen", color: "blk", position: "r8c1"},
+  // { type: "queen", color: "blk", position: "r8c2"},
+  // { type: "queen", color: "blk", position: "r8c3"},
+  // { type: "queen", color: "blk", position: "r8c4"},
+  // { type: "queen", color: "blk", position: "r8c5"},
+  // { type: "queen", color: "blk", position: "r8c6"},
+  // { type: "queen", color: "blk", position: "r8c7"},
+  // { type: "queen", color: "blk", position: "r8c8"},
+  // { type: "queen", color: "blk", position: "r8c9"},
 ];
 
 export function computePieceState(moves: Move[]): RulesPiece[] {

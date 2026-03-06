@@ -67,4 +67,7 @@ export type ClientMsg =
     | {
         type: "draw";
     }
+    | {
+        type: "undo";
+    }
     ;

@@ -136,6 +136,11 @@
   --sidebar-ring: oklch(1 0 0);
 }
 
+[data-sidebar="sidebar"] {
+  background: var(--sidebar) !important;
+  color: var(--sidebar-foreground);
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
@@ -438,5 +443,230 @@
 
   .r1c1 {
     @apply bottom-[15.5%] left-[47%];
+  }
+
+  .r12c1a {
+    @apply top-[15.8%] left-[44.3%];
+  }
+  .r11c1a {
+    @apply top-[21.7%] left-[26.0%];
+  }
+  .r11c2a {
+    @apply top-[21.7%] left-[44.3%];
+  }
+  .r11c3a {
+    @apply top-[21.7%] left-[63.3%];
+  }
+
+  .r10c1a {
+    @apply top-[27.7%] left-[19.3%];
+  }
+  .r10c2a {
+    @apply top-[27.7%] left-[26.7%];
+  }
+  .r10c3a {
+    @apply top-[27.7%] left-[44.3%];
+  }
+  .r10c4a {
+    @apply top-[27.7%] left-[62.2%];
+  }
+  .r10c5a {
+    @apply top-[27.7%] left-[69.9%];
+  }
+
+  .r9c1a {
+    @apply top-[33.5%] left-[15.6%];
+  }
+  .r9c2a {
+    @apply top-[33.5%] left-[22.2%];
+  }
+  .r9c3a {
+    @apply top-[33.5%] left-[29.5%];
+  }
+  .r9c4a {
+    @apply top-[33.5%] left-[44.3%];
+  }
+  .r9c5a {
+    @apply top-[33.5%] left-[59.8%];
+  }
+  .r9c6a {
+    @apply top-[33.5%] left-[67.1%];
+  }
+  .r9c7a {
+    @apply top-[33.5%] left-[73.7%];
+  }
+
+  .r8c1a {
+    @apply top-[39.2%] left-[13.7%];
+  }
+  .r8c2a {
+    @apply top-[39.2%] left-[19.9%];
+  }
+  .r8c3a {
+    @apply top-[39.2%] left-[26.2%];
+  }
+  .r8c4a {
+    @apply top-[39.2%] left-[33.0%];
+  }
+  .r8c5a {
+    @apply top-[39.2%] left-[44.3%];
+  }
+  .r8c6a {
+    @apply top-[39.2%] left-[56.2%];
+  }
+  .r8c7a {
+    @apply top-[39.2%] left-[63.0%];
+  }
+  .r8c8a {
+    @apply top-[39.2%] left-[69.0%];
+  }
+  .r8c9a {
+    @apply top-[39.2%] left-[75.2%];
+  }
+
+  .r7c1a {
+    @apply top-[45.1%] left-[12.6%];
+  }
+  .r7c2a {
+    @apply top-[45.1%] left-[18.5%];
+  }
+  .r7c3a {
+    @apply top-[45.1%] left-[24.5%];
+  }
+  .r7c4a {
+    @apply top-[45.1%] left-[30.5%];
+  }
+  .r7c5a {
+    @apply top-[45.1%] left-[36.5%];
+  }
+  .r7c6a {
+    @apply top-[45.1%] left-[44.3%];
+  }
+  .r7c7a {
+    @apply top-[45.1%] left-[52.7%];
+  }
+  .r7c8a {
+    @apply top-[45.1%] left-[58.7%];
+  }
+  .r7c9a {
+    @apply top-[45.1%] left-[64.6%];
+  }
+  .r7c10a {
+    @apply top-[45.1%] left-[70.4%];
+  }
+  .r7c11a {
+    @apply top-[45.1%] left-[76.4%];
+  }
+  .r6c1a {
+    @apply top-[50.8%] left-[18.3%];
+  }
+  .r6c2a {
+    @apply top-[50.6%] left-[24.2%];
+  }
+  .r6c3a {
+    @apply top-[50.6%] left-[30.2%];
+  }
+  .r6c4a {
+    @apply top-[50.6%] left-[36.1%];
+  }
+  .r6c5a {
+    @apply top-[50.6%] left-[42.1%];
+  }
+  .r6c6a {
+    @apply top-[50.6%] left-[50.2%];
+  }
+  .r6c7a {
+    @apply top-[50.6%] left-[58.6%];
+  }
+  .r6c8a {
+    @apply top-[50.6%] left-[64.6%];
+  }
+  .r6c9a {
+    @apply top-[50.6%] left-[70.5%];
+  }
+  .r6c10a {
+    @apply top-[50.6%] left-[76.4%];
+  }
+  .r6c11a {
+    @apply top-[50.6%] left-[82.2%];
+  }
+
+  .r5c1a {
+    @apply top-[56.6%] left-[19.3%];
+  }
+  .r5c2a {
+    @apply top-[56.6%] left-[25.7%];
+  }
+  .r5c3a {
+    @apply top-[56.6%] left-[31.9%];
+  }
+  .r5c4a {
+    @apply top-[56.6%] left-[38.7%];
+  }
+  .r5c5a {
+    @apply top-[56.6%] left-[50.2%];
+  }
+  .r5c6a {
+    @apply top-[56.6%] left-[61.8%];
+  }
+  .r5c7a {
+    @apply top-[56.6%] left-[68.8%];
+  }
+  .r5c8a {
+    @apply top-[56.6%] left-[75%];
+  }
+  .r5c9a {
+    @apply top-[56.6%] left-[81.2%];
+  }
+
+  .r4c1a {
+    @apply top-[62.3%] left-[22.2%];
+  }
+  .r4c2a {
+    @apply top-[62.3%] left-[29.3%];
+  }
+  .r4c3a {
+    @apply top-[62.3%] left-[37%];
+  }
+  .r4c4a {
+    @apply top-[62.3%] left-[50.2%];
+  }
+  .r4c5a {
+    @apply top-[62.3%] left-[63.9%];
+  }
+  .r4c6a {
+    @apply top-[62.3%] left-[71.7%];
+  }
+  .r4c7a {
+    @apply top-[62.3%] left-[78.6%];
+  }
+
+  .r3c1a {
+    @apply top-[68.1%] left-[26.1%];
+  }
+  .r3c2a {
+    @apply top-[68.1%] left-[34.6%];
+  }
+  .r3c3a {
+    @apply top-[68.1%] left-[50.2%];
+  }
+  .r3c4a {
+    @apply top-[68.1%] left-[65.7%];
+  }
+  .r3c5a {
+    @apply top-[68.1%] left-[74.6%];
+  }
+
+  .r2c1a {
+    @apply top-[73.9%] left-[31.9%];
+  }
+  .r2c2a {
+    @apply top-[73.9%] left-[50.2%];
+  }
+  .r2c3a {
+    @apply top-[73.9%] left-[68.2%];
+  }
+  .r1c1a {
+    @apply top-[79.5%] left-[50.2%];
   }
 }
