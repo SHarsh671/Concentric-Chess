@@ -1,7 +1,5 @@
-import { Gamepad, Book, History, Settings, FlaskConical } from "lucide-react";
-
+import { Gamepad, Book, History, Settings, FlaskConical, Film } from "lucide-react";
 import * as React from "react";
-
 import {
   Sidebar,
   SidebarMenu,
@@ -15,31 +13,14 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar";
 import { getSession } from "@/lib/auth";
-import { Button } from "./ui/button";
 import Link from "next/link";
 
-// This is sample data.
 const data = [
-  {
-    title: "Play",
-    url: "/play",
-    icon: Gamepad,
-  },
-  {
-    title: "History",
-    url: "/history",
-    icon: History,
-  },
-  {
-    title: "Rules",
-    url: "/rules",
-    icon: Book,
-  },
-  {
-    title: "Test Board",
-    url: "/test-board",
-    icon: FlaskConical,
-  },
+  { title: "Play",        url: "/play",        icon: Gamepad,      piece: "♟" },
+  { title: "History",     url: "/history",     icon: History,      piece: "♜" },
+  { title: "Rules",       url: "/rules",       icon: Book,         piece: "♝" },
+  { title: "Test Board",  url: "/test-board",  icon: FlaskConical, piece: "♞" },
+  { title: "Test Replay", url: "/test-replay", icon: Film,         piece: "♛" },
 ];
 
 export async function AppShell({
@@ -49,58 +30,86 @@ export async function AppShell({
 
   return (
     <SidebarProvider>
-      <Sidebar className="border-r-0">
-        <SidebarHeader className="py-0 pt-2">
-          <Link className="flex h-10 items-center px-1 gap-2" href="/">
-            <div className="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-7 items-center justify-center rounded-md">
-              <Gamepad className="size-5" />
+      <Sidebar className="border-r-0 bg-white">
+        {/* Header */}
+        <SidebarHeader className="py-0 border-b-4 border-black">
+          <Link
+            className="flex h-14 items-center px-4 gap-3 hover:bg-black hover:text-white transition-colors group"
+            href="/"
+          >
+            <div className="flex aspect-square size-8 items-center justify-center border-2 border-black bg-black text-white group-hover:bg-white group-hover:text-black transition-colors text-lg font-bold">
+              ♔
             </div>
-            <span className="truncate font-medium">Concentric Chess</span>
+            <span className="truncate font-bold tracking-widest uppercase text-sm">
+              Circular Chess
+            </span>
           </Link>
         </SidebarHeader>
-        <SidebarContent className="px-2">
-          <SidebarMenu>
+
+        <SidebarContent className="px-0 bg-white">
+          {/* Nav items */}
+          <SidebarMenu className="gap-0 mt-2 px-2">
             {data.map((item) => (
               <SidebarMenuItem key={item.title}>
-                <SidebarMenuButton asChild>
-                  <Link href={item.url}>
-                    <item.icon />
+                <SidebarMenuButton
+                  asChild
+                  className="h-11 rounded-none border-2 border-transparent hover:border-black hover:bg-black hover:text-white transition-all group font-bold tracking-wide uppercase text-sm px-3"
+                >
+                  <Link href={item.url} className="flex items-center gap-3">
+                    <span className="text-lg leading-none opacity-60 group-hover:opacity-100">
+                      {item.piece}
+                    </span>
                     <span>{item.title}</span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             ))}
           </SidebarMenu>
-          {session ? (
-            <SidebarMenu className="mt-auto pb-2">
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild>
-                  <Link href="/settings">
-                    <Settings />
-                    <span>Settings</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            </SidebarMenu>
-          ) : (
-            <div className="mt-auto pb-2 flex flex-col gap-2">
-              <Button className="w-full" asChild>
-                <Link href="/signup">
-                  <span>Sign Up</span>
+
+          {/* Decorative chess row */}
+          <div className="mx-2 mt-4 border-t-2 border-b-2 border-black py-2 text-center text-xl tracking-widest opacity-10 select-none">
+            ♜♞♝♛♚♝♞♜
+          </div>
+
+          {/* Auth section */}
+          <div className="mt-auto mx-2 mb-3 pt-4 border-t-2 border-black">
+            {session ? (
+              <SidebarMenu className="gap-0">
+                <SidebarMenuItem>
+                  <SidebarMenuButton
+                    asChild
+                    className="h-11 rounded-none border-2 border-transparent hover:border-black hover:bg-black hover:text-white transition-all font-bold tracking-wide uppercase text-sm px-3"
+                  >
+                    <Link href="/settings" className="flex items-center gap-3">
+                      <Settings className="size-4" />
+                      <span>Settings</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              </SidebarMenu>
+            ) : (
+              <div className="flex flex-col gap-2">
+                <Link
+                  href="/signup"
+                  className="w-full h-11 flex items-center justify-center bg-black text-white border-4 border-black font-bold uppercase tracking-widest text-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,0.3)] hover:shadow-none hover:translate-x-[3px] hover:translate-y-[3px] transition-all"
+                >
+                  Sign Up
                 </Link>
-              </Button>
-              <Button className="w-full" variant="secondary" asChild>
-                <Link href="/login">
-                  <span>Log In</span>
+                <Link
+                  href="/login"
+                  className="w-full h-11 flex items-center justify-center bg-white text-black border-4 border-black font-bold uppercase tracking-widest text-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-none hover:translate-x-[3px] hover:translate-y-[3px] transition-all"
+                >
+                  Log In
                 </Link>
-              </Button>
-            </div>
-          )}
+              </div>
+            )}
+          </div>
         </SidebarContent>
         <SidebarRail />
       </Sidebar>
+
       <SidebarInset>
-        <header className="flex h-12 shrink-0 items-center gap-2 md:hidden">
+        <header className="flex h-12 shrink-0 items-center gap-2 md:hidden border-b-4 border-black">
           <div className="flex flex-1 items-center gap-2 px-3">
             <SidebarTrigger />
           </div>
