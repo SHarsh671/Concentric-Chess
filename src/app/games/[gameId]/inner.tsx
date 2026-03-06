@@ -240,9 +240,9 @@ export default function GamePage({
       {/* Sidebar */}
       <div className="relative w-[30%] h-[70%] left-1/36 border-2 mt-[24px]">
         {/* Timers */}
-        <div className="flex w-full h-1/5">
-          <div className="relative w-1/3 h-1/2 top-1/4 left-1/18 border-gray-400 border-2 rounded-2xl bg-gray-200 text-center text-[37px] text-black"><Timer timeLeft={timer[0]}></Timer></div>
-          <div className="relative w-1/3 h-1/2 top-1/4 left-5/18 border-gray-800 border-2 rounded-2xl bg-gray-600 text-center text-[37px] text-white"><Timer timeLeft={timer[1]}></Timer></div>
+        <div className="flex justify-evenly w-full h-1/5">
+          <div className="relative w-1/3 h-1/2 top-1/4 border-gray-400 border-2 rounded-2xl bg-gray-200 text-center text-[37px] text-black"><Timer timeLeft={timer[0]}></Timer></div>
+          <div className="relative w-1/3 h-1/2 top-1/4 border-gray-800 border-2 rounded-2xl bg-gray-600 flex justify-center text-[37px] text-white"><Timer timeLeft={timer[1]}></Timer></div>
         </div>
         <div className="relative flex w-18/20 mx-auto h-3/5 border-2 rounded-md overflow-y-auto flex-col-reverse">
           {sortedTurns.map((turn) => {
@@ -272,9 +272,6 @@ export default function GamePage({
           <Button className="relative w-4/15 h-1/2 top-1/3 border-orange-400 border-2 rounded-2xl bg-orange-300 text-center text-xl text-orange-900" onClick={() => ws.send({ type: "undo" })}>Undo</Button>
           <Button className="relative w-4/15 h-1/2 top-1/3 border-orange-400 border-2 rounded-2xl bg-orange-300 text-center text-xl text-orange-900" onClick={() => ws.send({ type: "draw" })}>Draw</Button>
           <Button className="relative w-4/15 h-1/2 top-1/3 border-orange-400 border-2 rounded-2xl bg-orange-300 text-center text-xl text-orange-900" onClick={() => ws.send({ type: "resign" })}>Resign</Button>
-          {/* <Button className="relative w-4/15 h-1/2 top-1/3 left-1/15 border-orange-400 border-2 rounded-2xl bg-orange-300 text-center text-xl text-orange-900" onClick={() => ws.send({ type: "undo" })}>undo</Button>
-          <Button className="relative w-4/15 h-1/2 top-1/3 left-1/15 border-orange-400 border-2 rounded-2xl bg-orange-300 text-center text-xl text-orange-900" onClick={() => ws.send({ type: "draw" })}>Draw</Button>
-          <Button className="relative w-4/15 h-1/2 top-1/3 left-4/30 border-orange-400 border-2 rounded-2xl bg-orange-300 text-center text-xl text-orange-900" onClick={() => ws.send({ type: "resign" })}>Resign</Button> */}
         </div>
 
         {/* How to move hint */}
@@ -321,7 +318,7 @@ function Timer({ timeLeft }: { timeLeft: number | null }) {
   const minutes = Math.floor(seconds / 60);
   const remainingSeconds = seconds % 60;
   return (
-    <div className="inline-block w-16 text-center">
+    <div className="inline-block text-center">
       {minutes}:{remainingSeconds.toString().padStart(2, "0")}
     </div>
   );

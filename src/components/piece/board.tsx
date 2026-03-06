@@ -17,6 +17,7 @@ import { ARCHIMEDEAN_GRAPH } from "shared/archimedean-rules";
 type Space = {
   id: string;
   d: string;
+  transform: string;
 };
 
 type BoardState = {
@@ -67,7 +68,7 @@ export default function Board({
 
   useEffect(() => {
     fetch(variant === "concentric" ? "/cc/ccboard.svg" :
-      "/as/asboard.svg")
+      "/as/asboardbetter.svg")
       .then((res) => res.text())
       .then((svgText) => {
         const parser = new DOMParser();
@@ -76,6 +77,7 @@ export default function Board({
         setSpaces(
           pathNodes.map((node) => ({
             id: node.id || crypto.randomUUID(),
+            transform: node.getAttribute("transform") || "",
             d: node.getAttribute("d") || "",
           })),
         );
@@ -272,6 +274,7 @@ export default function Board({
               stroke={style.stroke}
               strokeWidth={style.strokeWidth}
               strokeOpacity={0}
+              transform={s.transform}
               style={{ cursor: isLegal || boardState.pieces.some(p => p.position === s.id) ? "pointer" : "default" }}
               onClick={() => handleCellClick(s.id)}
               onMouseEnter={(e) => {
