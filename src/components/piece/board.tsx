@@ -19,18 +19,58 @@ type Space = {
   d: string;
 };
 
+export type CapturedPiece = {
+  type: string;
+  color: string;
+};
+
 type BoardState = {
   pieces: RulesPiece[];
   selectedPiece: RulesPiece | null;
   selectedCell: string | null;
   legalMoves: string[];
-  hoveredMove: string | null;   // light green — hovering a legal square
-  pendingMove: string | null;   // dark green  — clicked once, waiting to confirm
+  hoveredMove: string | null;
+  pendingMove: string | null;
+  capturedPieces: CapturedPiece[];
 };
+
+// Recompute from scratch every time — no stale state bugs
+function computeCaptured(currentPieces: PieceProps[]): CapturedPiece[] {
+  const currentCounts = new Map<string, number>();
+  for (const p of currentPieces) {
+    const key = `${p.type}|${p.color}`;
+    currentCounts.set(key, (currentCounts.get(key) ?? 0) + 1);
+  }
+
+  const initialCounts = new Map<string, number>();
+  for (const p of initialPieces as PieceProps[]) {
+    const key = `${p.type}|${p.color}`;
+    initialCounts.set(key, (initialCounts.get(key) ?? 0) + 1);
+  }
+
+  const captured: CapturedPiece[] = [];
+  for (const [key, initialCount] of initialCounts) {
+    const currentCount = currentCounts.get(key) ?? 0;
+    const capturedCount = initialCount - currentCount;
+    if (capturedCount <= 0) continue;
+    const [type, color] = key.split("|");
+    for (let i = 0; i < capturedCount; i++) captured.push({ type, color });
+  }
+  return captured;
+}
 
 export default function Board({
   moves,
   onMove,
+  onCapturedPiecesChange,
+  trackCapturedPieces = true,
+  isReplayMode = false,
+}: {
+  moves: Move[];
+  onMove: (from: string, to: string) => void;
+  onCapturedPiecesChange?: (captured: CapturedPiece[]) => void;
+  trackCapturedPieces?: boolean;
+  isReplayMode?: boolean;
   viewerSide,
   currentTurn,
   isSpectator,
@@ -53,15 +93,29 @@ export default function Board({
     legalMoves: [],
     hoveredMove: null,
     pendingMove: null,
+    capturedPieces: [],
   });
   const [piecesReady, setPiecesReady] = useState(false);
 
   useEffect(() => {
-    console.log("Moves received:", moves);
     setPiecesReady(true);
+    const newPieces = computePieceState(moves);
+    const newCaptured = trackCapturedPieces ? computeCaptured(newPieces) : boardState.capturedPieces;
+
+    if (trackCapturedPieces) {
+      onCapturedPiecesChange?.(newCaptured);
+    }
+
+    // Clear ALL selection state atomically — fixes highlight-all bug
     setBoardState((prev) => ({
       ...prev,
-      pieces: computePieceState(moves),
+      pieces: newPieces,
+      capturedPieces: newCaptured,
+      selectedPiece: null,
+      selectedCell: null,
+      legalMoves: [],
+      hoveredMove: null,
+      pendingMove: null,
     }));
   }, [moves]);
 
@@ -112,6 +166,7 @@ export default function Board({
   };
 
   const handleCellClick = (cellId: string) => {
+    if (isReplayMode) return;
     if (isSpectator) return;
     if (!canControlBoth && viewerSide !== currentTurn) {
       return;
@@ -119,31 +174,17 @@ export default function Board({
 
     console.log("Cell clicked:", cellId);
 
-    // ── Confirm pending move ──────────────────────────────────────────────
     if (boardState.pendingMove === cellId && boardState.selectedPiece) {
       onMove(boardState.selectedPiece.position, cellId);
-      setBoardState((prev) => ({
-        ...prev,
-        selectedPiece: null,
-        selectedCell: null,
-        legalMoves: [],
-        hoveredMove: null,
-        pendingMove: null,
-      }));
+      // moves useEffect will clear state when new move arrives
       return;
     }
 
-    // ── Lock a legal move as pending (first click on destination) ─────────
     if (boardState.selectedPiece && boardState.legalMoves.includes(cellId)) {
-      setBoardState((prev) => ({
-        ...prev,
-        pendingMove: cellId,
-        hoveredMove: null,
-      }));
+      setBoardState((prev) => ({ ...prev, pendingMove: cellId, hoveredMove: null }));
       return;
     }
 
-    // ── Select / deselect a piece ─────────────────────────────────────────
     const pieceAtCell = boardState.pieces.find((p) => p.position === cellId);
 
     if (pieceAtCell) {
@@ -160,7 +201,6 @@ export default function Board({
 
       // If clicking the already selected piece, deselect it
       if (pieceAtCell === boardState.selectedPiece) {
-        // Deselect
         setBoardState((prev) => ({
           ...prev,
           selectedPiece: null,
@@ -170,7 +210,6 @@ export default function Board({
           pendingMove: null,
         }));
       } else {
-        // Select new piece
         const legalMoves = calculateLegalMoves(pieceAtCell);
         setBoardState((prev) => ({
           ...prev,
@@ -180,10 +219,8 @@ export default function Board({
           hoveredMove: null,
           pendingMove: null,
         }));
-        console.log("Selected:", pieceAtCell, "Moves:", legalMoves);
       }
     } else {
-      // Click on empty non-legal cell — deselect
       setBoardState((prev) => ({
         ...prev,
         selectedPiece: null,
@@ -196,8 +233,7 @@ export default function Board({
   };
 
   const handleCellHover = (cellId: string, entering: boolean) => {
-    // Only care about hovering legal move squares when a piece is selected
-    // and no move is locked yet
+    if (isReplayMode) return;
     if (!boardState.selectedPiece || boardState.pendingMove) return;
     if (boardState.legalMoves.includes(cellId)) {
       setBoardState((prev) => ({
@@ -260,8 +296,6 @@ export default function Board({
         {spaces.map((s) => {
           const style = getCellStyle(s.id);
           const isLegal = boardState.legalMoves.includes(s.id);
-          const hasPendingMove = !!boardState.pendingMove;
-
           return (
             <path
               key={s.id}
@@ -272,17 +306,23 @@ export default function Board({
               stroke={style.stroke}
               strokeWidth={style.strokeWidth}
               strokeOpacity={0}
-              style={{ cursor: isLegal || boardState.pieces.some(p => p.position === s.id) ? "pointer" : "default" }}
+              style={{
+                cursor: isReplayMode
+                  ? "default"
+                  : isLegal || boardState.pieces.some((p) => p.position === s.id)
+                    ? "pointer"
+                    : "default",
+              }}
               onClick={() => handleCellClick(s.id)}
               onMouseEnter={(e) => {
+                if (isReplayMode) return;
                 handleCellHover(s.id, true);
-
-                // Generic hover glow for non-selected, non-legal cells
                 if (!boardState.selectedPiece && !isLegal && s.id !== boardState.selectedCell) {
                   e.currentTarget.setAttribute("fill", "#f533e5ff");
                 }
               }}
               onMouseLeave={(e) => {
+                if (isReplayMode) return;
                 handleCellHover(s.id, false);
                 if (
                   !boardState.selectedPiece &&
@@ -297,15 +337,15 @@ export default function Board({
       </svg>
 
       {piecesReady &&
-        boardState.pieces.map((piece, idx) => {
+        boardState.pieces.map((piece) => {
           const center = getCellCenter(piece.position);
           return (
             <Piece
-              key={`${piece.type}-${piece.color}-${idx}`}
+              key={`${piece.position}-${piece.type}-${piece.color}`}
               {...piece}
               x={center.x}
               y={center.y}
-              onClick={() => handlePieceClick(piece)}
+              onClick={() => handleCellClick(piece.position)}
               isSelected={boardState.selectedPiece === piece}
               variant={variant}
             />
