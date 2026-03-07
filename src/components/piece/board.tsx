@@ -68,7 +68,7 @@ export default function Board({
 
   useEffect(() => {
     fetch(variant === "concentric" ? "/cc/ccboard.svg" :
-      "/as/asboardbetter.svg")
+      "/as/asboard.svg")
       .then((res) => res.text())
       .then((svgText) => {
         const parser = new DOMParser();
