@@ -35,7 +35,7 @@ type BoardState = {
 };
 
 // Recompute from scratch every time — no stale state bugs
-function computeCaptured(currentPieces: PieceProps[]): CapturedPiece[] {
+function computeCaptured(currentPieces: RulesPiece[]): CapturedPiece[] {
   const currentCounts = new Map<string, number>();
   for (const p of currentPieces) {
     const key = `${p.type}|${p.color}`;
@@ -43,7 +43,7 @@ function computeCaptured(currentPieces: PieceProps[]): CapturedPiece[] {
   }
 
   const initialCounts = new Map<string, number>();
-  for (const p of initialPieces as PieceProps[]) {
+  for (const p of initialPieces as RulesPiece[]) {
     const key = `${p.type}|${p.color}`;
     initialCounts.set(key, (initialCounts.get(key) ?? 0) + 1);
   }
@@ -62,20 +62,14 @@ function computeCaptured(currentPieces: PieceProps[]): CapturedPiece[] {
 export default function Board({
   moves,
   onMove,
-  onCapturedPiecesChange,
-  trackCapturedPieces = true,
-  isReplayMode = false,
-}: {
-  moves: Move[];
-  onMove: (from: string, to: string) => void;
-  onCapturedPiecesChange?: (captured: CapturedPiece[]) => void;
-  trackCapturedPieces?: boolean;
-  isReplayMode?: boolean;
   viewerSide,
   currentTurn,
   isSpectator,
   canControlBoth,
   variant,
+  onCapturedPiecesChange,
+  trackCapturedPieces = true,
+  isReplayMode = false,
 }: {
   moves: Move[];
   onMove: (from: string, to: string) => void;
@@ -84,6 +78,9 @@ export default function Board({
   isSpectator: boolean;
   canControlBoth: boolean;
   variant: "concentric" | "archimedean";
+  onCapturedPiecesChange?: (captured: CapturedPiece[]) => void;
+  trackCapturedPieces?: boolean;
+  isReplayMode?: boolean;
 }) {
   const [spaces, setSpaces] = useState<Space[]>([]);
   const [boardState, setBoardState] = useState<BoardState>({

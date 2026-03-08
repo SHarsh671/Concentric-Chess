@@ -1,0 +1,51 @@
+Date: March 3rd @ 10:15am
+Agenda:
+- Check in with prof.
+- Group check in and assign work for final deliverables.
+
+Attendees:
+- Josef
+- Carter
+- Harkirat
+- Skyler
+- Harshmeet
+- Roland
+Absent:
+- Sparsh
+
+Discussion:
+- Meeting with prof:
+  - Went over final deliverables and progress so far, prof recommended having a long meeting with the TA to walk through the backend and frontend code.
+- Check ins:
+  - Josef: completed work.
+  - Carter: working on updated spiral board with spiral in middle, have sample color scheme for archimedean board.
+  - Harshmeet/Harkirat: completed captured pieces UI, new overall style, sample of replays (full replays in progress).
+  - Skyler: not completed yet, will finish by this weekend.
+  - Roland: completed work.
+- Distribute todos (due March 20th, minus last-minute design choices and recording/editing)
+  - Poster (SKYLER, CARTER, ROLAND)
+    - Outline of what we want to include
+    - Poster design
+  - Video
+    - PowerPoint presentation (SPARSH?)
+    - Demo (JOSEF)
+    - Script (HARSHMEET, HARKIRAT)
+    - Editing (SKYLER)
+  - Code
+    - Board/move tests (JOSEF)
+    - Responsive design (JOSEF)
+    - Nicer "waiting for opponent page" (JOSEF)
+    - README (JOSEF)
+  - Finishing existing work
+    - Replays (HARSHMEET/HARKIRAT)
+    - Checkmate/draw/check (SPARSH)
+    - New archimedean board (CARTER)
+  - Final document (no due date yet)
+    - README (JOSEF)
+    - "Why is your project highly complex"
+    - Description of achievements (what does the app do uniquely)
+    - Table of P0 and P1 requirements
+    - Highlights and lowlights
+    - What you learned
+
+Next meeting: Friday, March 13th @ 10:30am
