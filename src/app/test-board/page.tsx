@@ -133,11 +133,11 @@ export default function TestBoardPage() {
             priority
           />
           <div className="absolute top-0 left-0 w-full h-full">
-            <Board
-              moves={moves}
-              onMove={handleMove}
-              onCapturedPiecesChange={setCapturedPieces}
-            />
+            {/* <Board */}
+            {/*   moves={moves} */}
+            {/*   onMove={handleMove} */}
+            {/*   onCapturedPiecesChange={setCapturedPieces} */}
+            {/* /> */}
           </div>
         </div>
 
