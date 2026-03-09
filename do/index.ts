@@ -5,9 +5,13 @@ import { ClientMsg, schema, ServerMsg, sessionsTable } from "../shared";
 import * as t from "drizzle-orm";
 import { getMovesForGame, recordMove } from "shared/moves";
 import {
-  computePieceState,
-  generatePseudoLegalMovesForPiece,
+  computePieceStateConcentric,
+  generatePseudoLegalMovesForPieceConcentric,
 } from "shared/concentric-rules";
+import {
+  computePieceStateArchimedean,
+  generatePseudoLegalMovesForPieceArchimedean,
+} from "shared/archimedean-rules";
 
 export class GameObject extends DurableObject<CloudflareEnv> {
   db: DrizzleD1Database<typeof schema>;
@@ -112,7 +116,10 @@ export class GameObject extends DurableObject<CloudflareEnv> {
 
         this.ctx.acceptWebSocket(server);
 
-        server.serializeAttachment({ gameId, playerId: session?.playerId || null });
+        server.serializeAttachment({
+          gameId,
+          playerId: session?.playerId || null,
+        });
         this.sockets.set(server, {
           gameId,
           playerId: session?.playerId || null,
@@ -226,7 +233,11 @@ export class GameObject extends DurableObject<CloudflareEnv> {
         return;
       }
       const now = new Date();
-      if (game.whitePlayerId === game.blackPlayerId && game.blackDisconnectedAt && game.status === "ongoing") {
+      if (
+        game.whitePlayerId === game.blackPlayerId &&
+        game.blackDisconnectedAt &&
+        game.status === "ongoing"
+      ) {
         await this.db
           .update(schema.gamesTable)
           .set({ deletedAt: now.toISOString(), status: "aborted" })
@@ -247,8 +258,7 @@ export class GameObject extends DurableObject<CloudflareEnv> {
       if (game.lastMoveAt === null) {
         return;
       }
-      const sinceLastMove =
-        now.getTime() - new Date(game.lastMoveAt).getTime();
+      const sinceLastMove = now.getTime() - new Date(game.lastMoveAt).getTime();
       let whiteTimeLeft = game.whiteTimeLeft;
       let blackTimeLeft = game.blackTimeLeft;
       if (game.nextMove % 2 === 1 && whiteTimeLeft !== null) {
@@ -307,7 +317,11 @@ export class GameObject extends DurableObject<CloudflareEnv> {
             break;
           }
           const turn = game.nextMove % 2 === 1 ? "white" : "black";
-          if (turn === msg.data.side && game.status === "ongoing" && msg.data.from != msg.data.to) {
+          if (
+            turn === msg.data.side &&
+            game.status === "ongoing" &&
+            msg.data.from != msg.data.to
+          ) {
             console.log("Processing move:", msg.data);
             if (
               (msg.data.side === "white" &&
@@ -319,19 +333,23 @@ export class GameObject extends DurableObject<CloudflareEnv> {
               // check valid move
               const moves = await getMovesForGame(this.db, game.id);
               console.log("Existing moves:", moves);
-              const pieces = computePieceState(moves);
+              const pieces = game.variant.startsWith("concentric")
+                ? computePieceStateConcentric(moves)
+                : computePieceStateArchimedean(moves);
               const piece = pieces.find((p) => p.position === msg.data.from);
               if (!piece) {
                 console.log("No piece at from position");
                 return;
               }
-              if ((piece.color == "wht" && turn == "black") || (piece.color == "blk" && turn == "white")) {
+              if (
+                (piece.color == "wht" && turn == "black") ||
+                (piece.color == "blk" && turn == "white")
+              ) {
                 return;
               }
-              const pseudoLegalMoves = generatePseudoLegalMovesForPiece(
-                piece,
-                pieces,
-              );
+              const pseudoLegalMoves = game.variant.startsWith("concentric")
+                ? generatePseudoLegalMovesForPieceConcentric(piece, pieces)
+                : generatePseudoLegalMovesForPieceArchimedean(piece, pieces);
               const isValid = pseudoLegalMoves.includes(msg.data.to);
               if (!isValid) {
                 console.log("Move is not valid");
@@ -408,7 +426,10 @@ export class GameObject extends DurableObject<CloudflareEnv> {
           if (!socketInfo.playerId) {
             break;
           }
-          if (socketInfo.playerId === game.whitePlayerId && !game.whiteAccepted) {
+          if (
+            socketInfo.playerId === game.whitePlayerId &&
+            !game.whiteAccepted
+          ) {
             await this.db
               .update(schema.gamesTable)
               .set({ whiteAccepted: 1, lastMoveAt: new Date().toISOString() })
@@ -421,7 +442,10 @@ export class GameObject extends DurableObject<CloudflareEnv> {
               },
             });
           }
-          if (socketInfo.playerId === game.blackPlayerId && !game.blackAccepted) {
+          if (
+            socketInfo.playerId === game.blackPlayerId &&
+            !game.blackAccepted
+          ) {
             await this.db
               .update(schema.gamesTable)
               .set({ blackAccepted: 1, lastMoveAt: new Date().toISOString() })
@@ -449,7 +473,10 @@ export class GameObject extends DurableObject<CloudflareEnv> {
           if (!socketInfo.playerId) {
             break;
           }
-          if (socketInfo.playerId !== game.whitePlayerId && socketInfo.playerId !== game.blackPlayerId) {
+          if (
+            socketInfo.playerId !== game.whitePlayerId &&
+            socketInfo.playerId !== game.blackPlayerId
+          ) {
             return;
           }
           if (game.status !== "ongoing") {
@@ -457,27 +484,41 @@ export class GameObject extends DurableObject<CloudflareEnv> {
           }
           // if this is a local game, the current turn resigns
           // otherwise it's the player who sent the message
-          const side = game.whitePlayerId === game.blackPlayerId ? game.nextMove % 2 === 1 ? "white" : "black" : socketInfo.playerId === game.whitePlayerId ? "white" : "black";
-          await this.db.update(schema.gamesTable)
+          const side =
+            game.whitePlayerId === game.blackPlayerId
+              ? game.nextMove % 2 === 1
+                ? "white"
+                : "black"
+              : socketInfo.playerId === game.whitePlayerId
+              ? "white"
+              : "black";
+          await this.db
+            .update(schema.gamesTable)
             .set({ status: side === "white" ? "white_resign" : "black_resign" })
             .where(t.eq(schema.gamesTable.id, game.id));
           await this.broadcastToGame(game.id, {
             type: "game_over",
-            data: { result: side === "white" ? "white_resign" : "black_resign" },
+            data: {
+              result: side === "white" ? "white_resign" : "black_resign",
+            },
           });
           break;
         case "draw":
           if (!socketInfo.playerId) {
             break;
           }
-          if (socketInfo.playerId !== game.whitePlayerId && socketInfo.playerId !== game.blackPlayerId) {
+          if (
+            socketInfo.playerId !== game.whitePlayerId &&
+            socketInfo.playerId !== game.blackPlayerId
+          ) {
             return;
           }
           if (game.status !== "ongoing") {
             return;
           }
           if (game.whitePlayerId === game.blackPlayerId) {
-            await this.db.update(schema.gamesTable)
+            await this.db
+              .update(schema.gamesTable)
               .set({ status: "draw" })
               .where(t.eq(schema.gamesTable.id, game.id));
             await this.broadcastToGame(game.id, {
@@ -485,8 +526,14 @@ export class GameObject extends DurableObject<CloudflareEnv> {
               data: { result: "draw" },
             });
           } else {
-            if ((game.whitePlayerId === socketInfo.playerId && game.blackDrawOffer) || (game.blackPlayerId === socketInfo.playerId && game.whiteDrawOffer)) {
-              await this.db.update(schema.gamesTable)
+            if (
+              (game.whitePlayerId === socketInfo.playerId &&
+                game.blackDrawOffer) ||
+              (game.blackPlayerId === socketInfo.playerId &&
+                game.whiteDrawOffer)
+            ) {
+              await this.db
+                .update(schema.gamesTable)
                 .set({ status: "draw", whiteDrawOffer: 1, blackDrawOffer: 1 })
                 .where(t.eq(schema.gamesTable.id, game.id));
               await this.broadcastToGame(game.id, {
@@ -494,20 +541,28 @@ export class GameObject extends DurableObject<CloudflareEnv> {
                 data: { result: "draw" },
               });
             } else if (game.whitePlayerId === socketInfo.playerId) {
-              await this.db.update(schema.gamesTable)
+              await this.db
+                .update(schema.gamesTable)
                 .set({ whiteDrawOffer: game.whiteDrawOffer ? 0 : 1 })
                 .where(t.eq(schema.gamesTable.id, game.id));
               await this.broadcastToGame(game.id, {
                 type: "draw_offer",
-                data: { whiteDrawOffer: game.whiteDrawOffer ? 0 : 1, blackDrawOffer: game.blackDrawOffer || 0 },
+                data: {
+                  whiteDrawOffer: game.whiteDrawOffer ? 0 : 1,
+                  blackDrawOffer: game.blackDrawOffer || 0,
+                },
               });
             } else if (game.blackPlayerId === socketInfo.playerId) {
-              await this.db.update(schema.gamesTable)
+              await this.db
+                .update(schema.gamesTable)
                 .set({ blackDrawOffer: game.blackPlayerId ? 0 : 1 })
                 .where(t.eq(schema.gamesTable.id, game.id));
               await this.broadcastToGame(game.id, {
                 type: "draw_offer",
-                data: { blackDrawOffer: game.blackDrawOffer ? 0 : 1, whiteDrawOffer: game.whiteDrawOffer || 0 },
+                data: {
+                  blackDrawOffer: game.blackDrawOffer ? 0 : 1,
+                  whiteDrawOffer: game.whiteDrawOffer || 0,
+                },
               });
             }
           }
@@ -516,7 +571,10 @@ export class GameObject extends DurableObject<CloudflareEnv> {
           if (!socketInfo.playerId) {
             break;
           }
-          if (socketInfo.playerId !== game.whitePlayerId && socketInfo.playerId !== game.blackPlayerId) {
+          if (
+            socketInfo.playerId !== game.whitePlayerId &&
+            socketInfo.playerId !== game.blackPlayerId
+          ) {
             return;
           }
           if (game.status !== "ongoing") {
@@ -547,7 +605,7 @@ export class GameObject extends DurableObject<CloudflareEnv> {
               moves: movesAfterUndo,
             },
           });
-          break
+          break;
       }
     } finally {
       this.lock.release();
@@ -593,7 +651,10 @@ export class GameObject extends DurableObject<CloudflareEnv> {
       ) {
         this.ctx.storage.setAlarm(Date.now() + 30000); // 30 seconds to reconnect
       }
-      if (game.whitePlayerId === game.blackPlayerId && game.whiteDisconnectedAt) {
+      if (
+        game.whitePlayerId === game.blackPlayerId &&
+        game.whiteDisconnectedAt
+      ) {
         console.log("Local game disconnected, setting alarm to abort");
         this.ctx.storage.setAlarm(Date.now() + 30000); // 30 seconds to reconnect
       }

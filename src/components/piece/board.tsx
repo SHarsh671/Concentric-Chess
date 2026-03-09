@@ -3,13 +3,19 @@
 import { useEffect, useState } from "react";
 import Piece from "./piece";
 import {
-  computePieceState,
-  generatePseudoLegalMovesForPiece,
   initialPieces,
   PieceType,
   RulesPiece,
   Side,
 } from "shared/concentric-rules";
+import {
+  computePieceStateConcentric,
+  generatePseudoLegalMovesForPieceConcentric,
+} from "shared/concentric-rules";
+import {
+  computePieceStateArchimedean,
+  generatePseudoLegalMovesForPieceArchimedean,
+} from "shared/archimedean-rules";
 import { Move } from "shared";
 import { CONCENTRIC_GRAPH } from "../../../shared/concentric-graph";
 import { ARCHIMEDEAN_GRAPH } from "shared/archimedean-rules";
@@ -73,8 +79,8 @@ export default function Board({
 }: {
   moves: Move[];
   onMove: (from: string, to: string) => void;
-  viewerSide: Side | undefined;    // "white" | "black" | undefined
-  currentTurn: Side;               // whose turn it is
+  viewerSide: Side | undefined; // "white" | "black" | undefined
+  currentTurn: Side; // whose turn it is
   isSpectator: boolean;
   canControlBoth: boolean;
   variant: "concentric" | "archimedean";
@@ -97,7 +103,9 @@ export default function Board({
   useEffect(() => {
     setPiecesReady(true);
     const newPieces = computePieceState(moves);
-    const newCaptured = trackCapturedPieces ? computeCaptured(newPieces) : boardState.capturedPieces;
+    const newCaptured = trackCapturedPieces
+      ? computeCaptured(newPieces)
+      : boardState.capturedPieces;
 
     if (trackCapturedPieces) {
       onCapturedPiecesChange?.(newCaptured);
@@ -117,8 +125,7 @@ export default function Board({
   }, [moves]);
 
   useEffect(() => {
-    fetch(variant === "concentric" ? "/cc/ccboard.svg" :
-      "/as/asboard.svg")
+    fetch(variant === "concentric" ? "/cc/ccboard.svg" : "/as/asboard.svg")
       .then((res) => res.text())
       .then((svgText) => {
         const parser = new DOMParser();
@@ -159,7 +166,7 @@ export default function Board({
       color: piece.color as Side,
       position: piece.position,
     };
-    return generatePseudoLegalMovesForPiece(rulesPiece, rulesPieces);
+    return variant === "concentric" ? generatePseudoLegalMovesForPieceConcentric(rulesPiece, rulesPieces) : generatePseudoLegalMovesForPieceArchimedean(rulesPiece, rulesPieces);
   };
 
   const handleCellClick = (cellId: string) => {
@@ -178,7 +185,11 @@ export default function Board({
     }
 
     if (boardState.selectedPiece && boardState.legalMoves.includes(cellId)) {
-      setBoardState((prev) => ({ ...prev, pendingMove: cellId, hoveredMove: null }));
+      setBoardState((prev) => ({
+        ...prev,
+        pendingMove: cellId,
+        hoveredMove: null,
+      }));
       return;
     }
 
@@ -235,7 +246,11 @@ export default function Board({
     if (boardState.legalMoves.includes(cellId)) {
       setBoardState((prev) => ({
         ...prev,
-        hoveredMove: entering ? cellId : prev.hoveredMove === cellId ? null : prev.hoveredMove,
+        hoveredMove: entering
+          ? cellId
+          : prev.hoveredMove === cellId
+          ? null
+          : prev.hoveredMove,
       }));
     }
   };
@@ -252,26 +267,51 @@ export default function Board({
   const getCellStyle = (cellId: string) => {
     // Dark green — locked pending move (first click, waiting for confirm)
     if (cellId === boardState.pendingMove) {
-      return { fill: "#16a34a", fillOpacity: 1, stroke: "#14532d", strokeWidth: 6 };
+      return {
+        fill: "#16a34a",
+        fillOpacity: 1,
+        stroke: "#14532d",
+        strokeWidth: 6,
+      };
     }
 
     // Selected piece — yellow
     if (cellId === boardState.selectedCell) {
-      return { fill: "#FFD700", fillOpacity: 1, stroke: "#000", strokeWidth: 6 };
+      return {
+        fill: "#FFD700",
+        fillOpacity: 1,
+        stroke: "#000",
+        strokeWidth: 6,
+      };
     }
 
     // Light green — hovering a legal square
     if (cellId === boardState.hoveredMove) {
-      return { fill: "#4ade80", fillOpacity: 1, stroke: "#16a34a", strokeWidth: 5 };
+      return {
+        fill: "#4ade80",
+        fillOpacity: 1,
+        stroke: "#16a34a",
+        strokeWidth: 5,
+      };
     }
 
     // Yellow-ish tint — available legal moves
     if (boardState.legalMoves.includes(cellId)) {
-      return { fill: "#ebe850", fillOpacity: 1, stroke: "#000", strokeWidth: 3 };
+      return {
+        fill: "#ebe850",
+        fillOpacity: 1,
+        stroke: "#000",
+        strokeWidth: 3,
+      };
     }
 
     return {
-      fill: (variant === "concentric" ? CONCENTRIC_GRAPH : ARCHIMEDEAN_GRAPH).color[cellId] === "dark" ? "#473c39" : "#f3f1f1",
+      fill:
+        (variant === "concentric" ? CONCENTRIC_GRAPH : ARCHIMEDEAN_GRAPH).color[
+          cellId
+        ] === "dark"
+          ? "#473c39"
+          : "#f3f1f1",
       fillOpacity: 1,
       stroke: "#000000",
       strokeWidth: 4,
@@ -306,15 +346,20 @@ export default function Board({
               style={{
                 cursor: isReplayMode
                   ? "default"
-                  : isLegal || boardState.pieces.some((p) => p.position === s.id)
-                    ? "pointer"
-                    : "default",
+                  : isLegal ||
+                    boardState.pieces.some((p) => p.position === s.id)
+                  ? "pointer"
+                  : "default",
               }}
               onClick={() => handleCellClick(s.id)}
               onMouseEnter={(e) => {
                 if (isReplayMode) return;
                 handleCellHover(s.id, true);
-                if (!boardState.selectedPiece && !isLegal && s.id !== boardState.selectedCell) {
+                if (
+                  !boardState.selectedPiece &&
+                  !isLegal &&
+                  s.id !== boardState.selectedCell
+                ) {
                   e.currentTarget.setAttribute("fill", "#f533e5ff");
                 }
               }}
@@ -348,7 +393,6 @@ export default function Board({
             />
           );
         })}
-
     </>
   );
 }

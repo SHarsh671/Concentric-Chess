@@ -11,7 +11,12 @@
 // - Board topology + semantics live in shared/concentric-graph.ts (single source of truth).
 // - This file only implements movement rules on top of that graph.
 
-import { CONCENTRIC_GRAPH, CELL_TAGS, CellId as GraphCellId, CellTag } from "./concentric-graph";
+import {
+  CONCENTRIC_GRAPH,
+  CELL_TAGS,
+  CellId as GraphCellId,
+  CellTag,
+} from "./concentric-graph";
 import { Move } from "./schema";
 
 export type Side = "wht" | "blk";
@@ -55,7 +60,11 @@ function parseCell(cell: CellId): { r: number; c: number } {
    KING / PRINCE
 -------------------------------------------------------- */
 
-function kingStepMoves(pieces: RulesPiece[], from: CellId, color: Side): CellId[] {
+function kingStepMoves(
+  pieces: RulesPiece[],
+  from: CellId,
+  color: Side,
+): CellId[] {
   const nbrs = new Set<CellId>([
     ...CONCENTRIC_GRAPH.edgeNbrs[from],
     ...CONCENTRIC_GRAPH.vertexNbrs[from],
@@ -75,7 +84,11 @@ function kingMoves(pieces: RulesPiece[], from: CellId, color: Side): CellId[] {
   return kingStepMoves(pieces, from, color);
 }
 
-function princeMoves(pieces: RulesPiece[], from: CellId, color: Side): CellId[] {
+function princeMoves(
+  pieces: RulesPiece[],
+  from: CellId,
+  color: Side,
+): CellId[] {
   // Prince moves like a king (not subject to check rules elsewhere).
   return kingStepMoves(pieces, from, color);
 }
@@ -124,11 +137,21 @@ function rookMoves(pieces: RulesPiece[], from: CellId, color: Side): CellId[] {
   return Array.from(new Set(out));
 }
 
-function bishopMoves(pieces: RulesPiece[], from: CellId, color: Side): CellId[] {
+function bishopMoves(
+  pieces: RulesPiece[],
+  from: CellId,
+  color: Side,
+): CellId[] {
   const out = new Set<CellId>();
 
   for (const first of CONCENTRIC_GRAPH.vertexNbrs[from]) {
-    const ray = rayFrom(pieces, from, first, color, CONCENTRIC_GRAPH.vertexNext);
+    const ray = rayFrom(
+      pieces,
+      from,
+      first,
+      color,
+      CONCENTRIC_GRAPH.vertexNext,
+    );
     for (const sq of ray) {
       out.add(sq);
     }
@@ -171,10 +194,12 @@ function bishopMoves(pieces: RulesPiece[], from: CellId, color: Side): CellId[] 
 }
 
 function queenMoves(pieces: RulesPiece[], from: CellId, color: Side): CellId[] {
-  return Array.from(new Set<CellId>([
-    ...rookMoves(pieces, from, color),
-    ...bishopMoves(pieces, from, color),
-  ]));
+  return Array.from(
+    new Set<CellId>([
+      ...rookMoves(pieces, from, color),
+      ...bishopMoves(pieces, from, color),
+    ]),
+  );
 }
 
 /* -------------------------------------------------------
@@ -182,7 +207,11 @@ function queenMoves(pieces: RulesPiece[], from: CellId, color: Side): CellId[] {
 -------------------------------------------------------- */
 
 // Knight: edge->vertex OR vertex->edge (excluding backtracking).
-function knightMoves(pieces: RulesPiece[], from: CellId, color: Side): CellId[] {
+function knightMoves(
+  pieces: RulesPiece[],
+  from: CellId,
+  color: Side,
+): CellId[] {
   const out = new Set<CellId>();
   const add = (to: CellId) => {
     const occ = pieceAt(pieces, to);
@@ -217,13 +246,17 @@ function forwardRowDelta(color: Side): number {
 function forwardEdgeTargets(from: CellId, color: Side): CellId[] {
   const { r: r0 } = parseCell(from);
   const dr = forwardRowDelta(color);
-  return CONCENTRIC_GRAPH.edgeNbrs[from].filter((to) => parseCell(to).r === r0 + dr);
+  return CONCENTRIC_GRAPH.edgeNbrs[from].filter(
+    (to) => parseCell(to).r === r0 + dr,
+  );
 }
 
 function forwardVertexTargets(from: CellId, color: Side): CellId[] {
   const { r: r0 } = parseCell(from);
   const dr = forwardRowDelta(color);
-  return CONCENTRIC_GRAPH.vertexNbrs[from].filter((to) => parseCell(to).r === r0 + dr);
+  return CONCENTRIC_GRAPH.vertexNbrs[from].filter(
+    (to) => parseCell(to).r === r0 + dr,
+  );
 }
 
 function pawnMoves(pieces: RulesPiece[], from: CellId, color: Side): CellId[] {
@@ -233,8 +266,12 @@ function pawnMoves(pieces: RulesPiece[], from: CellId, color: Side): CellId[] {
 
   // Normal pawn: forward=edge, capture=vertex
   // Berolina pawn: forward=vertex, capture=edge
-  const forward = berolina ? forwardVertexTargets(from, color) : forwardEdgeTargets(from, color);
-  const captures = berolina ? forwardEdgeTargets(from, color) : forwardVertexTargets(from, color);
+  const forward = berolina
+    ? forwardVertexTargets(from, color)
+    : forwardEdgeTargets(from, color);
+  const captures = berolina
+    ? forwardEdgeTargets(from, color)
+    : forwardVertexTargets(from, color);
 
   // Forward (non-capture)
   for (const to of forward) {
@@ -247,7 +284,9 @@ function pawnMoves(pieces: RulesPiece[], from: CellId, color: Side): CellId[] {
   if (r === startRow) {
     for (const step1 of forward) {
       if (pieceAt(pieces, step1)) continue;
-      const step2s = berolina ? forwardVertexTargets(step1, color) : forwardEdgeTargets(step1, color);
+      const step2s = berolina
+        ? forwardVertexTargets(step1, color)
+        : forwardEdgeTargets(step1, color);
       for (const step2 of step2s) {
         if (!pieceAt(pieces, step2)) out.push(step2);
       }
@@ -267,7 +306,7 @@ function pawnMoves(pieces: RulesPiece[], from: CellId, color: Side): CellId[] {
    PUBLIC API
 -------------------------------------------------------- */
 
-export function generatePseudoLegalMovesForPiece(
+export function generatePseudoLegalMovesForPieceConcentric(
   piece: RulesPiece,
   allPieces: RulesPiece[],
 ): CellId[] {
@@ -376,7 +415,7 @@ export const initialPieces: RulesPiece[] = [
   // { type: "queen", color: "blk", position: "r8c9"},
 ];
 
-export function computePieceState(moves: Move[]): RulesPiece[] {
+export function computePieceStateConcentric(moves: Move[]): RulesPiece[] {
   // deep copy
   const pieces: RulesPiece[] = initialPieces.map((p) => ({ ...p }));
 
