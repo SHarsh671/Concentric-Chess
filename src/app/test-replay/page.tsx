@@ -4,7 +4,14 @@ import { useState, useEffect } from "react";
 import Board, { CapturedPiece } from "@/components/piece/board";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Play, Pause } from "lucide-react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  ChevronsLeft,
+  ChevronsRight,
+  Play,
+  Pause,
+} from "lucide-react";
 
 interface TestMove {
   id: string;
@@ -71,8 +78,14 @@ export default function TestReplayPage() {
     <div className="flex flex-col gap-4 p-4">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">
-           Test Replay{" "}
-          <span className={`text-sm font-normal px-2 py-1 rounded ${isRecording ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700"}`}>
+          Test Replay{" "}
+          <span
+            className={`text-sm font-normal px-2 py-1 rounded ${
+              isRecording
+                ? "bg-red-100 text-red-700"
+                : "bg-green-100 text-green-700"
+            }`}
+          >
             {isRecording ? "● Recording" : "▶ Replaying"}
           </span>
         </h1>
@@ -111,23 +124,37 @@ export default function TestReplayPage() {
           </div>
           <div className="flex-1 overflow-y-auto space-y-3">
             <div>
-              <div className="text-xs text-gray-500 text-center mb-1">White ♔</div>
+              <div className="text-xs text-gray-500 text-center mb-1">
+                White ♔
+              </div>
               {whiteCaptured.length === 0 ? (
                 <p className="text-xs text-gray-400 italic text-center">—</p>
               ) : (
                 whiteCaptured.map((p, i) => (
-                  <img key={i} src={`/pieces/${p.type}-${p.color}.png`} className="w-12 h-12 mx-auto opacity-80" alt={`${p.color} ${p.type}`} />
+                  <img
+                    key={i}
+                    src={`/pieces/${p.type}-${p.color}.png`}
+                    className="w-12 h-12 mx-auto opacity-80"
+                    alt={`${p.color} ${p.type}`}
+                  />
                 ))
               )}
             </div>
             <div className="border-t border-gray-200" />
             <div>
-              <div className="text-xs text-gray-500 text-center mb-1">Black ♚</div>
+              <div className="text-xs text-gray-500 text-center mb-1">
+                Black ♚
+              </div>
               {blackCaptured.length === 0 ? (
                 <p className="text-xs text-gray-400 italic text-center">—</p>
               ) : (
                 blackCaptured.map((p, i) => (
-                  <img key={i} src={`/pieces/${p.type}-${p.color}.png`} className="w-12 h-12 mx-auto opacity-80" alt={`${p.color} ${p.type}`} />
+                  <img
+                    key={i}
+                    src={`/pieces/${p.type}-${p.color}.png`}
+                    className="w-12 h-12 mx-auto opacity-80"
+                    alt={`${p.color} ${p.type}`}
+                  />
                 ))
               )}
             </div>
@@ -146,34 +173,70 @@ export default function TestReplayPage() {
               priority
             />
             <div className="absolute top-0 left-0 w-full h-full">
-              <Board
-                moves={isRecording ? recordedMoves : visibleMoves}
-                onMove={isRecording ? handleRecordMove : () => {}}
-                onCapturedPiecesChange={setCapturedPieces}
-                isReplayMode={!isRecording}
-              />
+              {/* <Board */}
+              {/*   moves={isRecording ? recordedMoves : visibleMoves} */}
+              {/*   onMove={isRecording ? handleRecordMove : () => {}} */}
+              {/*   onCapturedPiecesChange={setCapturedPieces} */}
+              {/*   isReplayMode={!isRecording} */}
+              {/* /> */}
             </div>
           </div>
 
           {/* Replay controls — only shown in replay mode */}
           {!isRecording && (
             <div className="flex items-center gap-3 justify-center bg-gray-50 border-2 rounded-lg p-3">
-              <Button variant="outline" size="icon" onClick={() => { goTo(0); setIsPlaying(false); }}>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => {
+                  goTo(0);
+                  setIsPlaying(false);
+                }}
+              >
                 <ChevronsLeft size={18} />
               </Button>
-              <Button variant="outline" size="icon" onClick={() => { goTo(stepIndex - 1); setIsPlaying(false); }}>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => {
+                  goTo(stepIndex - 1);
+                  setIsPlaying(false);
+                }}
+              >
                 <ChevronLeft size={18} />
               </Button>
               <Button
                 onClick={() => setIsPlaying((p) => !p)}
                 className="px-6 bg-black text-white hover:bg-gray-800"
               >
-                {isPlaying ? <><Pause size={16} className="mr-1" /> Pause</> : <><Play size={16} className="mr-1" /> Play</>}
+                {isPlaying ? (
+                  <>
+                    <Pause size={16} className="mr-1" /> Pause
+                  </>
+                ) : (
+                  <>
+                    <Play size={16} className="mr-1" /> Play
+                  </>
+                )}
               </Button>
-              <Button variant="outline" size="icon" onClick={() => { goTo(stepIndex + 1); setIsPlaying(false); }}>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => {
+                  goTo(stepIndex + 1);
+                  setIsPlaying(false);
+                }}
+              >
                 <ChevronRight size={18} />
               </Button>
-              <Button variant="outline" size="icon" onClick={() => { goTo(recordedMoves.length); setIsPlaying(false); }}>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => {
+                  goTo(recordedMoves.length);
+                  setIsPlaying(false);
+                }}
+              >
                 <ChevronsRight size={18} />
               </Button>
               <span className="text-sm text-gray-600 ml-2">
@@ -185,8 +248,13 @@ export default function TestReplayPage() {
           {/* Recording hint */}
           {isRecording && (
             <div className="bg-red-50 border-2 border-red-200 rounded-lg p-3 text-sm text-red-700 max-w-[900px]">
-              <p className="font-semibold mb-1">● Recording mode — play a game normally</p>
-              <p>When done, click <strong>Start Replay</strong> to step through your moves.</p>
+              <p className="font-semibold mb-1">
+                ● Recording mode — play a game normally
+              </p>
+              <p>
+                When done, click <strong>Start Replay</strong> to step through
+                your moves.
+              </p>
             </div>
           )}
         </div>
@@ -199,8 +267,15 @@ export default function TestReplayPage() {
           <div className="flex flex-col p-1">
             {!isRecording && (
               <button
-                onClick={() => { goTo(0); setIsPlaying(false); }}
-                className={`text-left text-sm px-2 py-1 rounded mb-1 ${stepIndex === 0 ? "bg-yellow-200 font-semibold" : "hover:bg-gray-100"}`}
+                onClick={() => {
+                  goTo(0);
+                  setIsPlaying(false);
+                }}
+                className={`text-left text-sm px-2 py-1 rounded mb-1 ${
+                  stepIndex === 0
+                    ? "bg-yellow-200 font-semibold"
+                    : "hover:bg-gray-100"
+                }`}
               >
                 Start
               </button>
@@ -218,13 +293,14 @@ export default function TestReplayPage() {
                     isCurrent
                       ? "bg-yellow-200 font-semibold"
                       : isPast
-                        ? "text-gray-800 hover:bg-gray-100"
-                        : isRecording
-                          ? "text-gray-700"
-                          : "text-gray-400 hover:bg-gray-50"
+                      ? "text-gray-800 hover:bg-gray-100"
+                      : isRecording
+                      ? "text-gray-700"
+                      : "text-gray-400 hover:bg-gray-50"
                   }`}
                 >
-                  {turn}{mover}. {m.fromSquare}–{m.toSquare}
+                  {turn}
+                  {mover}. {m.fromSquare}–{m.toSquare}
                 </button>
               );
             })}
