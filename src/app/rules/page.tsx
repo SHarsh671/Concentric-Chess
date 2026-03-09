@@ -204,7 +204,7 @@ function SpiralRules() {
             </tbody>
           </table>
         </div>
-        <p className="text-xs text-gray-400 mt-2 italic">Green cells follow the same pattern reflected. A "—" means no diagonal exists in that direction.</p>
+        <p className="text-xs text-gray-400 mt-2 italic">Green cells follow the same pattern reflected. A &quot;—&quot; means no diagonal exists in that direction.</p>
       </Section>
 
       <Section title="Rule Modifications from Concentric Circle Chess">
