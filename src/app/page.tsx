@@ -165,7 +165,7 @@ export default function Home() {
             </h2>
             <div className="w-32 h-2 bg-black mx-auto"></div>
           </div>
-          
+
           <div className="grid lg:grid-cols-2 gap-8 max-w-6xl mx-auto">
             {/* Concentric Chess */}
             <Card className="bg-white border-8 border-black overflow-hidden hover:shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] transition-all">
@@ -182,7 +182,7 @@ export default function Home() {
                 <div className="p-8 space-y-4 bg-gray-50">
                   <h3 className="text-3xl font-bold text-black uppercase">Concentric Chess</h3>
                   <p className="text-gray-700 text-lg leading-relaxed">
-                    Classic circular board with 72 cells in concentric rings. 
+                    Classic circular board with 72 cells in concentric rings.
                     Features unique movement patterns with crescents and half-moons.
                   </p>
                   <Button asChild className="w-full bg-black hover:bg-gray-900 text-white py-6 text-lg border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] font-bold">
@@ -193,7 +193,7 @@ export default function Home() {
                 </div>
               </CardContent>
             </Card>
-            
+
             {/* Archimedes Chess */}
             <Card className="bg-white border-8 border-black overflow-hidden opacity-60">
               <CardContent className="p-0">
@@ -209,7 +209,7 @@ export default function Home() {
                 <div className="p-8 space-y-4 bg-gray-50">
                   <h3 className="text-3xl font-bold text-black uppercase">Archimedes Spiral</h3>
                   <p className="text-gray-700 text-lg leading-relaxed">
-                    Spiral board layout based on the Archimedes spiral. 
+                    Spiral board layout based on the Archimedes spiral.
                     Even more complex strategic possibilities await.
                   </p>
                   <Button disabled className="w-full bg-gray-300 text-gray-500 py-6 text-lg border-4 border-gray-300 font-bold cursor-not-allowed">
@@ -223,7 +223,7 @@ export default function Home() {
       </section>
 
 
-       <section className="py-20 bg-white">
+      <section className="py-20 bg-white">
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
             <h2 className="text-5xl lg:text-6xl font-bold text-black mb-4">
@@ -232,7 +232,7 @@ export default function Home() {
             <div className="w-32 h-2 bg-black mx-auto mb-4"></div>
             <p className="text-xl text-gray-600">Three simple steps to your first game</p>
           </div>
-          
+
           <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
             <div className="text-center space-y-4">
               <div className="w-24 h-24 bg-black text-white border-4 border-black flex items-center justify-center mx-auto text-4xl font-bold">
@@ -243,7 +243,7 @@ export default function Home() {
                 Create account or play as guest
               </p>
             </div>
-            
+
             <div className="text-center space-y-4">
               <div className="w-24 h-24 bg-black text-white border-4 border-black flex items-center justify-center mx-auto text-4xl font-bold">
                 2
@@ -253,7 +253,7 @@ export default function Home() {
                 Local, friend invite, or matchmaking
               </p>
             </div>
-            
+
             <div className="text-center space-y-4">
               <div className="w-24 h-24 bg-black text-white border-4 border-black flex items-center justify-center mx-auto text-4xl font-bold">
                 3
@@ -266,7 +266,7 @@ export default function Home() {
           </div>
         </div>
       </section>
-     
+
 
 
 

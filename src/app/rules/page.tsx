@@ -8,7 +8,6 @@ export default function RulesPage() {
   return (
     <div
       className="min-h-screen bg-white"
-      style={{ fontFamily: "var(--font-playfair), Georgia, serif" }}
     >
       {/* Page header */}
       <div className="border-b-8 border-black bg-black text-white px-8 py-10 relative overflow-hidden">
@@ -32,22 +31,20 @@ export default function RulesPage() {
       <div className="flex border-b-4 border-black">
         <button
           onClick={() => setTab("concentric")}
-          className={`flex items-center gap-3 px-8 py-4 font-bold uppercase tracking-widest text-sm transition-colors border-r-4 border-black ${
-            tab === "concentric"
-              ? "bg-black text-white"
-              : "bg-white text-black hover:bg-gray-100"
-          }`}
+          className={`flex items-center gap-3 px-8 py-4 font-bold uppercase tracking-widest text-sm transition-colors border-r-4 border-black ${tab === "concentric"
+            ? "bg-black text-white"
+            : "bg-white text-black hover:bg-gray-100"
+            }`}
         >
           <ChessBoardIcon />
           <span>Variant I — Concentric Circle</span>
         </button>
         <button
           onClick={() => setTab("spiral")}
-          className={`flex items-center gap-3 px-8 py-4 font-bold uppercase tracking-widest text-sm transition-colors ${
-            tab === "spiral"
-              ? "bg-black text-white"
-              : "bg-white text-black hover:bg-gray-100"
-          }`}
+          className={`flex items-center gap-3 px-8 py-4 font-bold uppercase tracking-widest text-sm transition-colors ${tab === "spiral"
+            ? "bg-black text-white"
+            : "bg-white text-black hover:bg-gray-100"
+            }`}
         >
           <SpiralIcon active={tab === "spiral"} />
           <span>Variant II — Archimedes Spiral</span>
@@ -148,9 +145,8 @@ function ConcentricRules() {
                 {piece}
               </div>
               <div
-                className={`p-3 text-sm leading-relaxed ${
-                  i % 2 === 0 ? "bg-white" : "bg-gray-50"
-                }`}
+                className={`p-3 text-sm leading-relaxed ${i % 2 === 0 ? "bg-white" : "bg-gray-50"
+                  }`}
               >
                 {rule}
               </div>
@@ -279,9 +275,8 @@ function SpiralRules() {
                     {from}
                   </td>
                   <td
-                    className={`px-3 py-2 text-sm border-r border-gray-200 border-b border-gray-100 ${
-                      l === "—" ? "text-gray-300" : ""
-                    }`}
+                    className={`px-3 py-2 text-sm border-r border-gray-200 border-b border-gray-100 ${l === "—" ? "text-gray-300" : ""
+                      }`}
                   >
                     {l}
                   </td>
@@ -450,16 +445,15 @@ function PawnTable({ title, rows }: { title: string; rows: string[][] }) {
                 i === 0
                   ? "bg-gray-100"
                   : i % 2 === 0
-                  ? "bg-gray-50"
-                  : "bg-white"
+                    ? "bg-gray-50"
+                    : "bg-white"
               }
             >
               {row.map((cell, j) => (
                 <td
                   key={j}
-                  className={`px-2 py-2 text-xs border-b border-gray-200 ${
-                    j < row.length - 1 ? "border-r border-gray-200" : ""
-                  } ${i === 0 ? "font-bold" : ""}`}
+                  className={`px-2 py-2 text-xs border-b border-gray-200 ${j < row.length - 1 ? "border-r border-gray-200" : ""
+                    } ${i === 0 ? "font-bold" : ""}`}
                 >
                   {cell}
                 </td>

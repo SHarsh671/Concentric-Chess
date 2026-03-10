@@ -75,7 +75,7 @@ export class GameSocket {
     };
     this.socket.onclose = () => {
       this.socket = null;
-      this.reconnect(10000);
+      this.reconnect(1000);
     };
     this.socket.onerror = (error) => {
       console.error("WebSocket error:", error);

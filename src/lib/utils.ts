@@ -1,4 +1,5 @@
 import { clsx, type ClassValue } from "clsx";
+import { PieceType } from "shared/concentric-rules";
 import { twMerge } from "tailwind-merge";
 
 export function cn(...inputs: ClassValue[]) {
@@ -28,4 +29,25 @@ export function toNotation(id: string): string {
     return `${LETTERS[12 - col]}${row - col + 1}`;
   }
   return `${LETTERS[12 - row]}${12 - row + 1 - (numCols - col)}`
+}
+
+export function pieceLabel(piece: PieceType): string {
+  switch (piece) {
+    case "pawn":
+      return "P";
+    case "knight":
+      return "N";
+    case "bishop":
+      return "B";
+    case "rook":
+      return "R";
+    case "queen":
+      return "Q";
+    case "king":
+      return "K";
+    case "prince":
+      return "D";
+    default:
+      return "";
+  }
 }

@@ -87,51 +87,51 @@ export default function SpiralRulesDialog({
           </Section>
 
           {/* Diagonal Reference */}
-          <Section title="Diagonal Behaviour on the Spiral">
-            <p style={{ fontSize: "0.9rem", color: "#555", marginBottom: "12px" }}>
-              Because the spiral wraps, diagonal moves lead to different rows than you might expect.
-              Use this reference table — it shows where a diagonal step from a given row leads, depending on direction.
-            </p>
-            <div style={{ border: "2px solid #111", borderRadius: "4px", overflow: "hidden" }}>
-              <div style={{ background: "#111", color: "#fff", padding: "8px 14px", fontWeight: "bold", fontSize: "0.88rem" }}>
-                Diagonal Row Reference — Blue Cells
-              </div>
-              <table style={{ width: "100%", borderCollapse: "collapse" }}>
-                <thead>
-                  <tr style={{ background: "#e8e8e8" }}>
-                    {["From row", "Left diagonal", "Right diagonal (inner)", "Right diagonal (outer)"].map((h) => (
-                      <th key={h} style={{ padding: "8px 12px", fontSize: "0.82rem", fontWeight: "bold", borderBottom: "2px solid #111", borderRight: "1px solid #ccc", textAlign: "left" }}>{h}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {[
-                    ["11", "11", "11", "11"],
-                    ["10", "10", "10", "10"],
-                    ["9", "9", "9", "9"],
-                    ["8", "8", "8", "8"],
-                    ["7", "6", "7", "7"],
-                    ["6", "4", "6", "7"],
-                    ["5", "3", "5", "7"],
-                    ["4", "2", "4", "6"],
-                    ["3", "1", "3", "5"],
-                    ["2", "—", "2", "4"],
-                    ["1", "—", "1", "3"],
-                  ].map(([from, l, rm, ro], i) => (
-                    <tr key={from} style={{ background: i % 2 === 0 ? "#fff" : "#fafafa" }}>
-                      <td style={{ padding: "7px 12px", fontSize: "0.85rem", fontWeight: "bold", borderRight: "1px solid #ddd", borderBottom: "1px solid #eee" }}>{from}</td>
-                      <td style={{ padding: "7px 12px", fontSize: "0.85rem", borderRight: "1px solid #ddd", borderBottom: "1px solid #eee", color: l === "—" ? "#bbb" : "#111" }}>{l}</td>
-                      <td style={{ padding: "7px 12px", fontSize: "0.85rem", borderRight: "1px solid #ddd", borderBottom: "1px solid #eee" }}>{rm}</td>
-                      <td style={{ padding: "7px 12px", fontSize: "0.85rem", borderBottom: "1px solid #eee" }}>{ro}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-            <div style={{ fontSize: "0.8rem", color: "#888", marginTop: "8px", fontStyle: "italic" }}>
-              Green cells follow the same pattern reflected. A &quot;—&quot; means no diagonal exists in that direction from that row.
-            </div>
-          </Section>
+          {/* <Section title="Diagonal Behaviour on the Spiral"> */}
+          {/*   <p style={{ fontSize: "0.9rem", color: "#555", marginBottom: "12px" }}> */}
+          {/*     Because the spiral wraps, diagonal moves lead to different rows than you might expect. */}
+          {/*     Use this reference table — it shows where a diagonal step from a given row leads, depending on direction. */}
+          {/*   </p> */}
+          {/*   <div style={{ border: "2px solid #111", borderRadius: "4px", overflow: "hidden" }}> */}
+          {/*     <div style={{ background: "#111", color: "#fff", padding: "8px 14px", fontWeight: "bold", fontSize: "0.88rem" }}> */}
+          {/*       Diagonal Row Reference — Blue Cells */}
+          {/*     </div> */}
+          {/*     <table style={{ width: "100%", borderCollapse: "collapse" }}> */}
+          {/*       <thead> */}
+          {/*         <tr style={{ background: "#e8e8e8" }}> */}
+          {/*           {["From row", "Left diagonal", "Right diagonal (inner)", "Right diagonal (outer)"].map((h) => ( */}
+          {/*             <th key={h} style={{ padding: "8px 12px", fontSize: "0.82rem", fontWeight: "bold", borderBottom: "2px solid #111", borderRight: "1px solid #ccc", textAlign: "left" }}>{h}</th> */}
+          {/*           ))} */}
+          {/*         </tr> */}
+          {/*       </thead> */}
+          {/*       <tbody> */}
+          {/*         {[ */}
+          {/*           ["11", "11", "11", "11"], */}
+          {/*           ["10", "10", "10", "10"], */}
+          {/*           ["9", "9", "9", "9"], */}
+          {/*           ["8", "8", "8", "8"], */}
+          {/*           ["7", "6", "7", "7"], */}
+          {/*           ["6", "4", "6", "7"], */}
+          {/*           ["5", "3", "5", "7"], */}
+          {/*           ["4", "2", "4", "6"], */}
+          {/*           ["3", "1", "3", "5"], */}
+          {/*           ["2", "—", "2", "4"], */}
+          {/*           ["1", "—", "1", "3"], */}
+          {/*         ].map(([from, l, rm, ro], i) => ( */}
+          {/*           <tr key={from} style={{ background: i % 2 === 0 ? "#fff" : "#fafafa" }}> */}
+          {/*             <td style={{ padding: "7px 12px", fontSize: "0.85rem", fontWeight: "bold", borderRight: "1px solid #ddd", borderBottom: "1px solid #eee" }}>{from}</td> */}
+          {/*             <td style={{ padding: "7px 12px", fontSize: "0.85rem", borderRight: "1px solid #ddd", borderBottom: "1px solid #eee", color: l === "—" ? "#bbb" : "#111" }}>{l}</td> */}
+          {/*             <td style={{ padding: "7px 12px", fontSize: "0.85rem", borderRight: "1px solid #ddd", borderBottom: "1px solid #eee" }}>{rm}</td> */}
+          {/*             <td style={{ padding: "7px 12px", fontSize: "0.85rem", borderBottom: "1px solid #eee" }}>{ro}</td> */}
+          {/*           </tr> */}
+          {/*         ))} */}
+          {/*       </tbody> */}
+          {/*     </table> */}
+          {/*   </div> */}
+          {/*   <div style={{ fontSize: "0.8rem", color: "#888", marginTop: "8px", fontStyle: "italic" }}> */}
+          {/*     Green cells follow the same pattern reflected. A &quot;—&quot; means no diagonal exists in that direction from that row. */}
+          {/*   </div> */}
+          {/* </Section> */}
 
           {/* Rule Changes */}
           <Section title="Rule Modifications from Concentric Circle Chess">

@@ -6,10 +6,11 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Game, Move } from "shared";
 import "client-only";
 import Board, { CapturedPiece } from "@/components/piece/board";
-import Image from "next/image";
 import RulesDialog from "@/components/piece/rules-dialog";
 import { HelpCircle } from "lucide-react";
-import { toNotation } from "@/lib/utils";
+import { pieceLabel, toNotation } from "@/lib/utils";
+import SpiralRulesDialog from "@/components/piece/spiral-rules-dialog";
+import { initialPieces, PieceType } from "shared/concentric-rules";
 
 export default function GamePage({
   game: initialGame,
@@ -21,7 +22,7 @@ export default function GamePage({
   playerId: string | undefined;
 }) {
   const [game, setGame] = useState(initialGame);
-  const ws = useMemo(() => GameSocket.getInstance(initialGame.id, true), [initialGame.id]);
+  const ws = useMemo(() => GameSocket.getInstance(initialGame.id), [initialGame.id]);
   const [moves, setMoves] = useState(initialMoves);
   const [showRules, setShowRules] = useState(false);
   // Flat array — filter by color where needed
@@ -40,19 +41,29 @@ export default function GamePage({
     });
   };
 
-  const groupedMoves: Record<number, { w?: typeof moves[0]; b?: typeof moves[0] }> = {};
+  const groupedMoves = useMemo(() => {
+    const out: Record<number, { w?: (typeof moves[0]) & { piece: PieceType }; b?: typeof moves[0] & { piece: PieceType } }> = {};
+    const state = initialPieces.reduce((acc, piece) => {
+      acc[piece.position] = piece;
+      return acc;
+    }, {} as Record<string, { type: PieceType; color: string }>);
+    for (const move of moves) {
+      const turn = Math.floor((move.moveNumber - 1) / 2) + 1;
+      const side = move.moveNumber % 2 === 1 ? "w" : "b";
 
-  moves.forEach((m) => {
-    const turn = Math.floor((m.moveNumber - 1) / 2) + 1;
-    const mover = m.moveNumber % 2 === 1 ? "w" : "b";
-
-    if (!groupedMoves[turn]) groupedMoves[turn] = {};
-    groupedMoves[turn][mover] = m;
-  });
-
-  const sortedTurns = Object.keys(groupedMoves)
-    .map(Number)
-    .sort((a, b) => b - a);
+      if (!out[turn]) out[turn] = {};
+      if (!state[move.fromSquare]) {
+        console.error(`Invalid move from ${move.fromSquare} to ${move.toSquare}: no piece at fromSquare`, moves, state);
+      }
+      out[turn][side] = {
+        piece: state[move.fromSquare].type,
+        ...move,
+      };
+      state[move.toSquare] = state[move.fromSquare];
+      delete state[move.fromSquare];
+    }
+    return Object.entries(out).sort((a, b) => parseInt(a[0]) - parseInt(b[0])).map((entry) => entry);
+  }, [moves]);
 
   useEffect(() => {
     gameRef.current = game;
@@ -259,9 +270,7 @@ export default function GamePage({
           <div className="relative w-1/3 h-1/2 top-1/4 left-5/18 border-gray-800 border-2 rounded-2xl bg-gray-600 text-center text-[37px] text-white"><Timer timeLeft={timer[1]}></Timer></div>
         </div>
         <div className="relative flex w-18/20 mx-auto h-3/5 border-2 rounded-md overflow-y-auto flex-col-reverse">
-          {sortedTurns.map((turn) => {
-            const move = groupedMoves[turn];
-
+          {groupedMoves.map(([turn, move]) => {
             return (
               <div
                 key={turn}
@@ -270,11 +279,11 @@ export default function GamePage({
                 <span className="font-semibold">{turn}.</span>
 
                 <span>
-                  {move.w && `${toNotation(move.w.fromSquare)}-${toNotation(move.w.toSquare)}`}
+                  {move.w && `${pieceLabel(move.w.piece)} ${toNotation(move.w.fromSquare)}-${toNotation(move.w.toSquare)}`}
                 </span>
 
                 <span>
-                  {move.b && `${toNotation(move.b.fromSquare)}-${toNotation(move.b.toSquare)}`}
+                  {move.b && `${pieceLabel(move.b.piece)} ${toNotation(move.b.fromSquare)}-${toNotation(move.b.toSquare)}`}
                 </span>
               </div>
             );
@@ -288,9 +297,9 @@ export default function GamePage({
         <div className="bg-blue-50 border-2 border-blue-300 rounded-lg p-4 max-w-[900px] text-sm text-blue-800 mt-[24px]">
           <p className="font-semibold mb-1">💡 How to move:</p>
           <ol className="list-decimal list-inside space-y-1">
-            <li>Click a piece to select it (yellow highlight)</li>
-            <li>Click a legal destination cell (yellow highlight)</li>
-            <li>Click the destination again (green highlight) to confirm</li>
+            <li>Click a piece to select it</li>
+            <li>Click a legal destination cell to select a move</li>
+            <li>Click the destination again to confirm the move</li>
           </ol>
         </div>
         <Button
@@ -303,7 +312,7 @@ export default function GamePage({
         </Button>
       </div>
 
-      <RulesDialog isOpen={showRules} onClose={() => setShowRules(false)} />
+      {game.variant.startsWith("concentric") ? (<RulesDialog isOpen={showRules} onClose={() => setShowRules(false)} />) : <SpiralRulesDialog isOpen={showRules} onClose={() => setShowRules(false)} />}
     </div>
   );
 }
