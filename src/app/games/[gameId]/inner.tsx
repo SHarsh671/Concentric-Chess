@@ -5,10 +5,9 @@ import { GameSocket } from "@/lib/ws";
 import { useEffect, useRef, useState } from "react";
 import { Game, Move } from "shared";
 import "client-only";
-import Board from "@/components/piece/board";
+import Board, { CapturedPiece } from "@/components/piece/board";
 import Image from "next/image";
 import RulesDialog from "@/components/piece/rules-dialog";
-import SpiralRulesDialog from "@/components/piece/spiral-rules-dialog";
 import { HelpCircle } from "lucide-react";
 import { toNotation } from "@/lib/utils";
 
@@ -25,17 +24,18 @@ export default function GamePage({
   const ws = GameSocket.get();
   const [moves, setMoves] = useState(initialMoves);
   const [showRules, setShowRules] = useState(false);
-  const [showSpiralRules, setShowSpiralRules] = useState(false);
+  // Flat array — filter by color where needed
+  const [capturedPieces, setCapturedPieces] = useState<CapturedPiece[]>([]);
 
   const gameRef = useRef(game);
+
   const onMove = (from: string, to: string) => {
-    console.log("Sending move:", { from, to });
     ws.send({
       type: "move",
       data: {
         side: game.nextMove % 2 === 1 ? "white" : "black",
-        from: from,
-        to: to,
+        from,
+        to,
       },
     });
   };
@@ -55,7 +55,6 @@ export default function GamePage({
     .sort((a, b) => b - a);
 
   useEffect(() => {
-    console.log("Game updated:", game);
     gameRef.current = game;
   }, [game]);
 
@@ -63,37 +62,29 @@ export default function GamePage({
     ws.connect(game.id, true);
     ws.setListener((message) => {
       switch (message.type) {
-        case "move":
-          {
-            const move = message.data.move;
-            if (move.moveNumber !== gameRef.current.nextMove) {
-              console.error(
-                `Received move with moveNumber ${move.moveNumber}, but expected ${gameRef.current.nextMove}`,
-              );
-              ws.send({ type: "sync_request" });
-            } else {
-              setMoves((prevMoves) => [...prevMoves, move]);
-              console.log("Move received:", move);
-              setGame((prevGame) => ({
-                ...prevGame,
-                nextMove: message.data.nextMove,
-                lastMoveAt: message.data.lastMoveAt,
-                whiteTimeLeft: message.data.whiteTimeLeft,
-                blackTimeLeft: message.data.blackTimeLeft,
-              }));
-            }
+        case "move": {
+          const move = message.data.move;
+          if (move.moveNumber !== gameRef.current.nextMove) {
+            console.error(`Received move ${move.moveNumber}, expected ${gameRef.current.nextMove}`);
+            ws.send({ type: "sync_request" });
+          } else {
+            setMoves((prev) => [...prev, move]);
+            setGame((prev) => ({
+              ...prev,
+              nextMove: message.data.nextMove,
+              lastMoveAt: message.data.lastMoveAt,
+              whiteTimeLeft: message.data.whiteTimeLeft,
+              blackTimeLeft: message.data.blackTimeLeft,
+            }));
           }
           break;
+        }
         case "aborted":
-          setGame((prevGame) => ({
-            ...prevGame,
-            status: "aborted",
-            deletedAt: new Date().toISOString(),
-          }));
+          setGame((prev) => ({ ...prev, status: "aborted", deletedAt: new Date().toISOString() }));
           break;
         case "accepted":
-          setGame((prevGame) => ({
-            ...prevGame,
+          setGame((prev) => ({
+            ...prev,
             whitePlayerId: message.data.whitePlayerId,
             blackPlayerId: message.data.blackPlayerId,
             whiteAccepted: 1,
@@ -101,17 +92,14 @@ export default function GamePage({
           }));
           break;
         case "game_over":
-          setGame((prevGame) => ({
-            ...prevGame,
-            status: message.data.result,
-          }));
+          setGame((prev) => ({ ...prev, status: message.data.result }));
           break;
         case "sync":
           setGame(message.data.game);
           setMoves(message.data.moves);
           break;
         case "draw_offer":
-          setGame((game) => ({ ...game, ...message.data }));
+          setGame((prev) => ({ ...prev, ...message.data }));
           break;
       }
     });
@@ -125,64 +113,44 @@ export default function GamePage({
     Date.now() - new Date(game.lastMoveAt || game.createdAt!).getTime();
   const [timer, setTimer] = useState([
     game.nextMove % 2 === 1
-      ? game.whiteTimeLeft !== null
-        ? Math.max(0, game.whiteTimeLeft - timeSinceLastMove)
-        : null
+      ? game.whiteTimeLeft !== null ? Math.max(0, game.whiteTimeLeft - timeSinceLastMove) : null
       : game.whiteTimeLeft,
     game.nextMove % 2 === 0
-      ? game.blackTimeLeft !== null
-        ? Math.max(0, game.blackTimeLeft - timeSinceLastMove)
-        : null
+      ? game.blackTimeLeft !== null ? Math.max(0, game.blackTimeLeft - timeSinceLastMove) : null
       : game.blackTimeLeft,
   ]);
 
   useEffect(() => {
-    let interval: NodeJS.Timeout;
-    if (game.status === "ongoing") {
-      interval = setInterval(() => {
-        const timeSinceLastMove =
-          Date.now() - new Date(game.lastMoveAt || game.createdAt!).getTime();
-        if (game.nextMove % 2 === 1) {
-          setTimer([
-            game.whiteTimeLeft !== null
-              ? Math.max(0, game.whiteTimeLeft - timeSinceLastMove)
-              : null,
-            game.blackTimeLeft,
-          ]);
-        } else {
-          setTimer([
-            game.whiteTimeLeft,
-            game.blackTimeLeft !== null
-              ? Math.max(0, game.blackTimeLeft - timeSinceLastMove)
-              : null,
-          ]);
-        }
-      }, 100);
-    }
-    return () => {
-      if (interval) clearInterval(interval);
-    };
-  }, [
-    game.status,
-    game.nextMove,
-    game.whiteTimeLeft,
-    game.blackTimeLeft,
-    game.lastMoveAt,
-    game.createdAt,
-  ]);
+    if (game.status !== "ongoing") return;
+    const interval = setInterval(() => {
+      const elapsed = Date.now() - new Date(game.lastMoveAt || game.createdAt!).getTime();
+      if (game.nextMove % 2 === 1) {
+        setTimer([
+          game.whiteTimeLeft !== null ? Math.max(0, game.whiteTimeLeft - elapsed) : null,
+          game.blackTimeLeft,
+        ]);
+      } else {
+        setTimer([
+          game.whiteTimeLeft,
+          game.blackTimeLeft !== null ? Math.max(0, game.blackTimeLeft - elapsed) : null,
+        ]);
+      }
+    }, 100);
+    return () => clearInterval(interval);
+  }, [game.status, game.nextMove, game.whiteTimeLeft, game.blackTimeLeft, game.lastMoveAt, game.createdAt]);
 
   if (!game) return <>Game not found</>;
   if (game.status === "aborted") return <>Game aborted</>;
   if (game.deletedAt) return <>Game not found</>;
-  if (game.blackPlayerId === playerId && game.blackAccepted === 0) {
+  if (game.blackPlayerId === playerId && game.blackAccepted === 0)
     return <Button onClick={() => ws.send({ type: "accept" })}>Accept Game</Button>;
-  }
-  if (game.whitePlayerId === playerId && game.whiteAccepted === 0) {
+  if (game.whitePlayerId === playerId && game.whiteAccepted === 0)
     return <Button onClick={() => ws.send({ type: "accept" })}>Accept Game</Button>;
-  }
-  if (game.whiteAccepted === 0 || game.blackAccepted === 0) {
+  if (game.whiteAccepted === 0 || game.blackAccepted === 0)
     return <>Waiting for opponent to accept the game...</>;
-  }
+
+  const whiteCaptured = capturedPieces.filter((p) => p.color === "wht");
+  const blackCaptured = capturedPieces.filter((p) => p.color === "blk");
 
   const isWhite = game.whitePlayerId === playerId;
   const isBlack = game.blackPlayerId === playerId;
@@ -200,7 +168,52 @@ export default function GamePage({
   const currentTurn = game.nextMove % 2 === 1 ? "wht" : "blk";
 
   return (
-    <div className="flex w-full">
+    <div className="flex w-full gap-4">
+      {/* Captured pieces sidebar */}
+      <div className="w-[140px] border-4 border-black bg-white rounded-lg p-3 flex flex-col h-[900px] shrink-0">
+        <div className="text-sm font-bold mb-3 uppercase text-center border-b-2 border-black pb-2">
+          Captured<br />Pieces
+        </div>
+        <div className="flex-1 overflow-y-auto space-y-4">
+          <div>
+            <div className="text-xs font-bold text-gray-600 mb-1 text-center">White ♔</div>
+            <div className="flex flex-col gap-1 items-center">
+              {whiteCaptured.length === 0 ? (
+                <span className="text-xs text-gray-400 italic">None</span>
+              ) : (
+                whiteCaptured.map((piece, idx) => (
+                  <img
+                    key={`white-${piece.type}-${idx}`}
+                    src={`/pieces/${piece.type}-${piece.color}.png`}
+                    alt={`${piece.color} ${piece.type}`}
+                    className="w-14 h-14 opacity-80"
+                  />
+                ))
+              )}
+            </div>
+          </div>
+          <div className="border-t-2 border-gray-300" />
+          <div>
+            <div className="text-xs font-bold text-gray-600 mb-1 text-center">Black ♚</div>
+            <div className="flex flex-col gap-1 items-center">
+              {blackCaptured.length === 0 ? (
+                <span className="text-xs text-gray-400 italic">None</span>
+              ) : (
+                blackCaptured.map((piece, idx) => (
+                  <img
+                    key={`black-${piece.type}-${idx}`}
+                    src={`/pieces/${piece.type}-${piece.color}.png`}
+                    alt={`${piece.color} ${piece.type}`}
+                    className="w-14 h-14 opacity-80"
+                  />
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Main board */}
       <div className="flex flex-col items-center space-y-4">
         {game.status === "white_win" && <div>White wins!</div>}
         {game.status === "black_win" && <div>Black wins!</div>}
@@ -220,13 +233,16 @@ export default function GamePage({
               ? "Black"
               : "a spectator"}
         . It is {game.nextMove % 2 === 1 ? "White's" : "Black's"} turn.
-        <br />
         <div className="relative w-[900px] h-[900px] border-2">
           {/* Overlay: SVG cells + pieces */}
           <div className="absolute top-0 left-0 w-full h-full">
             <Board
               moves={moves}
               onMove={onMove}
+              onCapturedPiecesChange={(pieces) => {
+                console.log("CAPTURED:", pieces);
+                setCapturedPieces(pieces);
+              }}
               viewerSide={viewerSide}
               currentTurn={currentTurn}
               isSpectator={isSpectator}
@@ -237,12 +253,11 @@ export default function GamePage({
         </div>
       </div>
 
-      {/* Sidebar */}
-      <div className="relative w-[30%] h-[70%] left-1/36 border-2 mt-[24px]">
-        {/* Timers */}
-        <div className="flex justify-evenly w-full h-1/5">
-          <div className="relative w-1/3 h-1/2 top-1/4 border-gray-400 border-2 rounded-2xl bg-gray-200 text-center text-[37px] text-black"><Timer timeLeft={timer[0]}></Timer></div>
-          <div className="relative w-1/3 h-1/2 top-1/4 border-gray-800 border-2 rounded-2xl bg-gray-600 flex justify-center text-[37px] text-white"><Timer timeLeft={timer[1]}></Timer></div>
+      {/* Game sidebar */}
+      <div className="relative w-[30%] h-[70%] border-2 mt-[24px]">
+        <div className="flex w-full h-1/5">
+          <div className="relative w-1/3 h-1/2 top-1/4 left-1/18 border-gray-400 border-2 rounded-2xl bg-gray-200 text-center text-[37px] text-black"><Timer timeLeft={timer[0]}></Timer></div>
+          <div className="relative w-1/3 h-1/2 top-1/4 left-5/18 border-gray-800 border-2 rounded-2xl bg-gray-600 text-center text-[37px] text-white"><Timer timeLeft={timer[1]}></Timer></div>
         </div>
         <div className="relative flex w-18/20 mx-auto h-3/5 border-2 rounded-md overflow-y-auto flex-col-reverse">
           {sortedTurns.map((turn) => {
@@ -266,48 +281,30 @@ export default function GamePage({
             );
           })}
         </div>
-
-        {/* Draw / Resign */}
-        <div className="flex justify-evenly w-full h-1/5">
+        <div className="flex w-full h-1/5">
           <Button className="relative w-4/15 h-1/2 top-1/3 border-orange-400 border-2 rounded-2xl bg-orange-300 text-center text-xl text-orange-900" onClick={() => ws.send({ type: "undo" })}>Undo</Button>
-          <Button className="relative w-4/15 h-1/2 top-1/3 border-orange-400 border-2 rounded-2xl bg-orange-300 text-center text-xl text-orange-900" onClick={() => ws.send({ type: "draw" })}>Draw</Button>
-          <Button className="relative w-4/15 h-1/2 top-1/3 border-orange-400 border-2 rounded-2xl bg-orange-300 text-center text-xl text-orange-900" onClick={() => ws.send({ type: "resign" })}>Resign</Button>
+          <Button className="relative w-2/5 h-1/2 top-1/3 left-1/15 border-orange-400 border-2 rounded-2xl bg-orange-300 text-center text-xl text-orange-900" onClick={() => ws.send({ type: "draw" })}>Draw</Button>
+          <Button className="relative w-2/5 h-1/2 top-1/3 left-4/30 border-orange-400 border-2 rounded-2xl bg-orange-300 text-center text-xl text-orange-900" onClick={() => ws.send({ type: "resign" })}>Resign</Button>
         </div>
-
-        {/* How to move hint */}
-        <div className="bg-gray-50 border-2 border-gray-300 rounded-lg p-4 max-w-[900px] text-sm text-gray-700 mt-[24px]">
-          <p className="font-semibold mb-1">♟ How to move:</p>
+        <div className="bg-blue-50 border-2 border-blue-300 rounded-lg p-4 max-w-[900px] text-sm text-blue-800 mt-[24px]">
+          <p className="font-semibold mb-1">💡 How to move:</p>
           <ol className="list-decimal list-inside space-y-1">
-            <li>Click a piece — available squares highlight <span className="font-semibold text-yellow-600">yellow</span></li>
-            <li>Hover a destination — it turns <span className="font-semibold" style={{ color: "#4ade80" }}>light green</span></li>
-            <li>Click to lock it — it turns <span className="font-semibold" style={{ color: "#16a34a" }}>dark green</span></li>
-            <li>Click again to confirm the move</li>
+            <li>Click a piece to select it (yellow highlight)</li>
+            <li>Click a legal destination cell (yellow highlight)</li>
+            <li>Click the destination again (green highlight) to confirm</li>
           </ol>
         </div>
-
-        {/* Rules buttons */}
-        <div className="flex gap-2 mt-4">
-          <Button
-            onClick={() => setShowRules(true)}
-            variant="outline"
-            className="flex items-center gap-2 border-gray-800 text-gray-800 hover:bg-gray-100"
-          >
-            <HelpCircle size={18} />
-            Circle Rules
-          </Button>
-          <Button
-            onClick={() => setShowSpiralRules(true)}
-            variant="outline"
-            className="flex items-center gap-2 border-gray-800 text-gray-800 hover:bg-gray-100"
-          >
-            <HelpCircle size={18} />
-            Spiral Rules
-          </Button>
-        </div>
+        <Button
+          onClick={() => setShowRules(true)}
+          variant="outline"
+          className="flex items-center gap-2 bg-indigo-50 hover:bg-indigo-100 border-indigo-300 text-indigo-700 mt-4"
+        >
+          <HelpCircle size={20} />
+          Rules
+        </Button>
       </div>
 
       <RulesDialog isOpen={showRules} onClose={() => setShowRules(false)} />
-      <SpiralRulesDialog isOpen={showSpiralRules} onClose={() => setShowSpiralRules(false)} />
     </div>
   );
 }

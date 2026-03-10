@@ -2,214 +2,218 @@ import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Gamepad, Users, Sparkles, BookOpen } from "lucide-react";
+import {
+  Gamepad,
+  BookOpen,
+  Trophy,
+  Circle,
+  Crown,
+  Swords,
+  Target,
+  ScrollText,
+  Zap,
+} from "lucide-react";
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
-      {/* Hero Section */}
-      <section className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-b from-orange-500/10 to-transparent" />
+    <div className="min-h-screen bg-white font-serif">
+      <div className="fixed inset-0 opacity-[0.03] pointer-events-none">
+        <div
+          className="absolute inset-0"
+          style={{
+            backgroundImage: `repeating-linear-gradient(0deg, #000 0px, #000 2px, transparent 2px, transparent 40px),
+                             repeating-linear-gradient(90deg, #000 0px, #000 2px, transparent 2px, transparent 40px)`,
+          }}
+        />
+      </div>
 
-        <div className="container mx-auto px-4 py-20 lg:py-32">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
-            {/* Left: Text Content */}
-            <div className="text-white space-y-6 z-10">
-              <div className="inline-block">
-                <span className="bg-orange-500/20 text-orange-400 px-4 py-2 rounded-full text-sm font-semibold">
-                  Historic Chess Variants Online
-                </span>
+      <section className="relative overflow-hidden border-b-8 border-black">
+        <div className="absolute top-10 left-10 text-9xl opacity-5 font-bold select-none">
+          ♔
+        </div>
+        <div className="absolute bottom-10 right-10 text-9xl opacity-5 font-bold select-none">
+          ♚
+        </div>
+
+        <div className="container mx-auto px-4 py-16 lg:py-24 relative z-10">
+          <div className="max-w-4xl mx-auto text-center space-y-8">
+            <div className="inline-flex items-center gap-2 bg-black text-white px-6 py-3 border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+              <Trophy className="h-5 w-5 text-white" strokeWidth={2} />
+              <span className="font-bold tracking-wider text-sm">
+                ORIGINAL CHESS VARIANTS ONLINE
+              </span>
+            </div>
+
+            <div className="space-y-4">
+              <div className="flex items-center justify-center gap-4 text-6xl lg:text-8xl">
+                <span className="opacity-20">♜</span>
+                <h1 className="font-bold leading-none text-black tracking-wide">
+                  CIRCULAR
+                </h1>
+                <span className="opacity-20">♞</span>
               </div>
-
-              <h1 className="text-5xl lg:text-7xl font-bold leading-tight">
-                Play Chess on a{" "}
-                <span className="text-orange-500">Circular Board</span>
-              </h1>
-
-              <p className="text-xl text-slate-300 leading-relaxed">
-                  Featuring two original variants, Concentric Chess and Archimedes Spiral Chess, designed within the last year for modern online play.
-              </p>
-
-              <div className="flex flex-wrap gap-4 pt-4">
-                <Button asChild size="lg" className="bg-orange-500 hover:bg-orange-600 text-white text-lg px-8 py-6">
-                  <Link href="/play">
-                    <Gamepad className="mr-2 h-5 w-5" />
-                    Play Now
-                  </Link>
-                </Button>
-
-                <Button asChild size="lg" variant="outline" className="bg-white text-slate-900 border-white hover:bg-slate-100 text-lg px-8 py-6">
-                  <Link href="/rules">
-                    <BookOpen className="mr-2 h-5 w-5" />
-                    Learn Rules
-                  </Link>
-                </Button>
-              </div>
-
-              <div className="flex gap-8 pt-6 text-sm text-slate-400">
-                <div>
-                  <div className="text-2xl font-bold text-white">72</div>
-                  <div>Unique Cells</div>
-                </div>
-                <div>
-                  <div className="text-2xl font-bold text-white">2</div>
-                  <div>Game Variants</div>
-                </div>
-                <div>
-                  <div className="text-2xl font-bold text-white">∞</div>
-                  <div>Strategies</div>
-                </div>
+              <div className="flex items-center justify-center gap-4 text-6xl lg:text-8xl">
+                <span className="opacity-20">♝</span>
+                <h1 className="font-bold leading-none text-black tracking-wide">
+                  CHESS
+                </h1>
+                <span className="opacity-20">♛</span>
               </div>
             </div>
 
-            {/* Right: Board Image */}
-            <div className="relative">
-              <div className="absolute inset-0 bg-orange-500/20 blur-3xl rounded-full" />
-              <div className="relative bg-slate-800/50 backdrop-blur-sm rounded-3xl p-8 border border-slate-700">
-                <Image
-                  src="/cc/ccboard.svg"
-                  alt="Concentric Chess Board"
-                  width={600}
-                  height={600}
-                  className="w-full h-auto drop-shadow-2xl"
-                  priority
-                />
+            <p className="text-xl lg:text-2xl text-gray-700 leading-relaxed max-w-3xl mx-auto">
+              Experience chess on a revolutionary circular board. Two original
+              variants designed for strategic depth and modern online play.
+            </p>
+
+            <div className="flex flex-wrap gap-4 justify-center pt-4">
+              <Button
+                asChild
+                size="lg"
+                className="bg-black hover:bg-gray-900 text-white text-lg px-10 py-7 border-4 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]"
+              >
+                <Link href="/play">
+                  <Gamepad className="mr-2 h-5 w-5 text-white" />
+                  PLAY NOW
+                </Link>
+              </Button>
+
+              <Button
+                asChild
+                size="lg"
+                variant="outline"
+                className="bg-white text-black border-4 border-black text-lg px-10 py-7 shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]"
+              >
+                <Link href="/rules">
+                  <BookOpen className="mr-2 h-5 w-5 text-black" />
+                  LEARN RULES
+                </Link>
+              </Button>
+            </div>
+
+            <div className="grid grid-cols-3 gap-4 max-w-2xl mx-auto pt-8">
+              <div className="p-4 bg-white border-4 border-black">
+                <div className="text-4xl font-bold text-black">72</div>
+                <div className="text-sm font-bold text-gray-600 uppercase tracking-wider">
+                  Cells
+                </div>
+              </div>
+              <div className="p-4 bg-black text-white border-4 border-black">
+                <div className="text-4xl font-bold">2</div>
+                <div className="text-sm font-bold uppercase tracking-wider">
+                  Variants
+                </div>
+              </div>
+              <div className="p-4 bg-white border-4 border-black">
+                <div className="text-4xl font-bold text-black">∞</div>
+                <div className="text-sm font-bold text-gray-600 uppercase tracking-wider">
+                  Moves
+                </div>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Features Section */}
-      <section className="py-20 bg-slate-900/50">
+      <section className="py-20 bg-white">
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
-            <h2 className="text-4xl lg:text-5xl font-bold text-white mb-4">
-              Why Play Concentric Chess?
+            <div className="inline-flex items-center justify-center w-20 h-20 bg-black text-white text-4xl mb-4 border-4 border-black">
+              ♔
+            </div>
+            <h2 className="text-5xl lg:text-6xl font-bold text-black mb-4 tracking-wide">
+              WHY PLAY?
             </h2>
-            <p className="text-xl text-slate-400 max-w-2xl mx-auto">
-              Discover what makes these original variants unique and challenging
-            </p>
+            <div className="w-32 h-2 bg-black mx-auto"></div>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {/* Feature 1 */}
-            <Card className="bg-slate-800/50 border-slate-700 hover:border-orange-500/50 transition-colors">
-              <CardContent className="p-6 text-center space-y-4">
-                <div className="w-16 h-16 bg-orange-500/20 rounded-full flex items-center justify-center mx-auto">
-                  <Gamepad className="h-8 w-8 text-orange-500" />
-                </div>
-                <h3 className="text-xl font-bold text-white">Circular Board</h3>
-                <p className="text-slate-400">
-                  72 cells in concentric rings create unique paths and strategic possibilities impossible on traditional boards
-                </p>
-              </CardContent>
-            </Card>
-
-            {/* Feature 2 */}
-            <Card className="bg-slate-800/50 border-slate-700 hover:border-orange-500/50 transition-colors">
-              <CardContent className="p-6 text-center space-y-4">
-                <div className="w-16 h-16 bg-blue-500/20 rounded-full flex items-center justify-center mx-auto">
-                  <Sparkles className="h-8 w-8 text-blue-500" />
-                </div>
-                <h3 className="text-xl font-bold text-white">Special Pieces</h3>
-                <p className="text-slate-400">
-                  Prince pieces immune to check, Berolina pawns with diagonal movement, and the King&apos;s initial leap
-                </p>
-              </CardContent>
-            </Card>
-
-            {/* Feature 3 */}
-            <Card className="bg-slate-800/50 border-slate-700 hover:border-orange-500/50 transition-colors">
-              <CardContent className="p-6 text-center space-y-4">
-                <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mx-auto">
-                  <Users className="h-8 w-8 text-green-500" />
-                </div>
-                <h3 className="text-xl font-bold text-white">Online Multiplayer</h3>
-                <p className="text-slate-400">
-                  Challenge friends with custom invites or join matchmaking. Real-time gameplay with move history and replays
-                </p>
-              </CardContent>
-            </Card>
-
-            {/* Feature 4 */}
-            <Card className="bg-slate-800/50 border-slate-700 hover:border-orange-500/50 transition-colors">
-              <CardContent className="p-6 text-center space-y-4">
-                <div className="w-16 h-16 bg-purple-500/20 rounded-full flex items-center justify-center mx-auto">
-                  <BookOpen className="h-8 w-8 text-purple-500" />
-                </div>
-                <h3 className="text-xl font-bold text-white">Original Variants</h3>
-                <p className="text-slate-400">
-                  Based on Original Concentric Chess and Archimedes Spiral Chess, now available for online play
-                </p>
-              </CardContent>
-            </Card>
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
+            {[
+              { icon: <Circle />, title: "Circular Board", desc: "72 cells in concentric rings create unique paths impossible on traditional square boards." },
+              { icon: <Crown />, title: "Special Pieces", desc: "Prince pieces, Berolina pawns, and unique royal movement rules." },
+              { icon: <Swords />, title: "Online Play", desc: "Challenge friends or join matchmaking with real-time gameplay." },
+              { icon: <Target />, title: "Strategic Depth", desc: "New tactical possibilities with crescents, half-moons, and twin cells." },
+              { icon: <ScrollText />, title: "Move History", desc: "Review games with complete move replay and analysis tools." },
+              { icon: <Zap />, title: "Fast & Free", desc: "No downloads required. Play instantly in your browser." },
+            ].map((feature, i) => (
+              <Card key={i} className="bg-white border-4 border-black hover:shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] transition-all">
+                <CardContent className="p-8 text-center space-y-4">
+                  <div className="w-20 h-20 bg-white border-4 border-black flex items-center justify-center mx-auto">
+                    {feature.icon &&
+                      feature.icon.type &&
+                      <feature.icon.type className="h-10 w-10 text-black" strokeWidth={2} />}
+                  </div>
+                  <h3 className="text-2xl font-bold text-black uppercase tracking-wide">
+                    {feature.title}
+                  </h3>
+                  <p className="text-gray-700 leading-relaxed">
+                    {feature.desc}
+                  </p>
+                </CardContent>
+              </Card>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* Variants Section */}
-      <section className="py-20">
+
+      <section className="py-20 bg-gray-50 border-y-8 border-black">
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
-            <h2 className="text-4xl lg:text-5xl font-bold text-white mb-4">
-              Choose Your Variant
+            <h2 className="text-5xl lg:text-6xl font-bold text-black mb-4">
+              CHOOSE YOUR VARIANT
             </h2>
-            <p className="text-xl text-slate-400 max-w-2xl mx-auto">
-              Two unique chess variants, each with their own strategic depth
-            </p>
+            <div className="w-32 h-2 bg-black mx-auto"></div>
           </div>
-
+          
           <div className="grid lg:grid-cols-2 gap-8 max-w-6xl mx-auto">
             {/* Concentric Chess */}
-            <Card className="bg-slate-800/50 border-slate-700 overflow-hidden hover:border-orange-500/50 transition-all hover:scale-105">
+            <Card className="bg-white border-8 border-black overflow-hidden hover:shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] transition-all">
               <CardContent className="p-0">
-                <div className="relative h-64 bg-slate-900">
+                <div className="relative h-80 bg-white border-b-8 border-black p-8">
                   <Image
                     src="/cc/ccboard.png"
                     alt="Concentric Chess Board"
                     width={400}
                     height={400}
-                    className="w-full h-full object-contain p-4"
+                    className="w-full h-full object-contain"
                   />
                 </div>
-                <div className="p-6 space-y-4">
-                  <h3 className="text-2xl font-bold text-white">Concentric Chess</h3>
-                  <p className="text-slate-400">
-                    Classic circular board with 72 cells arranged in concentric rings.
-                    Features crescents, half-moons, and twin cells that create unique movement patterns.
+                <div className="p-8 space-y-4 bg-gray-50">
+                  <h3 className="text-3xl font-bold text-black uppercase">Concentric Chess</h3>
+                  <p className="text-gray-700 text-lg leading-relaxed">
+                    Classic circular board with 72 cells in concentric rings. 
+                    Features unique movement patterns with crescents and half-moons.
                   </p>
-                  <Button asChild className="w-full bg-orange-500 hover:bg-orange-600 text-white">
+                  <Button asChild className="w-full bg-black hover:bg-gray-900 text-white py-6 text-lg border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] font-bold">
                     <Link href="/play">
-                      Play Concentric Chess
+                      PLAY NOW ♔
                     </Link>
                   </Button>
                 </div>
               </CardContent>
             </Card>
-
+            
             {/* Archimedes Chess */}
-            <Card className="bg-slate-800/50 border-slate-700 overflow-hidden hover:border-blue-500/50 transition-all hover:scale-105">
+            <Card className="bg-white border-8 border-black overflow-hidden opacity-60">
               <CardContent className="p-0">
-                <div className="relative h-64 bg-slate-900">
+                <div className="relative h-80 bg-white border-b-8 border-black p-8">
                   <Image
                     src="/as/asboard.png"
                     alt="Archimedes Spiral Chess Board"
                     width={400}
                     height={400}
-                    className="w-full h-full object-contain p-4"
+                    className="w-full h-full object-contain"
                   />
                 </div>
-                <div className="p-6 space-y-4">
-                  <h3 className="text-2xl font-bold text-white">Archimedes Spiral Chess</h3>
-                  <p className="text-slate-400">
-                    Spiral board layout with unique geometry. Based on the Archimedes spiral,
-                    offering even more complex strategic possibilities.
+                <div className="p-8 space-y-4 bg-gray-50">
+                  <h3 className="text-3xl font-bold text-black uppercase">Archimedes Spiral</h3>
+                  <p className="text-gray-700 text-lg leading-relaxed">
+                    Spiral board layout based on the Archimedes spiral. 
+                    Even more complex strategic possibilities await.
                   </p>
-                  <Button asChild className="w-full bg-slate-600 hover:bg-slate-700 text-white" disabled>
-                    <span>
-                      Coming Soon
-                    </span>
+                  <Button disabled className="w-full bg-gray-300 text-gray-500 py-6 text-lg border-4 border-gray-300 font-bold cursor-not-allowed">
+                    COMING SOON
                   </Button>
                 </div>
               </CardContent>
@@ -218,79 +222,86 @@ export default function Home() {
         </div>
       </section>
 
-      {/* How It Works Section */}
-      <section className="py-20 bg-slate-900/50">
+
+       <section className="py-20 bg-white">
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
-            <h2 className="text-4xl lg:text-5xl font-bold text-white mb-4">
-              Get Started in 3 Steps
+            <h2 className="text-5xl lg:text-6xl font-bold text-black mb-4">
+              GET STARTED
             </h2>
-            <p className="text-xl text-slate-400 max-w-2xl mx-auto">
-              Start playing in under a minute
-            </p>
+            <div className="w-32 h-2 bg-black mx-auto mb-4"></div>
+            <p className="text-xl text-gray-600">Three simple steps to your first game</p>
           </div>
-
+          
           <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-            {/* Step 1 */}
             <div className="text-center space-y-4">
-              <div className="w-20 h-20 bg-orange-500 rounded-full flex items-center justify-center mx-auto text-3xl font-bold text-white">
+              <div className="w-24 h-24 bg-black text-white border-4 border-black flex items-center justify-center mx-auto text-4xl font-bold">
                 1
               </div>
-              <h3 className="text-2xl font-bold text-white">Create Account</h3>
-              <p className="text-slate-400">
-                Sign up in seconds with email or play as a guest
+              <h3 className="text-2xl font-bold text-black uppercase">Sign Up</h3>
+              <p className="text-gray-700">
+                Create account or play as guest
               </p>
             </div>
-
-            {/* Step 2 */}
+            
             <div className="text-center space-y-4">
-              <div className="w-20 h-20 bg-orange-500 rounded-full flex items-center justify-center mx-auto text-3xl font-bold text-white">
+              <div className="w-24 h-24 bg-black text-white border-4 border-black flex items-center justify-center mx-auto text-4xl font-bold">
                 2
               </div>
-              <h3 className="text-2xl font-bold text-white">Choose Game Mode</h3>
-              <p className="text-slate-400">
-                Play locally, invite a friend, or join matchmaking
+              <h3 className="text-2xl font-bold text-black uppercase">Choose Mode</h3>
+              <p className="text-gray-700">
+                Local, friend invite, or matchmaking
               </p>
             </div>
-
-            {/* Step 3 */}
+            
             <div className="text-center space-y-4">
-              <div className="w-20 h-20 bg-orange-500 rounded-full flex items-center justify-center mx-auto text-3xl font-bold text-white">
+              <div className="w-24 h-24 bg-black text-white border-4 border-black flex items-center justify-center mx-auto text-4xl font-bold">
                 3
               </div>
-              <h3 className="text-2xl font-bold text-white">Start Playing</h3>
-              <p className="text-slate-400">
-                Make your first move and discover new strategies
+              <h3 className="text-2xl font-bold text-black uppercase">Play</h3>
+              <p className="text-gray-700">
+                Make moves and master the circle
               </p>
             </div>
           </div>
         </div>
       </section>
+     
 
-      {/* Final CTA Section */}
-      <section className="py-32 relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-t from-orange-500/10 to-transparent" />
+
+
+      <section className="py-24 bg-black text-white relative overflow-hidden">
+        <div className="absolute top-0 left-0 text-9xl opacity-10 select-none">
+          ♜♞♝♛♚♝♞♜
+        </div>
+        <div className="absolute bottom-0 right-0 text-9xl opacity-10 select-none rotate-180">
+          ♜♞♝♛♚♝♞♜
+        </div>
 
         <div className="container mx-auto px-4 text-center relative z-10">
-          <h2 className="text-4xl lg:text-6xl font-bold text-white mb-6">
-            Ready to Experience Chess<br />Like Never Before?
+          <h2 className="text-5xl lg:text-7xl font-bold mb-6">
+            READY TO PLAY?
           </h2>
-          <p className="text-xl text-slate-300 mb-10 max-w-2xl mx-auto">
-            Join players discovering new strategies on circular boards.
-            Free to play, endless possibilities.
+          <p className="text-2xl mb-10 max-w-2xl mx-auto opacity-90">
+            Join players worldwide discovering new strategies on circular boards.
           </p>
 
           <div className="flex flex-wrap gap-4 justify-center">
-            <Button asChild size="lg" className="bg-orange-500 hover:bg-orange-600 text-white text-lg px-10 py-7">
-              <Link href="/signup">
-                Sign Up Free
-              </Link>
+            <Button
+              asChild
+              size="lg"
+              className="bg-white text-black text-xl px-12 py-8 border-4 border-white shadow-[8px_8px_0px_0px_rgba(255,255,255,1)] font-bold"
+            >
+              <Link href="/signup">SIGN UP FREE</Link>
             </Button>
 
-            <Button asChild size="lg" variant="outline" className="bg-white text-slate-900 border-white hover:bg-slate-100 text-lg px-10 py-7">
-              <Link href="/play">
-                Play as Guest
-              </Link>
+            <Button
+              asChild
+              size="lg"
+              variant="outline"
+              className="bg-black text-white border-4 border-white text-xl px-12 py-8 shadow-[8px_8px_0px_0px_rgba(255,255,255,1)] font-bold"
+            >
+              <Link href="/play">PLAY AS GUEST</Link>
             </Button>
           </div>
         </div>
