@@ -23,6 +23,7 @@ import { ARCHIMEDEAN_GRAPH } from "shared/archimedean-rules";
 type Space = {
   id: string;
   d: string;
+  transform: string;
 };
 
 export type CapturedPiece = {
@@ -134,6 +135,7 @@ export default function Board({
         setSpaces(
           pathNodes.map((node) => ({
             id: node.id || crypto.randomUUID(),
+            transform: node.getAttribute("transform") || "",
             d: node.getAttribute("d") || "",
           })),
         );

@@ -282,6 +282,7 @@ export default function GamePage({
           })}
         </div>
         <div className="flex w-full h-1/5">
+          <Button className="relative w-4/15 h-1/2 top-1/3 border-orange-400 border-2 rounded-2xl bg-orange-300 text-center text-xl text-orange-900" onClick={() => ws.send({ type: "undo" })}>Undo</Button>
           <Button className="relative w-2/5 h-1/2 top-1/3 left-1/15 border-orange-400 border-2 rounded-2xl bg-orange-300 text-center text-xl text-orange-900" onClick={() => ws.send({ type: "draw" })}>Draw</Button>
           <Button className="relative w-2/5 h-1/2 top-1/3 left-4/30 border-orange-400 border-2 rounded-2xl bg-orange-300 text-center text-xl text-orange-900" onClick={() => ws.send({ type: "resign" })}>Resign</Button>
         </div>
@@ -314,7 +315,7 @@ function Timer({ timeLeft }: { timeLeft: number | null }) {
   const minutes = Math.floor(seconds / 60);
   const remainingSeconds = seconds % 60;
   return (
-    <div className="inline-block w-16 text-center">
+    <div className="inline-block text-center">
       {minutes}:{remainingSeconds.toString().padStart(2, "0")}
     </div>
   );
