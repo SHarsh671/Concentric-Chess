@@ -41,20 +41,24 @@ export default function TestBoardPage() {
 
   // Separate captured pieces by color
   const whiteCaptured = capturedPieces.filter((p) => p.color === "wht");
-  const blackCaptured = capturedPieces.filter((p) => p.color === "blk");    
+  const blackCaptured = capturedPieces.filter((p) => p.color === "blk");
 
   return (
     <div className="flex w-full gap-4 p-4">
       {/* Left sidebar: Captured Pieces */}
       <div className="w-[140px] border-4 border-black bg-white rounded-lg p-3 flex flex-col h-[900px] shrink-0">
         <div className="text-sm font-bold mb-3 uppercase text-center border-b-2 border-black pb-2">
-          Captured<br/>Pieces
+          Captured
+          <br />
+          Pieces
         </div>
-        
+
         <div className="flex-1 overflow-y-auto space-y-4">
           {/* White captured */}
           <div>
-            <div className="text-xs font-bold text-gray-600 mb-1 text-center">White ♔</div>
+            <div className="text-xs font-bold text-gray-600 mb-1 text-center">
+              White ♔
+            </div>
             <div className="flex flex-col gap-1 items-center">
               {whiteCaptured.length === 0 ? (
                 <span className="text-xs text-gray-400 italic">None</span>
@@ -81,7 +85,9 @@ export default function TestBoardPage() {
 
           {/* Black captured */}
           <div>
-            <div className="text-xs font-bold text-gray-600 mb-1 text-center">Black ♚</div>
+            <div className="text-xs font-bold text-gray-600 mb-1 text-center">
+              Black ♚
+            </div>
             <div className="flex flex-col gap-1 items-center">
               {blackCaptured.length === 0 ? (
                 <span className="text-xs text-gray-400 italic">None</span>
@@ -164,7 +170,8 @@ export default function TestBoardPage() {
               const mover = idx % 2 === 0 ? "w" : "b";
               return (
                 <div key={idx} className="text-sm px-2 py-1 hover:bg-gray-100">
-                  {turn}{mover}. {move.fromSquare} → {move.toSquare}
+                  {turn}
+                  {mover}. {move.fromSquare} → {move.toSquare}
                 </div>
               );
             })

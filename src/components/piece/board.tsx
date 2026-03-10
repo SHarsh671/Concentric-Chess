@@ -166,7 +166,9 @@ export default function Board({
       color: piece.color as Side,
       position: piece.position,
     };
-    return variant === "concentric" ? generatePseudoLegalMovesForPieceConcentric(rulesPiece, rulesPieces) : generatePseudoLegalMovesForPieceArchimedean(rulesPiece, rulesPieces);
+    return variant === "concentric"
+      ? generatePseudoLegalMovesForPieceConcentric(rulesPiece, rulesPieces)
+      : generatePseudoLegalMovesForPieceArchimedean(rulesPiece, rulesPieces);
   };
 
   const handleCellClick = (cellId: string) => {
