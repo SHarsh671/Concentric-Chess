@@ -102,7 +102,7 @@ export default function Board({
 
   useEffect(() => {
     setPiecesReady(true);
-    const newPieces = computePieceState(moves);
+    const newPieces = variant === "concentric" ? computePieceStateConcentric(moves) : computePieceStateArchimedean(moves);
     const newCaptured = trackCapturedPieces
       ? computeCaptured(newPieces)
       : boardState.capturedPieces;
@@ -251,8 +251,8 @@ export default function Board({
         hoveredMove: entering
           ? cellId
           : prev.hoveredMove === cellId
-          ? null
-          : prev.hoveredMove,
+            ? null
+            : prev.hoveredMove,
       }));
     }
   };
@@ -350,8 +350,8 @@ export default function Board({
                   ? "default"
                   : isLegal ||
                     boardState.pieces.some((p) => p.position === s.id)
-                  ? "pointer"
-                  : "default",
+                    ? "pointer"
+                    : "default",
               }}
               onClick={() => handleCellClick(s.id)}
               onMouseEnter={(e) => {
