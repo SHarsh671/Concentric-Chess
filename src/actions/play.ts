@@ -55,36 +55,36 @@ export async function play(_prevState: PlayState | null, formData: FormData) {
           };
         }
         // check if a game already exists between these two players
-        const existingGame = await db()
-          .select()
-          .from(schema.gamesTable)
-          .where(
-            t.and(
-              t.or(
-                t.and(
-                  t.eq(schema.gamesTable.whitePlayerId, session.playerId),
-                  t.eq(schema.gamesTable.blackPlayerId, player.id),
-                ),
-                t.and(
-                  t.eq(schema.gamesTable.whitePlayerId, player.id),
-                  t.eq(schema.gamesTable.blackPlayerId, session.playerId),
-                ),
-              ),
-              t.eq(schema.gamesTable.status, "ongoing"),
-              t.isNull(schema.gamesTable.deletedAt),
-            ),
-          )
-          .limit(1)
-          .then((rows) => rows[0]);
-        if (existingGame) {
-          return {
-            variant,
-            mode,
-            username,
-            error:
-              "A game already exists between you and the selected opponent.",
-          };
-        }
+        // const existingGame = await db()
+        //   .select()
+        //   .from(schema.gamesTable)
+        //   .where(
+        //     t.and(
+        //       t.or(
+        //         t.and(
+        //           t.eq(schema.gamesTable.whitePlayerId, session.playerId),
+        //           t.eq(schema.gamesTable.blackPlayerId, player.id),
+        //         ),
+        //         t.and(
+        //           t.eq(schema.gamesTable.whitePlayerId, player.id),
+        //           t.eq(schema.gamesTable.blackPlayerId, session.playerId),
+        //         ),
+        //       ),
+        //       t.eq(schema.gamesTable.status, "ongoing"),
+        //       t.isNull(schema.gamesTable.deletedAt),
+        //     ),
+        //   )
+        //   .limit(1)
+        //   .then((rows) => rows[0]);
+        // if (existingGame) {
+        //   return {
+        //     variant,
+        //     mode,
+        //     username,
+        //     error:
+        //       "A game already exists between you and the selected opponent.",
+        //   };
+        // }
         // otherwise, create a new game
         const gameId = crypto.randomUUID();
         const whitePlayerId =
@@ -144,10 +144,26 @@ export async function play(_prevState: PlayState | null, formData: FormData) {
           .limit(1)
           .then((rows) => rows[0]);
         if (existingGame) {
-          await db()
-            .update(schema.gamesTable)
-            .set({ status: "aborted", deletedAt: new Date().toISOString() })
-            .where(t.eq(schema.gamesTable.id, existingGame.id));
+          const res = await fetch(
+            process.env.NODE_ENV === "development"
+              ? `http://localhost:8787/do/games/${existingGame.id}/abort`
+              : `https://capstone.mrvillage.dev/do/games/${existingGame.id}/abort`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Cookie: serialize("session_token", session.token),
+              },
+              body: JSON.stringify({ sessionToken: session.token }),
+            },
+          );
+          if (!res.ok) {
+            return {
+              variant,
+              mode,
+              error: "Failed to leave existing game queue. Please try again.",
+            };
+          }
         }
         // next, check for an existing waiting player
         while (true) {
@@ -240,25 +256,25 @@ export async function play(_prevState: PlayState | null, formData: FormData) {
       }
     case "local":
       // check if there's already a local game
-      const existingGame = await db()
-        .select()
-        .from(schema.gamesTable)
-        .where(
-          t.and(
-            t.and(
-              t.eq(schema.gamesTable.whitePlayerId, session.playerId),
-              t.eq(schema.gamesTable.blackPlayerId, session.playerId),
-            ),
-            t.eq(schema.gamesTable.status, "ongoing"),
-            t.eq(schema.gamesTable.variant, variant),
-            t.isNull(schema.gamesTable.deletedAt),
-          ),
-        )
-        .limit(1)
-        .then((rows) => rows[0]);
-      if (existingGame) {
-        return redirect(`/games/${existingGame.id}`);
-      }
+      // const existingGame = await db()
+      //   .select()
+      //   .from(schema.gamesTable)
+      //   .where(
+      //     t.and(
+      //       t.and(
+      //         t.eq(schema.gamesTable.whitePlayerId, session.playerId),
+      //         t.eq(schema.gamesTable.blackPlayerId, session.playerId),
+      //       ),
+      //       t.eq(schema.gamesTable.status, "ongoing"),
+      //       t.eq(schema.gamesTable.variant, variant),
+      //       t.isNull(schema.gamesTable.deletedAt),
+      //     ),
+      //   )
+      //   .limit(1)
+      //   .then((rows) => rows[0]);
+      // if (existingGame) {
+      //   return redirect(`/games/${existingGame.id}`);
+      // }
       // otherwise, create a new game
       const gameId = crypto.randomUUID();
       await db()

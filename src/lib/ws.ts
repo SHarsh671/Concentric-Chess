@@ -2,52 +2,72 @@
 
 import { ServerMsg, ClientMsg } from "shared";
 import "client-only";
+import { toast } from "sonner";
 
 export class GameSocket {
-  private static instance: GameSocket | null = null;
+  private static instances: Map<string, GameSocket> = new Map();
   private socket: WebSocket | null = null;
-  private gameId: string | null = null;
+  private gameId: string;
   private listener: ((message: ServerMsg) => void) | null = null;
-  private rand: number;
+  private queue: ClientMsg[] = [];
+  private reconnecting: Promise<void> | null = null;
+  private reconnected: () => void = () => { };
 
-  constructor() {
-    this.rand = Math.random();
+  public static getInstance(gameId: string): GameSocket {
+    if (!this.instances.has(gameId)) {
+      const instance = new GameSocket(gameId);
+      this.instances.set(gameId, instance);
+    }
+    return this.instances.get(gameId)!;
   }
 
-  public static get(): GameSocket {
-    if (this.instance === null) {
-      this.instance = new GameSocket();
-    }
-    return this.instance;
-  }
-
-  public connect(gameId: string | null, initialSync: boolean = false) {
-    console.log("CONNECTING TO WEBSOCKET", gameId, this.rand, this.gameId);
-    if (this.gameId === gameId) {
-      return;
-    }
-    if (gameId === null) {
-      console.log("DISCONNECTING FROM WEBSOCKET");
-      this.disconnect();
-      return;
-    }
-    if (this.socket) {
-      console.log("HERE");
-      this.disconnect();
-    }
+  constructor(gameId: string) {
     this.gameId = gameId;
-    console.log(this.gameId === gameId);
+    if (typeof window === "undefined") {
+      return;
+    }
+    this.reconnect(0, true);
+  }
+
+  public reconnect(delay: number = 0, initial: boolean = false) {
+    if (this.socket) { return; }
+    if (!initial) {
+      if (!this.reconnecting) {
+        this.reconnecting = new Promise((resolve) => {
+          this.reconnected = resolve;
+        });
+      }
+      toast.promise(this.reconnecting, {
+        id: "reconnecting",
+        loading: "Reconnecting...",
+        success: "Reconnected!",
+        error: "Failed to reconnect.",
+        dismissible: true,
+        closeButton: true,
+      })
+    }
+    if (delay > 0) {
+      setTimeout(() => {
+        this.reconnect(0, initial);
+      }, delay);
+      return;
+    }
     if (window.location.origin.startsWith("http://localhost")) {
-      this.socket = new WebSocket(`ws://localhost:8787/do/games/${gameId}/ws`);
+      this.socket = new WebSocket(`ws://localhost:8787/do/games/${this.gameId}/ws`);
     } else {
       this.socket = new WebSocket(
-        `wss://capstone.mrvillage.dev/do/games/${gameId}/ws`,
+        `wss://capstone.mrvillage.dev/do/games/${this.gameId}/ws`,
       );
     }
-    console.log(this.socket);
     this.socket.onopen = () => {
-      if (initialSync) {
-        this.send({ type: "sync_request" });
+      console.log("WebSocket connected");
+      this.send({ type: "sync_request" });
+      this.reconnected();
+      this.reconnected = () => { };
+      this.reconnecting = null;
+      while (this.queue.length > 0) {
+        const message = this.queue.shift()!;
+        this.send(message);
       }
     };
     this.socket.onmessage = (event) => {
@@ -55,25 +75,24 @@ export class GameSocket {
     };
     this.socket.onclose = () => {
       this.socket = null;
-      this.gameId = null;
+      this.reconnect(10000);
     };
     this.socket.onerror = (error) => {
       console.error("WebSocket error:", error);
+      // this.reconnect(1000);
     };
   }
 
   public disconnect() {
+    this.removeInstance();
     if (this.socket) {
       const socket = this.socket;
       socket.onopen = () => {
-        console.log("CLOSING");
         socket.close();
       };
       if (this.socket.readyState === WebSocket.OPEN) {
         this.socket.close();
       }
-      this.socket = null;
-      this.gameId = null;
     }
   }
 
@@ -88,12 +107,16 @@ export class GameSocket {
     if (this.socket && this.socket.readyState === WebSocket.OPEN) {
       this.socket.send(JSON.stringify(message));
     } else {
-      console.log(this.socket);
-      throw new Error("WebSocket is not connected.");
+      this.queue.push(message);
+      this.reconnect();
     }
   }
 
   public setListener(listener: ((message: ServerMsg) => void) | null) {
     this.listener = listener;
+  }
+
+  public removeInstance() {
+    GameSocket.instances.delete(this.gameId);
   }
 }

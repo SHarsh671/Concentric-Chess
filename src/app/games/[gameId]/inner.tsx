@@ -2,7 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { GameSocket } from "@/lib/ws";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Game, Move } from "shared";
 import "client-only";
 import Board, { CapturedPiece } from "@/components/piece/board";
@@ -21,7 +21,7 @@ export default function GamePage({
   playerId: string | undefined;
 }) {
   const [game, setGame] = useState(initialGame);
-  const ws = GameSocket.get();
+  const ws = useMemo(() => GameSocket.getInstance(initialGame.id, true), [initialGame.id]);
   const [moves, setMoves] = useState(initialMoves);
   const [showRules, setShowRules] = useState(false);
   // Flat array — filter by color where needed
@@ -59,7 +59,6 @@ export default function GamePage({
   }, [game]);
 
   useEffect(() => {
-    ws.connect(game.id, true);
     ws.setListener((message) => {
       switch (message.type) {
         case "move": {

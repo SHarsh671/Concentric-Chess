@@ -39,6 +39,7 @@ export class GameObject extends DurableObject<CloudflareEnv> {
     this.ctx.setWebSocketAutoResponse(
       new WebSocketRequestResponsePair("ping", "pong"),
     );
+
   }
 
   async getGame(gameId: string) {
@@ -199,6 +200,25 @@ export class GameObject extends DurableObject<CloudflareEnv> {
         }
         // not an invite game, and both sides are filled
         return new Response("Game already accepted", { status: 409 });
+      } else if (request.url.endsWith("/abort") && session) {
+        // in this case, we want to check if the game is still in queue and abort it
+        const now = new Date();
+        if (
+          game.status === "ongoing" &&
+          game.deletedAt === null &&
+          ((game.whitePlayerId === session.playerId &&
+            game.blackPlayerId === null) ||
+            (game.blackPlayerId === session.playerId &&
+              game.whitePlayerId === null))
+        ) {
+          await this.db
+            .update(schema.gamesTable)
+            .set({ status: "aborted", deletedAt: now.toISOString() })
+            .where(t.eq(schema.gamesTable.id, game.id));
+          await this.broadcastToGame(game.id, { type: "aborted" });
+          return new Response("Game aborted", { status: 200 });
+        }
+        return new Response("Game cannot be aborted", { status: 403 });
       } else {
         return new Response("Not Found", { status: 404 });
       }
@@ -317,6 +337,7 @@ export class GameObject extends DurableObject<CloudflareEnv> {
             break;
           }
           const turn = game.nextMove % 2 === 1 ? "white" : "black";
+          console.log("It's", turn, "turn");
           if (
             turn === msg.data.side &&
             game.status === "ongoing" &&
@@ -345,6 +366,7 @@ export class GameObject extends DurableObject<CloudflareEnv> {
                 (piece.color == "wht" && turn == "black") ||
                 (piece.color == "blk" && turn == "white")
               ) {
+                console.log("Piece at from position does not belong to player");
                 return;
               }
               const pseudoLegalMoves = game.variant.startsWith("concentric")
@@ -490,8 +512,8 @@ export class GameObject extends DurableObject<CloudflareEnv> {
                 ? "white"
                 : "black"
               : socketInfo.playerId === game.whitePlayerId
-              ? "white"
-              : "black";
+                ? "white"
+                : "black";
           await this.db
             .update(schema.gamesTable)
             .set({ status: side === "white" ? "white_resign" : "black_resign" })
@@ -627,6 +649,14 @@ export class GameObject extends DurableObject<CloudflareEnv> {
       }
       const game = await this.getGame(socketInfo.gameId);
       if (!game) {
+        return;
+      }
+      const isLastSocketForPlayer = ![...this.sockets.values()].some(
+        (info) =>
+          info.gameId === socketInfo.gameId &&
+          info.playerId === socketInfo.playerId,
+      );
+      if (!isLastSocketForPlayer) {
         return;
       }
       const now = new Date().toISOString();
