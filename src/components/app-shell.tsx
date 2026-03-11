@@ -14,13 +14,14 @@ import {
 } from "@/components/ui/sidebar";
 import { getSession } from "@/lib/auth";
 import Link from "next/link";
+import { SidebarCloseOnNavigate } from "@/components/sidebar-close-on-navigate";
 
 const data = [
-  { title: "Play",        url: "/play",        icon: Gamepad,      piece: "♟" },
-  { title: "History",     url: "/history",     icon: History,      piece: "♜" },
-  { title: "Rules",       url: "/rules",       icon: Book,         piece: "♝" },
-  { title: "Test Board",  url: "/test-board",  icon: FlaskConical, piece: "♞" },
-  { title: "Test Replay", url: "/test-replay", icon: Film,         piece: "♛" },
+  { title: "Play", url: "/play", icon: Gamepad, piece: "♟" },
+  { title: "History", url: "/history", icon: History, piece: "♜" },
+  { title: "Rules", url: "/rules", icon: Book, piece: "♝" },
+  { title: "Test Board", url: "/test-board", icon: FlaskConical, piece: "♞" },
+  { title: "Test Replay", url: "/test-replay", icon: Film, piece: "♛" },
 ];
 
 export async function AppShell({
@@ -29,8 +30,9 @@ export async function AppShell({
   const session = await getSession();
 
   return (
-    <SidebarProvider>
-      <Sidebar className="border-r-0 bg-white">
+    <SidebarProvider className="h-screen overflow-hidden">
+      <SidebarCloseOnNavigate />
+      <Sidebar className="border-r bg-white" collapsible="offcanvas">
         {/* Header */}
         <SidebarHeader className="py-0 border-b-4 border-black">
           <Link
@@ -108,13 +110,13 @@ export async function AppShell({
         <SidebarRail />
       </Sidebar>
 
-      <SidebarInset>
+      <SidebarInset className="overflow-y-auto">
         <header className="flex h-12 shrink-0 items-center gap-2 md:hidden border-b-4 border-black">
           <div className="flex flex-1 items-center gap-2 px-3">
             <SidebarTrigger />
           </div>
         </header>
-        <div className="flex flex-1 flex-col min-h-screen">
+        <div className="flex flex-1 flex-col">
           {children}
         </div>
       </SidebarInset>

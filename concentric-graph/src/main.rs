@@ -334,21 +334,44 @@ fn get_vertex_next(row: usize, col: usize) -> HashMap<(usize, usize), (usize, us
     map
 }
 
+#[allow(clippy::collapsible_if, clippy::collapsible_else_if)]
 fn get_color(row: usize, col: usize, is_archimedean: bool) -> &'static str {
-    if !is_archimedean || row > 6 {
-        if row % 2 == 1 {
-            // odd rows start from dark
-            if col % 2 == 1 { "dark" } else { "light" }
+    if is_archimedean {
+        // four colors, light1, dark1, light2, dark2 based on the two spirals
+        let out = if row > 6 {
+            if row % 2 == 1 {
+                // odd rows start from dark
+                if col % 2 == 1 { "dark" } else { "light" }
+            } else {
+                // even rows start from light
+                if col % 2 == 1 { "light" } else { "dark" }
+            }
+        } else if row % 2 == 1 {
+            // odd archimedean bottom rows start from light
+            if col % 2 == 1 { "light" } else { "dark" }
         } else {
             // even rows start from light
-            if col % 2 == 1 { "light" } else { "dark" }
+            if col % 2 == 1 { "dark" } else { "light" }
+        };
+        if row > 6 {
+            if col % 2 == 1 {
+                if out == "light" { "light1" } else { "dark1" }
+            } else {
+                if out == "light" { "light2" } else { "dark2" }
+            }
+        } else {
+            if col % 2 == 1 {
+                if out == "light" { "light2" } else { "dark2" }
+            } else {
+                if out == "light" { "light1" } else { "dark1" }
+            }
         }
     } else if row % 2 == 1 {
-        // odd archimedean bottom rows start from light
-        if col % 2 == 1 { "light" } else { "dark" }
+        // odd rows start from dark
+        if col % 2 == 1 { "dark" } else { "light" }
     } else {
         // even rows start from light
-        if col % 2 == 1 { "dark" } else { "light" }
+        if col % 2 == 1 { "light" } else { "dark" }
     }
 }
 

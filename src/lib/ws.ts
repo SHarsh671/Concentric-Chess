@@ -12,6 +12,7 @@ export class GameSocket {
   private queue: ClientMsg[] = [];
   private reconnecting: Promise<void> | null = null;
   private reconnected: () => void = () => { };
+  private disconnected: boolean = false;
 
   public static getInstance(gameId: string): GameSocket {
     if (!this.instances.has(gameId)) {
@@ -30,6 +31,7 @@ export class GameSocket {
   }
 
   public reconnect(delay: number = 0, initial: boolean = false) {
+    if (this.disconnected) { return; }
     if (this.socket) { return; }
     if (!initial) {
       if (!this.reconnecting) {
@@ -84,14 +86,15 @@ export class GameSocket {
   }
 
   public disconnect() {
+    this.disconnected = true;
     this.removeInstance();
     if (this.socket) {
       const socket = this.socket;
-      socket.onopen = () => {
+      this.socket = null;
+      socket.onclose = null;
+      socket.onerror = null;
+      if (socket.readyState === WebSocket.OPEN || socket.readyState === WebSocket.CONNECTING) {
         socket.close();
-      };
-      if (this.socket.readyState === WebSocket.OPEN) {
-        this.socket.close();
       }
     }
   }

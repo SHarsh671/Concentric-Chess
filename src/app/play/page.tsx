@@ -1,145 +1,201 @@
 "use client";
 
-import { play } from "@/actions/play";
-import { Alert, AlertTitle } from "@/components/ui/alert";
+import { play, type PlayState } from "@/actions/play";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { AlertCircleIcon, LoaderCircle } from "lucide-react";
+import { AlertCircleIcon, Globe, LoaderCircle, Monitor } from "lucide-react";
 import { useActionState, useState } from "react";
 import { GAME_VARIANTS } from "shared";
 
+const GAME_TYPES = [
+  {
+    id: "concentric",
+    label: "Concentric",
+    description: "Rings of expanding squares",
+    piece: "♜",
+  },
+  {
+    id: "archimedean",
+    label: "Archimedean",
+    description: "Spiral board geometry",
+    piece: "♞",
+  },
+] as const;
+
+const TIME_CONTROLS = [
+  { id: "rapid", label: "Rapid", time: "10:00", sublabel: "10 min per side" },
+  { id: "blitz", label: "Blitz", time: "3:00", sublabel: "3 min per side" },
+  { id: "bullet", label: "Bullet", time: "1:00", sublabel: "1 min per side" },
+  { id: "unlimited", label: "Unlimited", time: "∞", sublabel: "No time limit" },
+] as const;
+
 export default function PlayPage() {
   const [state, formAction, pending] = useActionState(play, null);
-  const [mode, setMode] = useState<"online" | "local">(state?.mode || "online");
+  const [mode, setMode] = useState<"online" | "local">(state?.mode ?? "online");
+
+  const defaultVariant = state?.variant ?? GAME_VARIANTS[0].variant;
+  const [gameType, setGameType] = useState<"concentric" | "archimedean">(
+    defaultVariant.startsWith("archimedean") ? "archimedean" : "concentric"
+  );
+  const [timeControl, setTimeControl] = useState(
+    defaultVariant.split("-")[1] as "rapid" | "blitz" | "bullet" | "unlimited"
+  );
+  const variant = `${gameType}-${timeControl}`;
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Decorative header */}
-      <div className="border-b-8 border-black bg-black text-white px-8 py-10 relative overflow-hidden">
-        <div className="absolute top-0 right-0 text-9xl opacity-5 select-none font-bold leading-none">
-          ♟
+      {/* Searching overlay */}
+      <div className="max-w-lg mx-auto px-6 py-16">
+        {/* Header */}
+        <div className="mb-12 text-center">
+          <div className="text-7xl mb-3 select-none leading-none">♟</div>
+          <h1 className="text-4xl font-black uppercase tracking-tight">New Game</h1>
+          <p className="text-gray-400 mt-1 text-sm uppercase tracking-widest">Concentric Chess</p>
         </div>
-        <div className="max-w-3xl">
-          <div className="inline-flex items-center gap-2 border-2 border-white px-4 py-1 mb-4 text-xs font-bold uppercase tracking-widest">
-            <span>♔</span> New Game
-          </div>
-          <h1 className="text-5xl font-bold uppercase tracking-wide leading-tight">
-            Start Playing
-          </h1>
-          <p className="mt-2 text-gray-400 text-lg">
-            Choose your variant and challenge players worldwide.
-          </p>
-        </div>
-      </div>
 
-      <div className="px-8 py-10 max-w-3xl">
         {state?.error && (
-          <div className="mb-6 border-4 border-black bg-white p-4 flex items-center gap-3">
-            <AlertCircleIcon className="shrink-0" />
-            <span className="font-bold">{state.error}</span>
+          <div className="mb-8 border-4 border-black bg-white p-4 flex items-center gap-3">
+            <AlertCircleIcon className="size-5 shrink-0" />
+            <span className="font-bold text-sm">{state.error}</span>
           </div>
         )}
 
-        <form action={formAction} className="flex flex-col gap-8">
-          {/* Three columns */}
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-            {/* Variant */}
-            <div className="flex flex-col gap-2">
-              <Label className="font-bold uppercase tracking-widest text-xs">
-                ♜ Variant
-              </Label>
-              <Select
-                name="variant"
-                defaultValue={state?.variant || GAME_VARIANTS[0].variant}
-              >
-                <SelectTrigger className="h-12 border-4 border-black rounded-none font-bold focus:ring-0 focus:ring-offset-0">
-                  <SelectValue placeholder="Select a variant" />
-                </SelectTrigger>
-                <SelectContent className="border-4 border-black rounded-none">
-                  {GAME_VARIANTS.map((variant) => (
-                    <SelectItem
-                      key={variant.variant}
-                      value={variant.variant}
-                      className="font-bold rounded-none focus:bg-black focus:text-white"
-                    >
-                      {variant.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+        <form action={formAction} className="flex flex-col gap-10">
+          {/* Hidden inputs carry the selected values */}
+          <input type="hidden" name="variant" value={variant} />
+          <input type="hidden" name="mode" value={mode} />
 
-            {/* Mode */}
-            <div className="flex flex-col gap-2">
-              <Label className="font-bold uppercase tracking-widest text-xs">
-                ♞ Mode
-              </Label>
-              <Select
-                name="mode"
-                defaultValue={mode}
-                onValueChange={(value) => setMode(value as "online" | "local")}
-                value={mode}
-              >
-                <SelectTrigger className="h-12 border-4 border-black rounded-none font-bold focus:ring-0 focus:ring-offset-0">
-                  <SelectValue placeholder="Select a mode" />
-                </SelectTrigger>
-                <SelectContent className="border-4 border-black rounded-none">
-                  <SelectItem value="online" className="font-bold rounded-none focus:bg-black focus:text-white">
-                    Online Multiplayer
-                  </SelectItem>
-                  <SelectItem value="local" className="font-bold rounded-none focus:bg-black focus:text-white">
-                    Local Multiplayer
-                  </SelectItem>
-                </SelectContent>
-              </Select>
+          {/* Game type */}
+          <section>
+            <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3">
+              Game Type
+            </p>
+            <div className="grid grid-cols-2 gap-3">
+              {GAME_TYPES.map((gt) => {
+                const selected = gameType === gt.id;
+                return (
+                  <button
+                    type="button"
+                    key={gt.id}
+                    onClick={() => setGameType(gt.id)}
+                    className={`border-4 p-5 text-left transition-all cursor-pointer focus:outline-none ${selected
+                      ? "border-black bg-black text-white"
+                      : "border-gray-200 bg-white hover:border-gray-400"
+                      }`}
+                  >
+                    <div className={`text-3xl mb-2 leading-none select-none ${selected ? "opacity-80" : "opacity-30"}`}>
+                      {gt.piece}
+                    </div>
+                    <div className="font-bold uppercase tracking-wide text-sm leading-none">
+                      {gt.label}
+                    </div>
+                    <div className={`text-xs mt-1 ${selected ? "text-gray-400" : "text-gray-400"}`}>
+                      {gt.description}
+                    </div>
+                  </button>
+                );
+              })}
             </div>
+          </section>
 
-            {/* Opponent */}
-            <div className="flex flex-col gap-2">
-              <Label className="font-bold uppercase tracking-widest text-xs">
-                ♝ Opponent
-              </Label>
-              {mode === "online" ? (
-                <Input
-                  type="text"
-                  name="username"
-                  placeholder="Username"
-                  defaultValue={state?.mode === "online" ? state?.username : ""}
-                  className="h-12 border-4 border-black rounded-none font-bold placeholder:text-gray-400 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-black"
-                />
-              ) : (
-                <div className="h-12 border-4 border-gray-200 flex items-center px-3 text-gray-400 font-bold text-sm">
-                  Same device
+          {/* Time control */}
+          <section>
+            <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3">
+              Time Control
+            </p>
+            <div className="grid grid-cols-2 gap-3">
+              {TIME_CONTROLS.map((tc) => {
+                const selected = timeControl === tc.id;
+                return (
+                  <button
+                    type="button"
+                    key={tc.id}
+                    onClick={() => setTimeControl(tc.id)}
+                    className={`border-4 p-5 text-left transition-all cursor-pointer focus:outline-none ${selected
+                      ? "border-black bg-black text-white"
+                      : "border-gray-200 bg-white hover:border-gray-400"
+                      }`}
+                  >
+                    <div className="font-black text-3xl font-mono leading-none mb-2 tabular-nums">
+                      {tc.time}
+                    </div>
+                    <div className="font-bold uppercase tracking-wide text-sm leading-none">
+                      {tc.label}
+                    </div>
+                    <div className={`text-xs mt-1 ${selected ? "text-gray-400" : "text-gray-400"}`}>
+                      {tc.sublabel}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </section>
+
+          {/* Mode */}
+          <section>
+            <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3">
+              Mode
+            </p>
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={() => setMode("online")}
+                className={`border-4 p-5 text-left transition-all cursor-pointer focus:outline-none ${mode === "online"
+                  ? "border-black bg-black text-white"
+                  : "border-gray-200 bg-white hover:border-gray-400"
+                  }`}
+              >
+                <Globe className={`size-5 mb-3 ${mode === "online" ? "text-gray-300" : "text-gray-400"}`} />
+                <div className="font-bold uppercase tracking-wide text-sm leading-none">Online</div>
+                <div className={`text-xs mt-1 ${mode === "online" ? "text-gray-400" : "text-gray-400"}`}>
+                  Challenge players worldwide
                 </div>
-              )}
+              </button>
+              <button
+                type="button"
+                onClick={() => setMode("local")}
+                className={`border-4 p-5 text-left transition-all cursor-pointer focus:outline-none ${mode === "local"
+                  ? "border-black bg-black text-white"
+                  : "border-gray-200 bg-white hover:border-gray-400"
+                  }`}
+              >
+                <Monitor className={`size-5 mb-3 ${mode === "local" ? "text-gray-300" : "text-gray-400"}`} />
+                <div className="font-bold uppercase tracking-wide text-sm leading-none">Local</div>
+                <div className={`text-xs mt-1 ${mode === "local" ? "text-gray-400" : "text-gray-400"}`}>
+                  Two players, one screen
+                </div>
+              </button>
             </div>
-          </div>
+          </section>
+
+          {/* Opponent (online only) */}
+          {mode === "online" && (
+            <section>
+              <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3">
+                Opponent <span className="normal-case font-normal tracking-normal text-gray-300">(leave blank to find a random match)</span>
+              </p>
+              <Input
+                type="text"
+                name="username"
+                placeholder="Enter username or leave blank for random match"
+                defaultValue={(state as PlayState)?.username ?? ""}
+                className="h-14 border-4 border-black rounded-none font-bold text-base placeholder:text-gray-300 placeholder:font-normal focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-black px-4"
+              />
+            </section>
+          )}
 
           {/* Submit */}
           <Button
             type="submit"
             disabled={pending}
-            className="h-14 bg-black text-white border-4 border-black rounded-none font-bold uppercase tracking-widest text-base shadow-[6px_6px_0px_0px_rgba(0,0,0,0.2)] hover:shadow-none hover:translate-x-[6px] hover:translate-y-[6px] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            className="h-16 bg-black text-white border-4 border-black rounded-none font-black uppercase tracking-widest text-sm shadow-[6px_6px_0px_0px_rgba(0,0,0,0.12)] hover:shadow-none hover:translate-x-[6px] hover:translate-y-[6px] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {pending ? (
-              <LoaderCircle className="size-5 animate-spin mr-2" />
-            ) : (
-              <span className="mr-2">♟</span>
-            )}
-            {pending ? "Starting..." : "Start Game"}
+            <span className="mr-2 text-base">♟</span>
+            Start Game
           </Button>
         </form>
 
-        {/* Decorative piece row */}
-        <div className="mt-12 border-t-4 border-black pt-6 text-center text-3xl tracking-widest opacity-10 select-none">
+        <div className="mt-16 text-center text-2xl tracking-widest opacity-8 select-none">
           ♜♞♝♛♚♝♞♜
         </div>
       </div>

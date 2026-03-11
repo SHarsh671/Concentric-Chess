@@ -19,6 +19,7 @@ import {
 import { Move } from "shared";
 import { CONCENTRIC_GRAPH } from "../../../shared/concentric-graph";
 import { ARCHIMEDEAN_GRAPH } from "shared/archimedean-rules";
+import colors from "tailwindcss/colors"
 
 type Space = {
   id: string;
@@ -272,53 +273,66 @@ export default function Board({
     // Dark green — locked pending move (first click, waiting for confirm)
     if (cellId === boardState.pendingMove) {
       return {
-        fill: "#16a34a",
+        fill: colors.yellow[400],
         fillOpacity: 1,
-        stroke: "#14532d",
-        strokeWidth: 6,
+        stroke: "#000000",
+        strokeWidth: 1,
       };
     }
 
     // Selected piece — yellow
     if (cellId === boardState.selectedCell) {
       return {
-        fill: "#FFD700",
+        fill: colors.green[400],
         fillOpacity: 1,
-        stroke: "#000",
-        strokeWidth: 6,
+        stroke: "#000000",
+        strokeWidth: 1,
       };
     }
 
     // Light green — hovering a legal square
     if (cellId === boardState.hoveredMove) {
       return {
-        fill: "#4ade80",
+        fill: colors.green[500],
         fillOpacity: 1,
-        stroke: "#16a34a",
-        strokeWidth: 5,
+        stroke: "#000000",
+        strokeWidth: 1,
       };
     }
 
     // Yellow-ish tint — available legal moves
     if (boardState.legalMoves.includes(cellId)) {
       return {
-        fill: "#ebe850",
+        fill: colors.green[400],
         fillOpacity: 1,
-        stroke: "#000",
-        strokeWidth: 3,
+        stroke: "#000000",
+        strokeWidth: 1,
       };
     }
-
+    const color = (variant === "concentric" ? CONCENTRIC_GRAPH : ARCHIMEDEAN_GRAPH).color[
+      cellId
+    ];
+    const getColor = (color: "dark" | "light" | "dark1" | "light1" | "dark2" | "light2") => {
+      switch (color) {
+        case "dark":
+          return colors.stone[700];
+        case "light":
+          return colors.stone[50];
+        case "dark1":
+          return colors.sky[500];
+        case "light1":
+          return colors.sky[200];
+        case "dark2":
+          return colors.stone[500];
+        case "light2":
+          return colors.stone[200];
+      }
+    }
     return {
-      fill:
-        (variant === "concentric" ? CONCENTRIC_GRAPH : ARCHIMEDEAN_GRAPH).color[
-          cellId
-        ] === "dark"
-          ? "#473c39"
-          : "#f3f1f1",
+      fill: getColor(color),
       fillOpacity: 1,
       stroke: "#000000",
-      strokeWidth: 4,
+      strokeWidth: 1,
     };
   };
 
@@ -346,7 +360,7 @@ export default function Board({
               fillOpacity={style.fillOpacity}
               stroke={style.stroke}
               strokeWidth={style.strokeWidth}
-              strokeOpacity={0}
+              strokeOpacity={1}
               style={{
                 cursor: isReplayMode
                   ? "default"
@@ -364,7 +378,7 @@ export default function Board({
                   !isLegal &&
                   s.id !== boardState.selectedCell
                 ) {
-                  e.currentTarget.setAttribute("fill", "#f533e5ff");
+                  e.currentTarget.setAttribute("fill", colors.green[300]);
                 }
               }}
               onMouseLeave={(e) => {

@@ -7,10 +7,11 @@ import { Game, Move } from "shared";
 import "client-only";
 import Board, { CapturedPiece } from "@/components/piece/board";
 import RulesDialog from "@/components/piece/rules-dialog";
-import { HelpCircle } from "lucide-react";
+import { HelpCircle, LoaderCircle } from "lucide-react";
 import { pieceLabel, toNotation } from "@/lib/utils";
 import SpiralRulesDialog from "@/components/piece/spiral-rules-dialog";
 import { initialPieces, PieceType } from "shared/concentric-rules";
+import Image from "next/image";
 
 export default function GamePage({
   game: initialGame,
@@ -149,15 +150,76 @@ export default function GamePage({
     return () => clearInterval(interval);
   }, [game.status, game.nextMove, game.whiteTimeLeft, game.blackTimeLeft, game.lastMoveAt, game.createdAt]);
 
-  if (!game) return <>Game not found</>;
-  if (game.status === "aborted") return <>Game aborted</>;
-  if (game.deletedAt) return <>Game not found</>;
-  if (game.blackPlayerId === playerId && game.blackAccepted === 0)
-    return <Button onClick={() => ws.send({ type: "accept" })}>Accept Game</Button>;
-  if (game.whitePlayerId === playerId && game.whiteAccepted === 0)
-    return <Button onClick={() => ws.send({ type: "accept" })}>Accept Game</Button>;
+  if (!game) return (
+    <div className="min-h-screen bg-white flex items-center justify-center w-full">
+      <div className="border-4 border-black p-12 max-w-md w-full text-center shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
+        <div className="text-7xl mb-6 select-none opacity-30">♙</div>
+        <div className="inline-flex items-center gap-2 border-2 border-black px-4 py-1 mb-4 text-xs font-bold uppercase tracking-widest">
+          404
+        </div>
+        <h1 className="text-3xl font-bold uppercase tracking-wide mb-3">Game Not Found</h1>
+        <p className="text-gray-500">This game doesn&apos;t exist or has been removed.</p>
+      </div>
+    </div>
+  );
+  if (game.status === "aborted") return (
+    <div className="min-h-screen bg-white flex items-center justify-center w-full">
+      <div className="border-4 border-black p-12 max-w-md w-full text-center shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
+        <div className="text-7xl mb-6 select-none opacity-30">✕</div>
+        <div className="inline-flex items-center gap-2 border-2 border-black px-4 py-1 mb-4 text-xs font-bold uppercase tracking-widest">
+          Aborted
+        </div>
+        <h1 className="text-3xl font-bold uppercase tracking-wide mb-3">Game Aborted</h1>
+        <p className="text-gray-500">This game was aborted before it could begin.</p>
+      </div>
+    </div>
+  );
+  if (game.deletedAt) return (
+    <div className="min-h-screen bg-white flex items-center justify-center w-full">
+      <div className="border-4 border-black p-12 max-w-md w-full text-center shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
+        <div className="text-7xl mb-6 select-none opacity-30">♙</div>
+        <div className="inline-flex items-center gap-2 border-2 border-black px-4 py-1 mb-4 text-xs font-bold uppercase tracking-widest">
+          404
+        </div>
+        <h1 className="text-3xl font-bold uppercase tracking-wide mb-3">Game Not Found</h1>
+        <p className="text-gray-500">This game doesn&apos;t exist or has been removed.</p>
+      </div>
+    </div>
+  );
+  if ((game.blackPlayerId === playerId && game.blackAccepted === 0) ||
+    (game.whitePlayerId === playerId && game.whiteAccepted === 0))
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center w-full">
+        <div className="border-4 border-black p-12 max-w-md w-full text-center shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
+          <div className="text-7xl mb-6 select-none">♟</div>
+          <div className="inline-flex items-center gap-2 border-2 border-black px-4 py-1 mb-4 text-xs font-bold uppercase tracking-widest">
+            <span>⚔</span> Challenge Received
+          </div>
+          <h1 className="text-3xl font-bold uppercase tracking-wide mb-3">Game Invite</h1>
+          <p className="text-gray-500 mb-8">An opponent is ready to play. Accept to start the game.</p>
+          <Button
+            onClick={() => ws.send({ type: "accept" })}
+            className="w-full h-14 bg-black text-white border-4 border-black rounded-none font-bold uppercase tracking-widest text-base shadow-[6px_6px_0px_0px_rgba(0,0,0,0.2)] hover:shadow-none hover:translate-x-[6px] hover:translate-y-[6px] transition-all"
+          >
+            ♚ Accept Game
+          </Button>
+        </div>
+      </div>
+    );
   if (game.whiteAccepted === 0 || game.blackAccepted === 0)
-    return <>Waiting for opponent to accept the game...</>;
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center w-full">
+        <div className="border-4 border-black p-12 max-w-md w-full text-center shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
+          <div className="text-7xl mb-6 select-none animate-pulse">♟</div>
+          <div className="inline-flex items-center gap-3 border-2 border-black px-4 py-1 mb-4 text-xs font-bold uppercase tracking-widest">
+            <LoaderCircle className="size-3 animate-spin" /> Matchmaking
+          </div>
+          <h1 className="text-3xl font-bold uppercase tracking-wide mb-3">Waiting for Opponent</h1>
+          <p className="text-gray-500 mb-8">Your opponent hasn&apos;t accepted yet. Hang tight…</p>
+          <div className="text-3xl opacity-10 select-none tracking-widest">♜♞♝♛♚♝♞♜</div>
+        </div>
+      </div>
+    );
 
   const whiteCaptured = capturedPieces.filter((p) => p.color === "wht");
   const blackCaptured = capturedPieces.filter((p) => p.color === "blk");
@@ -192,7 +254,7 @@ export default function GamePage({
                 <span className="text-xs text-gray-400 italic">None</span>
               ) : (
                 whiteCaptured.map((piece, idx) => (
-                  <img
+                  <Image
                     key={`white-${piece.type}-${idx}`}
                     src={`/pieces/${piece.type}-${piece.color}.png`}
                     alt={`${piece.color} ${piece.type}`}
@@ -210,7 +272,7 @@ export default function GamePage({
                 <span className="text-xs text-gray-400 italic">None</span>
               ) : (
                 blackCaptured.map((piece, idx) => (
-                  <img
+                  <Image
                     key={`black-${piece.type}-${idx}`}
                     src={`/pieces/${piece.type}-${piece.color}.png`}
                     alt={`${piece.color} ${piece.type}`}
@@ -318,7 +380,7 @@ export default function GamePage({
 }
 
 function Timer({ timeLeft }: { timeLeft: number | null }) {
-  if (timeLeft === null) return <>unlimited</>;
+  if (timeLeft === null) return <div className="inline-block text-center">∞</div>;
   const seconds = Math.floor(timeLeft / 1000);
   const minutes = Math.floor(seconds / 60);
   const remainingSeconds = seconds % 60;
