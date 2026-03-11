@@ -1605,7 +1605,7 @@ export const ARCHIMEDEAN_GRAPH: BoardGraph =
     },
     "r9c7": {}
   }
-}
+};
 
 /**
  * Semantic tags for special Archimedean cells (placeholder).
