@@ -369,6 +369,7 @@ export default function Board({
                 key={s.id}
                 id={s.id}
                 d={s.d}
+                transform={s.transform}
                 fill={style.fill}
                 fillOpacity={style.fillOpacity}
                 stroke={style.stroke}
