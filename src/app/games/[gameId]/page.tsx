@@ -1,6 +1,8 @@
 import { db } from "@/lib/db";
 import Game from "./inner";
 import { getSession } from "@/lib/auth";
+import { playersTable } from "shared/schema";
+import { inArray } from "drizzle-orm";
 
 export default async function GamePage({
   params,
@@ -19,11 +21,25 @@ export default async function GamePage({
     orderBy: (movesTable, { asc }) => [asc(movesTable.moveNumber)],
   });
   const session = await getSession();
-  console.log(game.status);
+
+  const playerIds = [game.whitePlayerId, game.blackPlayerId].filter(Boolean) as string[];
+  const players = playerIds.length > 0
+    ? await db().select({ id: playersTable.id, username: playersTable.username })
+        .from(playersTable)
+        .where(inArray(playersTable.id, playerIds))
+    : [];
+  const whiteUsername = players.find(p => p.id === game.whitePlayerId)?.username ?? null;
+  const blackUsername = players.find(p => p.id === game.blackPlayerId)?.username ?? null;
 
   return (
-    <div className="flex p-4">
-      <Game game={game} moves={moves} playerId={session?.playerId} />
+    <div className="flex-1 flex flex-col overflow-hidden">
+      <Game
+        game={game}
+        moves={moves}
+        playerId={session?.playerId}
+        whiteUsername={whiteUsername}
+        blackUsername={blackUsername}
+      />
     </div>
   );
 }

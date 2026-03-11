@@ -45,7 +45,11 @@ export type ServerMsg =
             game: Game;
             moves: Move[];
         };
-    };
+    }
+    | {
+        type: "draw_reject";
+    }
+    ;
 export type ClientMsg =
     | {
         type: "move";
@@ -69,5 +73,8 @@ export type ClientMsg =
     }
     | {
         type: "undo";
+    }
+    | {
+        type: "draw_reject";
     }
     ;

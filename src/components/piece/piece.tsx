@@ -10,6 +10,7 @@ export type PieceProps = {
   onClick?: () => void;
   isSelected?: boolean;
   variant: "concentric" | "archimedean";
+  flipped?: boolean;
 };
 
 export default function Piece({
@@ -21,6 +22,7 @@ export default function Piece({
   isSelected,
   position,
   variant,
+  flipped,
 }: PieceProps) {
   // Scale factor to match the 900px board size
   const scaleFactor = 900 / 1730;
@@ -35,9 +37,10 @@ export default function Piece({
         // top: `${scaledY}px`,
         // transform: 'translate(-50%, -50%)',
         // zIndex: 10,
-        filter: isSelected ? "drop-shadow(0 0 10px yellow)" : "none",
+        // filter: isSelected ? "drop-shadow(0 0 10px yellow)" : "none",
         scale: isSelected ? "1.1" : "1",
         pointerEvents: 'none',
+        transform: flipped ? "rotate(180deg)" : undefined,
       }
       }
       onClick={(e) => {

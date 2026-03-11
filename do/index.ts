@@ -628,6 +628,27 @@ export class GameObject extends DurableObject<CloudflareEnv> {
             },
           });
           break;
+        case "draw_reject":
+          if (!socketInfo.playerId) {
+            break;
+          }
+          if (
+            socketInfo.playerId !== game.whitePlayerId &&
+            socketInfo.playerId !== game.blackPlayerId
+          ) {
+            return;
+          }
+          if (game.status !== "ongoing") {
+            return;
+          }
+          await this.db
+            .update(schema.gamesTable)
+            .set({ whiteDrawOffer: 0, blackDrawOffer: 0 })
+            .where(t.eq(schema.gamesTable.id, game.id));
+          await this.broadcastToGame(game.id, {
+            type: "draw_reject",
+          });
+          break;
       }
     } finally {
       this.lock.release();

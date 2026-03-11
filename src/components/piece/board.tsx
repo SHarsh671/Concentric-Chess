@@ -184,12 +184,14 @@ export default function Board({
     console.log("Cell clicked:", cellId);
 
     if (boardState.pendingMove === cellId && boardState.selectedPiece) {
+      console.log("Move confirmed:", boardState.selectedPiece.position, "->", cellId);
       onMove(boardState.selectedPiece.position, cellId);
       // moves useEffect will clear state when new move arrives
       return;
     }
 
     if (boardState.selectedPiece && boardState.legalMoves.includes(cellId)) {
+      console.log("Move pending:", boardState.selectedPiece.position, "->", cellId);
       setBoardState((prev) => ({
         ...prev,
         pendingMove: cellId,
@@ -336,82 +338,109 @@ export default function Board({
     };
   };
 
-  return (
-    <>
-      <svg
-        viewBox="0 0 1730 1730"
-        className="absolute w-[900px] h-[900px]"
-        // want to prevent highlighting cells on double click, but still allow text selection for debugging
-        onMouseDown={(e) => {
-          if (e.detail > 1) {
-            e.preventDefault();
-          }
-        }}
-      >
-        {spaces.map((s) => {
-          const style = getCellStyle(s.id);
-          const isLegal = boardState.legalMoves.includes(s.id);
-          return (
-            <path
-              key={s.id}
-              id={s.id}
-              d={s.d}
-              fill={style.fill}
-              fillOpacity={style.fillOpacity}
-              stroke={style.stroke}
-              strokeWidth={style.strokeWidth}
-              strokeOpacity={1}
-              style={{
-                cursor: isReplayMode
-                  ? "default"
-                  : isLegal ||
-                    boardState.pieces.some((p) => p.position === s.id)
-                    ? "pointer"
-                    : "default",
-              }}
-              onClick={() => handleCellClick(s.id)}
-              onMouseEnter={(e) => {
-                if (isReplayMode) return;
-                handleCellHover(s.id, true);
-                if (
-                  !boardState.selectedPiece &&
-                  !isLegal &&
-                  s.id !== boardState.selectedCell
-                ) {
-                  e.currentTarget.setAttribute("fill", colors.green[300]);
-                }
-              }}
-              onMouseLeave={(e) => {
-                if (isReplayMode) return;
-                handleCellHover(s.id, false);
-                if (
-                  !boardState.selectedPiece &&
-                  !boardState.legalMoves.includes(s.id)
-                ) {
-                  e.currentTarget.setAttribute("fill", style.fill);
-                }
-              }}
-            />
-          );
-        })}
-      </svg>
+  // The SVG viewBox is 0 0 1730 1730, but the board circle has radius 600 centered at (865,865),
+  // so it spans 265–1465 in both axes (1200×1200 of 1730×1730 = ~69.4%). Scale up by 1730/1200
+  // from the center so the board circle fills the container; overflow is clipped by the parent.
+  const BOARD_SCALE = 1730 / (variant === "concentric" ? 1250 : 1400);
 
-      {piecesReady &&
-        boardState.pieces.map((piece) => {
-          const center = getCellCenter(piece.position);
-          return (
-            <Piece
-              key={`${piece.position}-${piece.type}-${piece.color}`}
-              {...piece}
-              x={center.x}
-              y={center.y}
-              onClick={() => handleCellClick(piece.position)}
-              isSelected={boardState.selectedPiece === piece}
-              variant={variant}
-            />
-          );
-        })}
-    </>
+  return (
+    <div style={{ position: "absolute", inset: 0, overflow: "hidden" }}>
+      <div style={{
+        position: "absolute",
+        inset: 0,
+        transform: `scale(${BOARD_SCALE})${viewerSide === "blk" ? " rotate(180deg)" : ""}`,
+        transformOrigin: "center center",
+      }}>
+        <svg
+          viewBox="0 0 1730 1730"
+          className="absolute w-full h-full"
+          // want to prevent highlighting cells on double click, but still allow text selection for debugging
+          onMouseDown={(e) => {
+            if (e.detail > 1) {
+              e.preventDefault();
+            }
+          }}
+        >
+          {spaces.map((s) => {
+            const style = getCellStyle(s.id);
+            const isLegal = boardState.legalMoves.includes(s.id);
+            return (
+              <path
+                key={s.id}
+                id={s.id}
+                d={s.d}
+                fill={style.fill}
+                fillOpacity={style.fillOpacity}
+                stroke={style.stroke}
+                strokeWidth={style.strokeWidth}
+                strokeOpacity={1}
+                style={{
+                  cursor: isReplayMode
+                    ? "default"
+                    : isLegal ||
+                      boardState.pieces.some((p) => p.position === s.id)
+                      ? "pointer"
+                      : "default",
+                }}
+                onClick={() => handleCellClick(s.id)}
+                onMouseEnter={(e) => {
+                  if (isReplayMode) return;
+                  handleCellHover(s.id, true);
+                  if (
+                    !boardState.selectedPiece &&
+                    !isLegal &&
+                    s.id !== boardState.selectedCell
+                  ) {
+                    e.currentTarget.setAttribute("fill", colors.green[300]);
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (isReplayMode) return;
+                  handleCellHover(s.id, false);
+                  if (
+                    !boardState.selectedPiece &&
+                    !boardState.legalMoves.includes(s.id)
+                  ) {
+                    e.currentTarget.setAttribute("fill", style.fill);
+                  }
+                }}
+              />
+            );
+          })}
+        </svg>
+
+        {piecesReady &&
+          boardState.pieces
+            .filter((piece) => {
+              // Hide the piece at the pending destination — it will be captured
+              if (boardState.pendingMove && boardState.selectedPiece) {
+                if (piece.position === boardState.pendingMove && piece !== boardState.selectedPiece) {
+                  return false;
+                }
+              }
+              return true;
+            })
+            .map((piece) => {
+              // Show the selected piece at its pending destination for preview
+              const isMoving = !!(boardState.pendingMove && piece === boardState.selectedPiece);
+              const displayPosition = isMoving ? boardState.pendingMove! : piece.position;
+              const center = getCellCenter(displayPosition);
+              return (
+                <Piece
+                  key={`${piece.position}-${piece.type}-${piece.color}`}
+                  {...piece}
+                  position={displayPosition}
+                  x={center.x}
+                  y={center.y}
+                  onClick={() => handleCellClick(piece.position)}
+                  isSelected={!isMoving && boardState.selectedPiece === piece}
+                  variant={variant}
+                  flipped={viewerSide === "blk"}
+                />
+              );
+            })}
+      </div>
+    </div>
   );
 }
 // {

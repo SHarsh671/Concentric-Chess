@@ -12,7 +12,6 @@ export class GameSocket {
   private queue: ClientMsg[] = [];
   private reconnecting: Promise<void> | null = null;
   private reconnected: () => void = () => { };
-  private disconnected: boolean = false;
 
   public static getInstance(gameId: string): GameSocket {
     if (!this.instances.has(gameId)) {
@@ -31,7 +30,6 @@ export class GameSocket {
   }
 
   public reconnect(delay: number = 0, initial: boolean = false) {
-    if (this.disconnected) { return; }
     if (this.socket) { return; }
     if (!initial) {
       if (!this.reconnecting) {
@@ -48,8 +46,10 @@ export class GameSocket {
         closeButton: true,
       })
     }
+    console.log(`Reconnecting in ${delay}ms...`);
     if (delay > 0) {
       setTimeout(() => {
+        console.log("Attempting to reconnect...");
         this.reconnect(0, initial);
       }, delay);
       return;
@@ -76,6 +76,7 @@ export class GameSocket {
       this.processMessage(event.data);
     };
     this.socket.onclose = () => {
+      console.log("WebSocket closed, attempting to reconnect...");
       this.socket = null;
       this.reconnect(1000);
     };
@@ -86,15 +87,14 @@ export class GameSocket {
   }
 
   public disconnect() {
-    this.disconnected = true;
     this.removeInstance();
     if (this.socket) {
       const socket = this.socket;
-      this.socket = null;
-      socket.onclose = null;
-      socket.onerror = null;
-      if (socket.readyState === WebSocket.OPEN || socket.readyState === WebSocket.CONNECTING) {
+      socket.onopen = () => {
         socket.close();
+      };
+      if (this.socket.readyState === WebSocket.OPEN) {
+        this.socket.close();
       }
     }
   }
@@ -110,8 +110,14 @@ export class GameSocket {
     if (this.socket && this.socket.readyState === WebSocket.OPEN) {
       this.socket.send(JSON.stringify(message));
     } else {
-      this.queue.push(message);
-      this.reconnect();
+      console.warn("WebSocket not ready, queuing message:", message, this.socket?.readyState);
+      if (!this.queue.some((msg) => JSON.stringify(msg) === JSON.stringify(message))) {
+        this.queue.push(message);
+      }
+      if (!this.socket || this.socket.readyState === WebSocket.CLOSED || this.socket.readyState === WebSocket.CLOSING) {
+        this.socket = null;
+        this.reconnect(0);
+      }
     }
   }
 
