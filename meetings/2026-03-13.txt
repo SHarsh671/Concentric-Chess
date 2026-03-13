@@ -1,0 +1,23 @@
+Date: March 13th @ 10:30am
+Agenda:
+- Group check in on final deliverables.
+
+Attendees:
+- Josef
+- Carter
+- Harkirat
+- Harshmeet
+- Roland
+- Sparsh
+Absent:
+- Skyler
+
+Discussion:
+- Check ins:
+  - Josef: met with Dr Rapoport and got (and completed) feedback, completed responsive design and nicer waiting for opponent pages, will work on board/move tests and README next.
+  - Sparsh: finished rules.
+  - Carter: finished board, will start on poster next week.
+  - Harshmeet/Harkirat: will have replays and script done by next week.
+  - Roland: will work on poster this week.
+
+Next meeting: Friday, March 20th @ 10:30am
