@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import Piece from "./piece";
 import {
   initialPieces,
@@ -408,6 +408,55 @@ export default function Board({
               />
             );
           })}
+
+          {/* Row labels for concentric board */}
+          {variant === "concentric" && (() => {
+            const FONT = 40;
+            const isFlipped = viewerSide === "blk";
+            const topItems = [
+              { label: "a", y: 345, x: 580 },
+              { label: "b", y: 445, x: 620 },
+              { label: "c", y: 545, x: 640 },
+              { label: "d", y: 645, x: 680 },
+              { label: "e", y: 745, x: 720 },
+              { label: "f", y: 845, x: 780 },
+            ];
+            const botItems = [
+              { label: "g", y: 915 - 30, x: 950 },
+              { label: "h", y: 1015 - 30, x: 1000 },
+              { label: "i", y: 1115 - 30, x: 1030 },
+              { label: "j", y: 1215 - 30, x: 1070 },
+              { label: "k", y: 1315 - 30, x: 1100 },
+              { label: "l", y: 1415 - 30, x: 1130 },
+            ];
+            const labelStyle: React.CSSProperties = { userSelect: "none", pointerEvents: "none" };
+            return (
+              <>
+                {topItems.map(({ label, x, y }) => {
+                  return (
+                    <text key={label} x={x} y={y} fontSize={FONT}
+                      fontFamily="sans-serif" fontWeight="bold"
+                      textAnchor="start" dominantBaseline="central"
+                      transform={isFlipped ? `rotate(180, ${x}, ${y})` : undefined}
+                      fill="#000"
+                      style={labelStyle}
+                    >{label}</text>
+                  );
+                })}
+                {botItems.map(({ label, x, y }) => {
+                  return (
+                    <text key={label} x={x} y={y} fontSize={FONT}
+                      fontFamily="sans-serif" fontWeight="bold"
+                      textAnchor="end" dominantBaseline="central"
+                      fill="#fff"
+                      transform={isFlipped ? `rotate(180, ${x}, ${y})` : undefined}
+                      style={labelStyle}
+                    >{label}</text>
+                  );
+                })}
+              </>
+            );
+          })()}
         </svg>
 
         {piecesReady &&

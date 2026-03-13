@@ -114,7 +114,6 @@ export class GameObject extends DurableObject<CloudflareEnv> {
 
         const websocketPair = new WebSocketPair();
         const [client, server] = Object.values(websocketPair);
-
         this.ctx.acceptWebSocket(server);
 
         server.serializeAttachment({
