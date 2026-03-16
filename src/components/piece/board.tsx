@@ -170,8 +170,8 @@ export default function Board({
       position: piece.position,
     };
     return variant === "concentric"
-      ? generatePseudoLegalMovesForPieceConcentric(rulesPiece, rulesPieces)
-      : generatePseudoLegalMovesForPieceArchimedean(rulesPiece, rulesPieces);
+      ? generatePseudoLegalMovesForPieceConcentric(rulesPiece, rulesPieces, moves)
+      : generatePseudoLegalMovesForPieceArchimedean(rulesPiece, rulesPieces, moves);
   };
 
   const handleCellClick = (cellId: string) => {

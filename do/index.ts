@@ -369,8 +369,8 @@ export class GameObject extends DurableObject<CloudflareEnv> {
                 return;
               }
               const pseudoLegalMoves = game.variant.startsWith("concentric")
-                ? generatePseudoLegalMovesForPieceConcentric(piece, pieces)
-                : generatePseudoLegalMovesForPieceArchimedean(piece, pieces);
+                ? generatePseudoLegalMovesForPieceConcentric(piece, pieces, moves)
+                : generatePseudoLegalMovesForPieceArchimedean(piece, pieces, moves);
               const isValid = pseudoLegalMoves.includes(msg.data.to);
               if (!isValid) {
                 console.log("Move is not valid");
