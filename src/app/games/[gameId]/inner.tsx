@@ -11,8 +11,11 @@ import RulesDialog from "@/components/piece/rules-dialog";
 import { HelpCircle, LoaderCircle } from "lucide-react";
 import { pieceLabel, toNotation } from "@/lib/utils";
 import SpiralRulesDialog from "@/components/piece/spiral-rules-dialog";
-import { initialPieces, PieceType, Side } from "shared/concentric-rules";
+import { initialPieces } from "shared/concentric-rules";
+import { PieceType, Side } from "shared/graph";
 import Image from "next/image";
+import { computePieceStateConcentric, gameStatusConcentric } from "shared/concentric-rules";
+import { computePieceStateArchimedean, gameStatusArchimedean } from "shared/archimedean-rules";
 
 export default function GamePage({
   game: initialGame,
@@ -42,7 +45,7 @@ export default function GamePage({
   const topBarRef = useRef<HTMLDivElement>(null);
   const botBarRef = useRef<HTMLDivElement>(null);
   const [boardPx, setBoardPx] = useState(0);
-  const computeBoardSize = useRef<() => void>(() => {});
+  const computeBoardSize = useRef<() => void>(() => { });
 
   useLayoutEffect(() => {
     if (!boardColEl) return;
@@ -61,13 +64,14 @@ export default function GamePage({
     return () => ro.disconnect();
   }, [boardColEl]);
 
-  const onMove = (from: string, to: string) => {
+  const onMove = (from: string, to: string, promotion?: PieceType | null) => {
     ws.send({
       type: "move",
       data: {
         side: game.nextMove % 2 === 1 ? "white" : "black",
         from,
         to,
+        promotion: promotion ?? null,
       },
     });
   };
@@ -189,13 +193,15 @@ export default function GamePage({
     if (game.status !== "ongoing") {
       setTimer([game.whiteTimeLeft, game.blackTimeLeft]);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [game.status]);
 
-  // Recompute board size when banner appears/disappears (status change shifts layout)
+  // Recompute board size when top-banner conditions can change.
+  // `game.status` covers terminal banners, while `nextMove`/`moves.length` cover
+  // tactical banners like check that can appear/disappear during ongoing games.
   useEffect(() => {
     computeBoardSize.current();
-  }, [game.status]);
+  }, [game.status, game.nextMove, moves.length]);
 
   if (!game) return (
     <div className="min-h-screen bg-white flex items-center justify-center w-full">
@@ -305,15 +311,35 @@ export default function GamePage({
   const myDrawOffer = viewerSide === "wht" ? game.whiteDrawOffer : viewerSide === "blk" ? game.blackDrawOffer : 0;
   const opponentDrawOffer = viewerSide === "wht" ? game.blackDrawOffer : viewerSide === "blk" ? game.whiteDrawOffer : 0;
 
-  const statusMessage =
-    game.status === "white_win" ? "♔ White Wins!" :
-      game.status === "black_win" ? "♚ Black Wins!" :
-        game.status === "draw" ? "Game Drawn" :
-          game.status === "white_resign" ? "White Resigned — Black Wins" :
-            game.status === "black_resign" ? "Black Resigned — White Wins" :
-              null;
-
   const boardVariant = game.variant.split("-")[0] as "concentric" | "archimedean";
+  const positionState = (() => {
+    const pieces = boardVariant === "concentric"
+      ? computePieceStateConcentric(moves)
+      : computePieceStateArchimedean(moves);
+    return boardVariant === "concentric"
+      ? gameStatusConcentric(pieces, currentTurn, moves)
+      : gameStatusArchimedean(pieces, currentTurn, moves);
+  })();
+  const statusMessage =
+    game.status === "white_win"
+      ? (positionState === "checkmate" ? "♔ White Wins by Checkmate" : "♔ White Wins!")
+      : game.status === "black_win"
+        ? (positionState === "checkmate" ? "♚ Black Wins by Checkmate" : "♚ Black Wins!")
+        : game.status === "draw"
+          ? (positionState === "stalemate" ? "Draw by Stalemate" : "Game Drawn")
+          : game.status === "white_resign"
+            ? "White Resigned — Black Wins"
+            : game.status === "black_resign"
+              ? "Black Resigned — White Wins"
+              : null;
+  const tacticalStatusMessage =
+    positionState === "check" ? `${currentTurn === "wht" ? "♔ White" : "♚ Black"} in Check` :
+      positionState === "checkmate" ? "Checkmate" :
+        positionState === "stalemate" ? "Stalemate" :
+          positionState === "draw" ? "Draw" :
+            null;
+  const topBannerMessage = statusMessage ?? tacticalStatusMessage;
+  const desktopBoardReady = boardPx > 0;
 
   const sharedBoardProps = {
     moves, onMove,
@@ -328,9 +354,9 @@ export default function GamePage({
   return (
     <div className="bg-white flex-1 flex flex-col overflow-hidden min-h-0">
       {/* Game over banner */}
-      {statusMessage && (
+      {topBannerMessage && (
         <div className="shrink-0 bg-black text-white text-center py-2.5 font-black uppercase tracking-widest text-sm">
-          {statusMessage}
+          {topBannerMessage}
         </div>
       )}
 
@@ -339,29 +365,35 @@ export default function GamePage({
 
         {/* Board column — ResizeObserver measures this to compute board size */}
         <div ref={setBoardColEl} className="flex-1 min-w-0 min-h-0 flex flex-col items-center justify-center overflow-hidden">
-          {/* Outer border wraps bars + board; inner horizontal dividers separate them */}
-          <div className="border-4 border-black flex flex-col" style={{ width: boardPx + 8 || undefined }}>
-            <div ref={topBarRef}>
-              <PlayerBar
-                isWhiteSide={topIsWhite} timeLeft={topTimer} isActive={topActive}
-                captured={topCaptured} label={topLabel} role={topRole}
-                gameOngoing={game.status === "ongoing"}
-              />
+          {desktopBoardReady ? (
+            // Outer border wraps bars + board; inner horizontal dividers separate them
+            <div className="border-4 border-black flex flex-col" style={{ width: boardPx + 8 }}>
+              <div ref={topBarRef}>
+                <PlayerBar
+                  isWhiteSide={topIsWhite} timeLeft={topTimer} isActive={topActive}
+                  captured={topCaptured} label={topLabel} role={topRole}
+                  gameOngoing={game.status === "ongoing"}
+                />
+              </div>
+              <div
+                className="relative border-t-4 border-b-4 border-black overflow-hidden shrink-0"
+                style={{ width: boardPx, height: boardPx }}
+              >
+                <Board {...sharedBoardProps} />
+              </div>
+              <div ref={botBarRef}>
+                <PlayerBar
+                  isWhiteSide={!topIsWhite} timeLeft={botTimer} isActive={botActive}
+                  captured={botCaptured} label={botLabel} role={botRole}
+                  gameOngoing={game.status === "ongoing"}
+                />
+              </div>
             </div>
-            <div
-              className="relative border-t-4 border-b-4 border-black overflow-hidden shrink-0"
-              style={{ width: boardPx || "100%", height: boardPx || "auto", aspectRatio: boardPx ? undefined : "1/1" }}
-            >
-              <Board {...sharedBoardProps} />
+          ) : (
+            <div className="w-full max-w-4xl border-4 border-black bg-white/60 px-4 py-10 text-center text-xs font-bold uppercase tracking-widest text-gray-500">
+              Loading board…
             </div>
-            <div ref={botBarRef}>
-              <PlayerBar
-                isWhiteSide={!topIsWhite} timeLeft={botTimer} isActive={botActive}
-                captured={botCaptured} label={botLabel} role={botRole}
-                gameOngoing={game.status === "ongoing"}
-              />
-            </div>
-          </div>
+          )}
         </div>
 
         {/* Sidebar */}

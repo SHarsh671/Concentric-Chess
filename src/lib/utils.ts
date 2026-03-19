@@ -1,5 +1,5 @@
 import { clsx, type ClassValue } from "clsx";
-import { PieceType } from "shared/concentric-rules";
+import { PieceType } from "shared/graph";
 import { twMerge } from "tailwind-merge";
 
 export function cn(...inputs: ClassValue[]) {

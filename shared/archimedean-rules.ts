@@ -667,7 +667,7 @@ function pawnMovesRaw(
 function generatePseudoLegalMovesRaw(
   piece: RulesPiece,
   allPieces: RulesPiece[],
-  moves: Move[] = [],
+  moves: Move[],
 ): CellId[] {
   const { type, color, position } = piece;
 
@@ -701,7 +701,7 @@ function generatePseudoLegalMovesRaw(
 function attackSquaresForPiece(
   piece: RulesPiece,
   pieces: RulesPiece[],
-  moves: Move[] = [],
+  moves: Move[],
 ): CellId[] {
   switch (piece.type) {
     case "pawn":
@@ -730,7 +730,7 @@ function attacksSquare(
   pieces: RulesPiece[],
   attacker: RulesPiece,
   target: CellId,
-  moves: Move[] = [],
+  moves: Move[],
 ): boolean {
   return attackSquaresForPiece(attacker, pieces, moves).includes(target);
 }
@@ -747,7 +747,7 @@ function kingPosition(pieces: RulesPiece[], color: Side): CellId | null {
 export function isKingInCheckArchimedean(
   pieces: RulesPiece[],
   color: Side,
-  moves: Move[] = [],
+  moves: Move[],
 ): boolean {
   const kp = kingPosition(pieces, color);
   if (!kp) return false;
@@ -788,7 +788,7 @@ function applyMoveToPieces(
 function legalMovesForPiece(
   piece: RulesPiece,
   pieces: RulesPiece[],
-  moves: Move[] = [],
+  moves: Move[],
 ): CellId[] {
   const pseudo = generatePseudoLegalMovesRaw(piece, pieces, moves);
   const legal: CellId[] = [];
@@ -850,7 +850,7 @@ function legalMovesForPiece(
 export function generatePseudoLegalMovesForPieceArchimedean(
   piece: RulesPiece,
   allPieces: RulesPiece[],
-  moves: Move[] = [],
+  moves: Move[],
 ): CellId[] {
   return legalMovesForPiece(piece, allPieces, moves);
 }
@@ -862,7 +862,7 @@ export function generatePseudoLegalMovesForPieceArchimedean(
 export function sideHasLegalMoveArchimedean(
   pieces: RulesPiece[],
   color: Side,
-  moves: Move[] = [],
+  moves: Move[],
 ): boolean {
   for (const p of pieces) {
     if (p.color !== color) continue;
@@ -887,7 +887,7 @@ export function insufficientMaterialArchimedean(
 export function gameStatusArchimedean(
   pieces: RulesPiece[],
   sideToMove: Side,
-  moves: Move[] = [],
+  moves: Move[],
 ): "ongoing" | "check" | "checkmate" | "stalemate" | "draw" {
   if (insufficientMaterialArchimedean(pieces)) return "draw";
 

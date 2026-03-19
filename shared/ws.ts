@@ -1,4 +1,5 @@
 import { Game, Move, Side } from "./schema";
+import { PieceType } from "./graph";
 
 export type ServerMsg =
     | {
@@ -57,6 +58,7 @@ export type ClientMsg =
             side: Side;
             from: string;
             to: string;
+            promotion?: PieceType | null;
         };
     }
     | {
