@@ -5,29 +5,12 @@
 import {
   CONCENTRIC_GRAPH,
   CELL_TAGS,
-  CellId as GraphCellId,
   CellTag,
-} from "./concentric-graph";
+  RulesPiece, CellId,
+  Side,
+  PieceType,
+} from "./graph";
 import { Move } from "./schema";
-
-export type Side = "wht" | "blk";
-
-export type PieceType =
-  | "king"
-  | "queen"
-  | "rook"
-  | "bishop"
-  | "knight"
-  | "prince"
-  | "pawn";
-
-export type CellId = GraphCellId;
-
-export interface RulesPiece {
-  type: PieceType;
-  color: Side;
-  position: CellId;
-}
 
 type InternalPiece = RulesPiece & {
   _id: string;
@@ -60,7 +43,9 @@ function uniq<T>(arr: T[]): T[] {
 }
 
 function cellColor(cell: CellId): "light" | "dark" | undefined {
-  return CONCENTRIC_GRAPH.color[cell];
+  const v = CONCENTRIC_GRAPH.color[cell];
+  if (!v) return undefined;
+  return v.startsWith("light") ? "light" : "dark";
 }
 
 function otherSide(color: Side): Side {

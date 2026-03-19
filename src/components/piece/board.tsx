@@ -4,9 +4,6 @@ import React, { useEffect, useState } from "react";
 import Piece from "./piece";
 import {
   initialPieces,
-  PieceType,
-  RulesPiece,
-  Side,
 } from "shared/concentric-rules";
 import {
   computePieceStateConcentric,
@@ -17,8 +14,12 @@ import {
   generatePseudoLegalMovesForPieceArchimedean,
 } from "shared/archimedean-rules";
 import { Move } from "shared";
-import { CONCENTRIC_GRAPH } from "../../../shared/concentric-graph";
-import { ARCHIMEDEAN_GRAPH } from "shared/archimedean-rules";
+import {
+  CONCENTRIC_GRAPH, ARCHIMEDEAN_GRAPH,
+  PieceType,
+  RulesPiece,
+  Side,
+} from "shared/graph";
 import colors from "tailwindcss/colors"
 
 type Space = {
