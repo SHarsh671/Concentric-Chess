@@ -227,8 +227,9 @@ export default function Board({
       (canControlBoth || viewerSide === currentTurn);
 
     console.log("Cell clicked:", cellId);
+    const pieceAtCell = boardState.pieces.find((p) => p.position === cellId);
 
-    if (canCommitMove && boardState.pendingMove === cellId && boardState.selectedPiece) {
+    if (canCommitMove && boardState.pendingMove === cellId && boardState.selectedPiece && boardState.selectedPiece.color === currentTurn) {
       console.log(
         "Move confirmed:",
         boardState.selectedPiece.position,
@@ -261,7 +262,8 @@ export default function Board({
     if (
       canCommitMove &&
       boardState.selectedPiece &&
-      boardState.legalMoves.includes(cellId)
+      boardState.legalMoves.includes(cellId) &&
+      boardState.selectedPiece.color === currentTurn
     ) {
       console.log(
         "Move pending:",
@@ -276,8 +278,6 @@ export default function Board({
       }));
       return;
     }
-
-    const pieceAtCell = boardState.pieces.find((p) => p.position === cellId);
 
     if (pieceAtCell) {
       if (!gameOngoing) {
@@ -399,7 +399,7 @@ export default function Board({
     // Selected piece — yellow
     if (cellId === boardState.selectedCell) {
       return {
-        fill: colors.green[400],
+        fill: colors.purple[400],
         fillOpacity: 1,
         stroke: "#000000",
         strokeWidth: 1,
@@ -551,32 +551,83 @@ export default function Board({
             (() => {
               const FONT = 40;
               const isFlipped = viewerSide === "blk";
-              const topItems = [
-                { label: "a", y: 345, x: 580 },
-                { label: "b", y: 445, x: 620 },
-                { label: "c", y: 545, x: 640 },
-                { label: "d", y: 645, x: 680 },
-                { label: "e", y: 745, x: 720 },
-                { label: "f", y: 845, x: 780 },
-              ];
-              const botItems = [
-                { label: "g", y: 915 - 30, x: 950 },
-                { label: "h", y: 1015 - 30, x: 1000 },
-                { label: "i", y: 1115 - 30, x: 1030 },
-                { label: "j", y: 1215 - 30, x: 1070 },
-                { label: "k", y: 1315 - 30, x: 1100 },
-                { label: "l", y: 1415 - 30, x: 1130 },
-              ];
+              const topItems = isFlipped ?
+                [
+                  { label: "a", y: 385, x: 680 },
+                  { label: "k", y: 385, x: 1070 },
+
+                  { label: "b", y: 485, x: 675 },
+                  { label: "j", y: 490, x: 1060 },
+
+                  { label: "c", y: 585, x: 730 },
+                  { label: "i", y: 585, x: 1025 },
+
+                  { label: "d", y: 685, x: 760 },
+                  { label: "h", y: 685, x: 995 },
+
+                  { label: "e", y: 785, x: 795 },
+                  { label: "g", y: 790, x: 965 },
+
+                  { label: "f", y: 325, x: 675 },
+                  { label: "f", y: 325, x: 1065 },
+                ] : [
+                  { label: "a", y: 385, x: 650 },
+                  { label: "k", y: 385, x: 1070 },
+
+                  { label: "b", y: 485, x: 675 },
+                  { label: "j", y: 485, x: 1055 },
+
+                  { label: "c", y: 585, x: 700 },
+                  { label: "i", y: 585, x: 1015 },
+
+                  { label: "d", y: 685, x: 725 },
+                  { label: "h", y: 685, x: 980 },
+
+                  { label: "e", y: 780, x: 770 },
+                  { label: "g", y: 780, x: 945 },
+
+                  { label: "f", y: 325, x: 655 },
+                  { label: "f", y: 325, x: 1070 },
+                ];
+              const botItems = isFlipped ?
+                [
+                  { label: "e", y: 955, x: 800 },
+                  { label: "g", y: 955, x: 960 },
+                  { label: "d", y: 1045, x: 755 },
+                  { label: "h", y: 1045, x: 1000 },
+                  { label: "c", y: 1155, x: 745 },
+                  { label: "i", y: 1145, x: 1015 },
+                  { label: "b", y: 1245, x: 695 },
+                  { label: "j", y: 1245, x: 1055 },
+                  { label: "a", y: 1355, x: 695 },
+                  { label: "k", y: 1345, x: 1075 },
+                  { label: "f", y: 1400, x: 690 },
+                  { label: "f", y: 1400, x: 1070 },
+                ] : [
+                  { label: "e", y: 945, x: 770 },
+                  { label: "g", y: 935, x: 945 },
+                  { label: "d", y: 1045, x: 725 },
+                  { label: "h", y: 1045, x: 980 },
+                  { label: "c", y: 1145, x: 700 },
+                  { label: "i", y: 1145, x: 1015 },
+                  { label: "b", y: 1245, x: 675 },
+                  { label: "j", y: 1235, x: 1055 },
+                  { label: "a", y: 1345, x: 650 },
+                  { label: "k", y: 1345, x: 1070 },
+                  { label: "f", y: 1400, x: 655 },
+                  { label: "f", y: 1400, x: 1070 },
+                ];
               const labelStyle: React.CSSProperties = {
                 userSelect: "none",
                 pointerEvents: "none",
+                textAlign: "center",
               };
               return (
                 <>
                   {topItems.map(({ label, x, y }) => {
                     return (
                       <text
-                        key={label}
+                        key={`${label}-${x}-${y}`}
                         x={x}
                         y={y}
                         fontSize={FONT}
@@ -587,7 +638,7 @@ export default function Board({
                         transform={
                           isFlipped ? `rotate(180, ${x}, ${y})` : undefined
                         }
-                        fill="#000"
+                        fill={isFlipped ? "#fff" : "#000"}
                         style={labelStyle}
                       >
                         {label}
@@ -597,15 +648,96 @@ export default function Board({
                   {botItems.map(({ label, x, y }) => {
                     return (
                       <text
-                        key={label}
+                        key={`${label}-${x}-${y}`}
                         x={x}
                         y={y}
                         fontSize={FONT}
                         fontFamily="sans-serif"
                         fontWeight="bold"
-                        textAnchor="end"
+                        // textAnchor="end"
                         dominantBaseline="central"
+                        fill={isFlipped ? "#fff" : "#000"}
+                        transform={
+                          isFlipped ? `rotate(180, ${x}, ${y})` : undefined
+                        }
+                        style={labelStyle}
+                      >
+                        {label}
+                      </text>
+                    );
+                  })}
+                </>
+              );
+            })()}
+          {variant === "archimedean" &&
+            (() => {
+              const FONT = 40;
+              const isFlipped = viewerSide === "blk";
+              const lightItems = [
+                { label: "a", y: 380, x: 610 },
+                { label: "k", y: 385, x: 1040 },
+                { label: "b", y: 485, x: 635 },
+                { label: "j", y: 485, x: 1030 },
+                { label: "c", y: 575, x: 660 },
+                { label: "i", y: 580, x: 1000 },
+                { label: "d", y: 680, x: 685 },
+                { label: "h", y: 680, x: 960 },
+                { label: "e", y: 770, x: 720 },
+                { label: "h", y: 775, x: 925 },
+                { label: "f", y: 960, x: 790 },
+                { label: "e", y: 960, x: 980 },
+                { label: "e", y: 1050, x: 760 },
+                { label: "j", y: 1045, x: 1035 },
+                { label: "d", y: 1145, x: 710 },
+                { label: "k", y: 1145, x: 1065 },
+                { label: "c", y: 1245, x: 695 },
+                { label: "l", y: 1245, x: 1080 },
+                { label: "b", y: 1345, x: 675 },
+                { label: "m", y: 1345, x: 1080 },
+              ];
+              const darkItems = [
+                { label: "g", y: 860, x: 825 },
+              ];
+              const labelStyle: React.CSSProperties = {
+                userSelect: "none",
+                pointerEvents: "none",
+                textAlign: "center",
+              };
+              return (
+                <>
+                  {lightItems.map(({ label, x, y }) => {
+                    return (
+                      <text
+                        key={`${label}-${x}-${y}`}
+                        x={x}
+                        y={y}
+                        fontSize={FONT}
+                        fontFamily="sans-serif"
+                        fontWeight="bold"
+                        // textAnchor="start"
+                        dominantBaseline="central"
+                        transform={
+                          isFlipped ? `rotate(180, ${x}, ${y})` : undefined
+                        }
                         fill="#fff"
+                        style={labelStyle}
+                      >
+                        {label}
+                      </text>
+                    );
+                  })}
+                  {darkItems.map(({ label, x, y }) => {
+                    return (
+                      <text
+                        key={`${label}-${x}-${y}`}
+                        x={x}
+                        y={y}
+                        fontSize={FONT}
+                        fontFamily="sans-serif"
+                        fontWeight="bold"
+                        // textAnchor="end"
+                        dominantBaseline="central"
+                        fill="#000"
                         transform={
                           isFlipped ? `rotate(180, ${x}, ${y})` : undefined
                         }
@@ -657,25 +789,26 @@ export default function Board({
                 />
               );
             })}
-        {/* {spaces.map((s) => { */}
-        {/*   return ( */}
-        {/*     <span */}
-        {/*       key={s.id} */}
-        {/*       className={`size-piece ${s.id}a`} */}
-        {/*       style={{ */}
-        {/*         position: "absolute", */}
-        {/*         fontSize: "10px", */}
-        {/*         transform: "translate(20%, 30%)", */}
-        {/*         fontWeight: "bold", */}
-        {/*         pointerEvents: "none", */}
-        {/*         color: */}
-        {/*           CONCENTRIC_GRAPH.color[s.id] === "light" ? "#000" : "#fff", */}
-        {/*       }} */}
-        {/*     > */}
-        {/*       {toNotation(s.id, variant)} */}
-        {/*     </span> */}
-        {/*   ); */}
-        {/* })} */}
+        {spaces.map((s) => {
+          return (
+            <span
+              key={s.id}
+              className={`size-piece ${s.id}a`}
+              // className={`size-piece ${s.id}`}
+              style={{
+                position: "absolute",
+                fontSize: "10px",
+                transform: "translate(20%, 30%)",
+                fontWeight: "bold",
+                pointerEvents: "none",
+                color:
+                  CONCENTRIC_GRAPH.color[s.id] === "light" ? "#000" : "#fff",
+              }}
+            >
+              {toNotation(s.id, variant)}
+            </span>
+          );
+        })}
       </div>
       {pendingPromotion && (
         <div className="absolute inset-x-0 bottom-4 z-50 px-4">
