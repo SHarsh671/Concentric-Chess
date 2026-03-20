@@ -11,24 +11,51 @@ export function genId() {
 }
 function getNumCols(row: number): number {
   row = row >= 7 ? 13 - row : row;
-  return 1 + (2 * (row - 1));
+  return 1 + 2 * (row - 1);
 }
 
-const LETTERS = "abcdefghijkl";
+const LETTERS = "abcdefghijklm";
 
-export function toNotation(id: string): string {
+export function toNotation(
+  id: string,
+  variant: "concentric" | "archimedean",
+): string {
+  switch (variant) {
+    case "concentric":
+      return toNotationConcentric(id);
+    case "archimedean":
+      return toNotationArchimedean(id);
+  }
+}
+
+function toNotationConcentric(id: string): string {
   const row = parseInt(id.match(/r(\d+)/)?.[1] || "0", 10);
   const col = parseInt(id.match(/c(\d+)/)?.[1] || "0", 10);
 
   const numCols = getNumCols(row);
   const centerCol = Math.ceil(numCols / 2);
   if (col == centerCol) {
-    return `${LETTERS[12 - row]}1`;
+    return `f${row}`;
   }
   if (col < centerCol) {
-    return `${LETTERS[12 - col]}${row - col + 1}`;
+    return `${LETTERS[col - 1]}${row}`;
   }
-  return `${LETTERS[12 - row]}${12 - row + 1 - (numCols - col)}`
+  return `${LETTERS[10 - (numCols - col)]}${row}`;
+}
+
+function toNotationArchimedean(id: string): string {
+  const row = parseInt(id.match(/r(\d+)/)?.[1] || "0", 10);
+  const col = parseInt(id.match(/c(\d+)/)?.[1] || "0", 10);
+
+  const numCols = getNumCols(row);
+  const centerCol = Math.ceil(numCols / 2);
+  if (col == centerCol) {
+    return `g${row}`;
+  }
+  if (col < centerCol) {
+    return `${LETTERS[col - 1 + (row <= 6 ? 1 : 0)]}${row}`;
+  }
+  return `${LETTERS[10 - (numCols - col) + (row <= 6 ? 2 : 1)]}${row}`;
 }
 
 export function pieceLabel(piece: PieceType): string {
@@ -46,7 +73,7 @@ export function pieceLabel(piece: PieceType): string {
     case "king":
       return "K";
     case "prince":
-      return "D";
+      return "F";
     default:
       return "";
   }

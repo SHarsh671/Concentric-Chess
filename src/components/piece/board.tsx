@@ -2,9 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import Piece from "./piece";
-import {
-  initialPieces,
-} from "shared/concentric-rules";
+import { initialPieces } from "shared/concentric-rules";
 import {
   computePieceStateConcentric,
   generatePseudoLegalMovesForPieceConcentric,
@@ -17,12 +15,14 @@ import {
 } from "shared/archimedean-rules";
 import { Move } from "shared";
 import {
-  CONCENTRIC_GRAPH, ARCHIMEDEAN_GRAPH,
+  CONCENTRIC_GRAPH,
+  ARCHIMEDEAN_GRAPH,
   PieceType,
   RulesPiece,
   Side,
 } from "shared/graph";
-import colors from "tailwindcss/colors"
+import colors from "tailwindcss/colors";
+import { toNotation } from "@/lib/utils";
 
 type Space = {
   id: string;
@@ -131,7 +131,8 @@ export default function Board({
     capturedPieces: [],
   });
   const [piecesReady, setPiecesReady] = useState(false);
-  const [pendingPromotion, setPendingPromotion] = useState<PendingPromotion | null>(null);
+  const [pendingPromotion, setPendingPromotion] =
+    useState<PendingPromotion | null>(null);
 
   useEffect(() => {
     setPiecesReady(true);
@@ -202,8 +203,16 @@ export default function Board({
       position: piece.position,
     };
     return variant === "concentric"
-      ? generatePseudoLegalMovesForPieceConcentric(rulesPiece, rulesPieces, moves)
-      : generatePseudoLegalMovesForPieceArchimedean(rulesPiece, rulesPieces, moves);
+      ? generatePseudoLegalMovesForPieceConcentric(
+          rulesPiece,
+          rulesPieces,
+          moves,
+        )
+      : generatePseudoLegalMovesForPieceArchimedean(
+          rulesPiece,
+          rulesPieces,
+          moves,
+        );
   };
 
   const handleCellClick = (cellId: string) => {
@@ -217,10 +226,22 @@ export default function Board({
     console.log("Cell clicked:", cellId);
 
     if (boardState.pendingMove === cellId && boardState.selectedPiece) {
-      console.log("Move confirmed:", boardState.selectedPiece.position, "->", cellId);
-      const promotionOptions = variant === "concentric"
-        ? validPromotionOptionsForMoveConcentric(boardState.selectedPiece, cellId)
-        : validPromotionOptionsForMoveArchimedean(boardState.selectedPiece, cellId);
+      console.log(
+        "Move confirmed:",
+        boardState.selectedPiece.position,
+        "->",
+        cellId,
+      );
+      const promotionOptions =
+        variant === "concentric"
+          ? validPromotionOptionsForMoveConcentric(
+              boardState.selectedPiece,
+              cellId,
+            )
+          : validPromotionOptionsForMoveArchimedean(
+              boardState.selectedPiece,
+              cellId,
+            );
       if (promotionOptions.length > 0) {
         setPendingPromotion({
           from: boardState.selectedPiece.position,
@@ -235,7 +256,12 @@ export default function Board({
     }
 
     if (boardState.selectedPiece && boardState.legalMoves.includes(cellId)) {
-      console.log("Move pending:", boardState.selectedPiece.position, "->", cellId);
+      console.log(
+        "Move pending:",
+        boardState.selectedPiece.position,
+        "->",
+        cellId,
+      );
       setBoardState((prev) => ({
         ...prev,
         pendingMove: cellId,
@@ -303,8 +329,8 @@ export default function Board({
         hoveredMove: entering
           ? cellId
           : prev.hoveredMove === cellId
-            ? null
-            : prev.hoveredMove,
+          ? null
+          : prev.hoveredMove,
       }));
     }
   };
@@ -358,15 +384,17 @@ export default function Board({
         strokeWidth: 1,
       };
     }
-    const color = (variant === "concentric" ? CONCENTRIC_GRAPH : ARCHIMEDEAN_GRAPH).color[
-      cellId
-    ];
-    const getColor = (color: "dark" | "light" | "dark1" | "light1" | "dark2" | "light2") => {
+    const color = (
+      variant === "concentric" ? CONCENTRIC_GRAPH : ARCHIMEDEAN_GRAPH
+    ).color[cellId];
+    const getColor = (
+      color: "dark" | "light" | "dark1" | "light1" | "dark2" | "light2",
+    ) => {
       switch (color) {
         case "dark":
-          return colors.stone[700];
+          return colors.stone[500];
         case "light":
-          return colors.stone[50];
+          return colors.stone[200];
         case "dark1":
           return colors.sky[500];
         case "light1":
@@ -376,7 +404,7 @@ export default function Board({
         case "light2":
           return colors.stone[200];
       }
-    }
+    };
     return {
       fill: getColor(color),
       fillOpacity: 1,
@@ -392,12 +420,16 @@ export default function Board({
 
   return (
     <div style={{ position: "absolute", inset: 0, overflow: "hidden" }}>
-      <div style={{
-        position: "absolute",
-        inset: 0,
-        transform: `scale(${BOARD_SCALE})${viewerSide === "blk" ? " rotate(180deg)" : ""}`,
-        transformOrigin: "center center",
-      }}>
+      <div
+        style={{
+          position: "absolute",
+          inset: 0,
+          transform: `scale(${BOARD_SCALE})${
+            viewerSide === "blk" ? " rotate(180deg)" : ""
+          }`,
+          transformOrigin: "center center",
+        }}
+      >
         <svg
           viewBox="0 0 1730 1730"
           className="absolute w-full h-full"
@@ -427,8 +459,8 @@ export default function Board({
                     ? "default"
                     : isLegal ||
                       boardState.pieces.some((p) => p.position === s.id)
-                      ? "pointer"
-                      : "default",
+                    ? "pointer"
+                    : "default",
                 }}
                 onClick={() => handleCellClick(s.id)}
                 onMouseEnter={(e) => {
@@ -457,53 +489,77 @@ export default function Board({
           })}
 
           {/* Row labels for concentric board */}
-          {variant === "concentric" && (() => {
-            const FONT = 40;
-            const isFlipped = viewerSide === "blk";
-            const topItems = [
-              { label: "a", y: 345, x: 580 },
-              { label: "b", y: 445, x: 620 },
-              { label: "c", y: 545, x: 640 },
-              { label: "d", y: 645, x: 680 },
-              { label: "e", y: 745, x: 720 },
-              { label: "f", y: 845, x: 780 },
-            ];
-            const botItems = [
-              { label: "g", y: 915 - 30, x: 950 },
-              { label: "h", y: 1015 - 30, x: 1000 },
-              { label: "i", y: 1115 - 30, x: 1030 },
-              { label: "j", y: 1215 - 30, x: 1070 },
-              { label: "k", y: 1315 - 30, x: 1100 },
-              { label: "l", y: 1415 - 30, x: 1130 },
-            ];
-            const labelStyle: React.CSSProperties = { userSelect: "none", pointerEvents: "none" };
-            return (
-              <>
-                {topItems.map(({ label, x, y }) => {
-                  return (
-                    <text key={label} x={x} y={y} fontSize={FONT}
-                      fontFamily="sans-serif" fontWeight="bold"
-                      textAnchor="start" dominantBaseline="central"
-                      transform={isFlipped ? `rotate(180, ${x}, ${y})` : undefined}
-                      fill="#000"
-                      style={labelStyle}
-                    >{label}</text>
-                  );
-                })}
-                {botItems.map(({ label, x, y }) => {
-                  return (
-                    <text key={label} x={x} y={y} fontSize={FONT}
-                      fontFamily="sans-serif" fontWeight="bold"
-                      textAnchor="end" dominantBaseline="central"
-                      fill="#fff"
-                      transform={isFlipped ? `rotate(180, ${x}, ${y})` : undefined}
-                      style={labelStyle}
-                    >{label}</text>
-                  );
-                })}
-              </>
-            );
-          })()}
+          {variant === "concentric" &&
+            (() => {
+              const FONT = 40;
+              const isFlipped = viewerSide === "blk";
+              const topItems = [
+                { label: "a", y: 345, x: 580 },
+                { label: "b", y: 445, x: 620 },
+                { label: "c", y: 545, x: 640 },
+                { label: "d", y: 645, x: 680 },
+                { label: "e", y: 745, x: 720 },
+                { label: "f", y: 845, x: 780 },
+              ];
+              const botItems = [
+                { label: "g", y: 915 - 30, x: 950 },
+                { label: "h", y: 1015 - 30, x: 1000 },
+                { label: "i", y: 1115 - 30, x: 1030 },
+                { label: "j", y: 1215 - 30, x: 1070 },
+                { label: "k", y: 1315 - 30, x: 1100 },
+                { label: "l", y: 1415 - 30, x: 1130 },
+              ];
+              const labelStyle: React.CSSProperties = {
+                userSelect: "none",
+                pointerEvents: "none",
+              };
+              return (
+                <>
+                  {topItems.map(({ label, x, y }) => {
+                    return (
+                      <text
+                        key={label}
+                        x={x}
+                        y={y}
+                        fontSize={FONT}
+                        fontFamily="sans-serif"
+                        fontWeight="bold"
+                        textAnchor="start"
+                        dominantBaseline="central"
+                        transform={
+                          isFlipped ? `rotate(180, ${x}, ${y})` : undefined
+                        }
+                        fill="#000"
+                        style={labelStyle}
+                      >
+                        {label}
+                      </text>
+                    );
+                  })}
+                  {botItems.map(({ label, x, y }) => {
+                    return (
+                      <text
+                        key={label}
+                        x={x}
+                        y={y}
+                        fontSize={FONT}
+                        fontFamily="sans-serif"
+                        fontWeight="bold"
+                        textAnchor="end"
+                        dominantBaseline="central"
+                        fill="#fff"
+                        transform={
+                          isFlipped ? `rotate(180, ${x}, ${y})` : undefined
+                        }
+                        style={labelStyle}
+                      >
+                        {label}
+                      </text>
+                    );
+                  })}
+                </>
+              );
+            })()}
         </svg>
 
         {piecesReady &&
@@ -511,7 +567,10 @@ export default function Board({
             .filter((piece) => {
               // Hide the piece at the pending destination — it will be captured
               if (boardState.pendingMove && boardState.selectedPiece) {
-                if (piece.position === boardState.pendingMove && piece !== boardState.selectedPiece) {
+                if (
+                  piece.position === boardState.pendingMove &&
+                  piece !== boardState.selectedPiece
+                ) {
                   return false;
                 }
               }
@@ -519,8 +578,12 @@ export default function Board({
             })
             .map((piece) => {
               // Show the selected piece at its pending destination for preview
-              const isMoving = !!(boardState.pendingMove && piece === boardState.selectedPiece);
-              const displayPosition = isMoving ? boardState.pendingMove! : piece.position;
+              const isMoving = !!(
+                boardState.pendingMove && piece === boardState.selectedPiece
+              );
+              const displayPosition = isMoving
+                ? boardState.pendingMove!
+                : piece.position;
               const center = getCellCenter(displayPosition);
               return (
                 <Piece
@@ -536,6 +599,25 @@ export default function Board({
                 />
               );
             })}
+        {/* {spaces.map((s) => { */}
+        {/*   return ( */}
+        {/*     <span */}
+        {/*       key={s.id} */}
+        {/*       className={`size-piece ${s.id}a`} */}
+        {/*       style={{ */}
+        {/*         position: "absolute", */}
+        {/*         fontSize: "10px", */}
+        {/*         transform: "translate(20%, 30%)", */}
+        {/*         fontWeight: "bold", */}
+        {/*         pointerEvents: "none", */}
+        {/*         color: */}
+        {/*           CONCENTRIC_GRAPH.color[s.id] === "light" ? "#000" : "#fff", */}
+        {/*       }} */}
+        {/*     > */}
+        {/*       {toNotation(s.id, variant)} */}
+        {/*     </span> */}
+        {/*   ); */}
+        {/* })} */}
       </div>
       {pendingPromotion && (
         <div className="absolute inset-x-0 bottom-4 z-50 px-4">
@@ -547,10 +629,13 @@ export default function Board({
               {pendingPromotion.options.map((option) => (
                 <button
                   key={option}
-                  onClick={() => onMove(pendingPromotion.from, pendingPromotion.to, option)}
+                  onClick={() =>
+                    onMove(pendingPromotion.from, pendingPromotion.to, option)
+                  }
                   className="border-2 border-black py-2 text-xs font-bold uppercase tracking-wide hover:bg-black hover:text-white transition-colors"
                 >
-                  {option[0].toUpperCase()}{option.slice(1)}
+                  {option[0].toUpperCase()}
+                  {option.slice(1)}
                 </button>
               ))}
             </div>
@@ -566,23 +651,3 @@ export default function Board({
     </div>
   );
 }
-// {
-//   spaces.map((s) => {
-//     return (
-//       <span
-//         key={s.id}
-//         className={`size-piece ${s.id}a`}
-//         style={{
-//           position: "absolute",
-//           // fontSize: "10px",
-//           transform: "translate(20%, 30%)",
-//           fontWeight: "bold",
-//           pointerEvents: "none",
-//           color: "#000",
-//         }}
-//       >
-//         {s.id}
-//       </span>
-//     );
-//   })
-// }
