@@ -31,6 +31,8 @@ export type ServerMsg =
             | "draw"
             | "white_resign"
             | "black_resign";
+            whiteTimeLeft: number | null;
+            blackTimeLeft: number | null;
         };
     }
     | {
@@ -72,9 +74,6 @@ export type ClientMsg =
     }
     | {
         type: "draw";
-    }
-    | {
-        type: "undo";
     }
     | {
         type: "draw_reject";

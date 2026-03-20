@@ -104,6 +104,7 @@ export default function Board({
   currentTurn,
   isSpectator,
   canControlBoth,
+  gameOngoing = true,
   variant,
   onCapturedPiecesChange,
   trackCapturedPieces = true,
@@ -115,6 +116,7 @@ export default function Board({
   currentTurn: Side; // whose turn it is
   isSpectator: boolean;
   canControlBoth: boolean;
+  gameOngoing?: boolean;
   variant: "concentric" | "archimedean";
   onCapturedPiecesChange?: (captured: CapturedPiece[]) => void;
   trackCapturedPieces?: boolean;
@@ -204,28 +206,29 @@ export default function Board({
     };
     return variant === "concentric"
       ? generatePseudoLegalMovesForPieceConcentric(
-          rulesPiece,
-          rulesPieces,
-          moves,
-        )
+        rulesPiece,
+        rulesPieces,
+        moves,
+      )
       : generatePseudoLegalMovesForPieceArchimedean(
-          rulesPiece,
-          rulesPieces,
-          moves,
-        );
+        rulesPiece,
+        rulesPieces,
+        moves,
+      );
   };
 
   const handleCellClick = (cellId: string) => {
-    if (isReplayMode) return;
-    if (isSpectator) return;
+    // if (isReplayMode) return;
     if (pendingPromotion) return;
-    if (!canControlBoth && viewerSide !== currentTurn) {
-      return;
-    }
+    const canCommitMove =
+      gameOngoing &&
+      !isSpectator &&
+      !isReplayMode &&
+      (canControlBoth || viewerSide === currentTurn);
 
     console.log("Cell clicked:", cellId);
 
-    if (boardState.pendingMove === cellId && boardState.selectedPiece) {
+    if (canCommitMove && boardState.pendingMove === cellId && boardState.selectedPiece) {
       console.log(
         "Move confirmed:",
         boardState.selectedPiece.position,
@@ -235,13 +238,13 @@ export default function Board({
       const promotionOptions =
         variant === "concentric"
           ? validPromotionOptionsForMoveConcentric(
-              boardState.selectedPiece,
-              cellId,
-            )
+            boardState.selectedPiece,
+            cellId,
+          )
           : validPromotionOptionsForMoveArchimedean(
-              boardState.selectedPiece,
-              cellId,
-            );
+            boardState.selectedPiece,
+            cellId,
+          );
       if (promotionOptions.length > 0) {
         setPendingPromotion({
           from: boardState.selectedPiece.position,
@@ -255,7 +258,11 @@ export default function Board({
       return;
     }
 
-    if (boardState.selectedPiece && boardState.legalMoves.includes(cellId)) {
+    if (
+      canCommitMove &&
+      boardState.selectedPiece &&
+      boardState.legalMoves.includes(cellId)
+    ) {
       console.log(
         "Move pending:",
         boardState.selectedPiece.position,
@@ -273,16 +280,50 @@ export default function Board({
     const pieceAtCell = boardState.pieces.find((p) => p.position === cellId);
 
     if (pieceAtCell) {
-      // Spectators cannot select
-      if (isSpectator) return;
+      if (!gameOngoing) {
+        const legalMoves = calculateLegalMoves(pieceAtCell);
+        setPendingPromotion(null);
+        setBoardState((prev) => ({
+          ...prev,
+          selectedPiece: pieceAtCell,
+          selectedCell: cellId,
+          legalMoves,
+          hoveredMove: null,
+          pendingMove: null,
+        }));
+        return;
+      }
 
-      // Must be correct turn (unless controlling both)
-      if (!canControlBoth && viewerSide !== currentTurn) return;
+      if (isSpectator) {
+        const legalMoves = calculateLegalMoves(pieceAtCell);
+        setPendingPromotion(null);
+        setBoardState((prev) => ({
+          ...prev,
+          selectedPiece: pieceAtCell,
+          selectedCell: cellId,
+          legalMoves,
+          hoveredMove: null,
+          pendingMove: null,
+        }));
+        return;
+      }
 
-      // Determine which color this user is allowed to control right now
+      // Determine which color this user is allowed to control right now.
       const allowedColor = canControlBoth ? currentTurn : viewerSide;
-
-      if (pieceAtCell.color !== allowedColor) return;
+      const isControllablePiece = pieceAtCell.color === allowedColor;
+      if (!isControllablePiece) {
+        const legalMoves = calculateLegalMoves(pieceAtCell);
+        setPendingPromotion(null);
+        setBoardState((prev) => ({
+          ...prev,
+          selectedPiece: pieceAtCell,
+          selectedCell: cellId,
+          legalMoves,
+          hoveredMove: null,
+          pendingMove: null,
+        }));
+        return;
+      }
 
       // If clicking the already selected piece, deselect it
       if (pieceAtCell === boardState.selectedPiece) {
@@ -329,8 +370,8 @@ export default function Board({
         hoveredMove: entering
           ? cellId
           : prev.hoveredMove === cellId
-          ? null
-          : prev.hoveredMove,
+            ? null
+            : prev.hoveredMove,
       }));
     }
   };
@@ -369,6 +410,24 @@ export default function Board({
     if (cellId === boardState.hoveredMove) {
       return {
         fill: colors.green[500],
+        fillOpacity: 1,
+        stroke: "#000000",
+        strokeWidth: 1,
+      };
+    }
+
+    // Preview-only legal moves for non-controllable selections.
+    if (
+      boardState.legalMoves.includes(cellId) &&
+      boardState.selectedPiece &&
+      (!gameOngoing ||
+        isSpectator ||
+        (canControlBoth
+          ? boardState.selectedPiece.color !== currentTurn
+          : boardState.selectedPiece.color !== viewerSide))
+    ) {
+      return {
+        fill: colors.sky[300],
         fillOpacity: 1,
         stroke: "#000000",
         strokeWidth: 1,
@@ -424,9 +483,8 @@ export default function Board({
         style={{
           position: "absolute",
           inset: 0,
-          transform: `scale(${BOARD_SCALE})${
-            viewerSide === "blk" ? " rotate(180deg)" : ""
-          }`,
+          transform: `scale(${BOARD_SCALE})${viewerSide === "blk" ? " rotate(180deg)" : ""
+            }`,
           transformOrigin: "center center",
         }}
       >
@@ -459,8 +517,8 @@ export default function Board({
                     ? "default"
                     : isLegal ||
                       boardState.pieces.some((p) => p.position === s.id)
-                    ? "pointer"
-                    : "default",
+                      ? "pointer"
+                      : "default",
                 }}
                 onClick={() => handleCellClick(s.id)}
                 onMouseEnter={(e) => {

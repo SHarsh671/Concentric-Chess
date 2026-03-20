@@ -54,7 +54,7 @@ export default function GamePage({
   const topBarRef = useRef<HTMLDivElement>(null);
   const botBarRef = useRef<HTMLDivElement>(null);
   const [boardPx, setBoardPx] = useState(0);
-  const computeBoardSize = useRef<() => void>(() => {});
+  const computeBoardSize = useRef<() => void>(() => { });
 
   useLayoutEffect(() => {
     if (!boardColEl) return;
@@ -167,7 +167,12 @@ export default function GamePage({
           }));
           break;
         case "game_over":
-          setGame((prev) => ({ ...prev, status: message.data.result }));
+          setGame((prev) => ({
+            ...prev,
+            status: message.data.result,
+            whiteTimeLeft: message.data.whiteTimeLeft,
+            blackTimeLeft: message.data.blackTimeLeft,
+          }));
           break;
         case "sync":
           setGame(message.data.game);
@@ -388,27 +393,27 @@ export default function GamePage({
   const topRole = isSpectator
     ? topSideLabel
     : viewerSide
-    ? `Opponent · ${topSideLabel}`
-    : topSideLabel;
+      ? `Opponent · ${topSideLabel}`
+      : topSideLabel;
   const botRole = isSpectator
     ? botSideLabel
     : viewerSide
-    ? `You · ${botSideLabel}`
-    : botSideLabel;
+      ? `You · ${botSideLabel}`
+      : botSideLabel;
 
   // Draw offer state
   const myDrawOffer =
     viewerSide === "wht"
       ? game.whiteDrawOffer
       : viewerSide === "blk"
-      ? game.blackDrawOffer
-      : 0;
+        ? game.blackDrawOffer
+        : 0;
   const opponentDrawOffer =
     viewerSide === "wht"
       ? game.blackDrawOffer
       : viewerSide === "blk"
-      ? game.whiteDrawOffer
-      : 0;
+        ? game.whiteDrawOffer
+        : 0;
 
   const boardVariant = game.variant.split("-")[0] as
     | "concentric"
@@ -428,28 +433,28 @@ export default function GamePage({
         ? "♔ White Wins by Checkmate"
         : "♔ White Wins!"
       : game.status === "black_win"
-      ? positionState === "checkmate"
-        ? "♚ Black Wins by Checkmate"
-        : "♚ Black Wins!"
-      : game.status === "draw"
-      ? positionState === "stalemate"
-        ? "Draw by Stalemate"
-        : "Game Drawn"
-      : game.status === "white_resign"
-      ? "White Resigned — Black Wins"
-      : game.status === "black_resign"
-      ? "Black Resigned — White Wins"
-      : null;
+        ? positionState === "checkmate"
+          ? "♚ Black Wins by Checkmate"
+          : "♚ Black Wins!"
+        : game.status === "draw"
+          ? positionState === "stalemate"
+            ? "Draw by Stalemate"
+            : "Game Drawn"
+          : game.status === "white_resign"
+            ? "White Resigned — Black Wins"
+            : game.status === "black_resign"
+              ? "Black Resigned — White Wins"
+              : null;
   const tacticalStatusMessage =
     positionState === "check"
       ? `${currentTurn === "wht" ? "♔ White" : "♚ Black"} in Check`
       : positionState === "checkmate"
-      ? "Checkmate"
-      : positionState === "stalemate"
-      ? "Stalemate"
-      : positionState === "draw"
-      ? "Draw"
-      : null;
+        ? "Checkmate"
+        : positionState === "stalemate"
+          ? "Stalemate"
+          : positionState === "draw"
+            ? "Draw"
+            : null;
   const topBannerMessage = statusMessage ?? tacticalStatusMessage;
   const desktopBoardReady = boardPx > 0;
 
@@ -461,6 +466,7 @@ export default function GamePage({
     currentTurn,
     isSpectator,
     canControlBoth,
+    gameOngoing: game.status === "ongoing",
     variant: boardVariant,
   };
 
@@ -533,10 +539,10 @@ export default function GamePage({
               {isSpectator
                 ? "Spectating"
                 : canControlBoth
-                ? "Both Sides"
-                : viewerSide === "wht"
-                ? "Playing White"
-                : "Playing Black"}
+                  ? "Both Sides"
+                  : viewerSide === "wht"
+                    ? "Playing White"
+                    : "Playing Black"}
             </span>
             <span className="text-[11px] font-black uppercase border-2 border-black px-2 py-0.5 bg-black text-white">
               {currentTurn === "wht" ? "♔ White" : "♚ Black"}
@@ -629,7 +635,7 @@ export default function GamePage({
             Move History
           </div>
           <div className="max-h-64 overflow-y-auto flex flex-col-reverse">
-            <MoveList groupedMoves={groupedMoves} />
+            <MoveList groupedMoves={groupedMoves} variant={boardVariant} />
           </div>
         </div>
         <button
@@ -681,17 +687,15 @@ function PlayerBar({
 }) {
   return (
     <div
-      className={`flex items-center gap-3 px-3 py-2 ${
-        isWhiteSide ? "bg-white text-black" : "bg-black text-white"
-      }`}
+      className={`flex items-center gap-3 px-3 py-2 ${isWhiteSide ? "bg-white text-black" : "bg-black text-white"
+        }`}
     >
       <div className="shrink-0 min-w-[90px]">
         <div className="font-black uppercase text-sm leading-none">{label}</div>
         {role && (
           <div
-            className={`text-[10px] uppercase tracking-wider font-bold leading-none mt-0.5 ${
-              isWhiteSide ? "text-gray-400" : "text-gray-400"
-            }`}
+            className={`text-[10px] uppercase tracking-wider font-bold leading-none mt-0.5 ${isWhiteSide ? "text-gray-400" : "text-gray-400"
+              }`}
           >
             {role}
           </div>
@@ -713,11 +717,7 @@ function PlayerBar({
         {isActive && gameOngoing && (
           <span className="w-1.5 h-1.5 rounded-full bg-current animate-pulse" />
         )}
-        <span
-          className={`font-mono font-black tabular-nums text-xl border-2 px-2 py-0.5 ${
-            isWhiteSide ? "border-black text-black" : "border-white text-white"
-          }`}
-        >
+        <span className={`flex items-center justify-center text-center font-mono font-black tabular-nums text-xl border-2 px-2 py-0.5 ${isWhiteSide ? "border-black text-black" : "border-white text-white"}`}>
           <TimerDisplay timeLeft={timeLeft} />
         </span>
       </div>
@@ -766,21 +766,12 @@ function MoveList({
   );
 }
 
-function ActionButtons({
-  onSend,
-  drawOffered,
-}: {
-  onSend: (type: "undo" | "draw" | "resign") => void;
+function ActionButtons({ onSend, drawOffered }: {
+  onSend: (type: "draw" | "resign") => void;
   drawOffered: boolean;
 }) {
   return (
     <div className="flex gap-2">
-      <button
-        onClick={() => onSend("undo")}
-        className="flex-1 py-2 font-bold uppercase text-xs bg-white border-4 border-black hover:bg-black hover:text-white transition-colors shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-none"
-      >
-        Undo
-      </button>
       {drawOffered ? (
         <div className="flex-1 py-2 font-bold uppercase text-xs text-center border-4 border-black bg-gray-100 text-gray-500">
           Draw Offered
