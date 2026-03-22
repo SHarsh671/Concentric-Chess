@@ -13,6 +13,8 @@ import {
   ArrowLeft,
 } from "lucide-react";
 import Link from "next/link";
+import Board, { CapturedPiece } from "@/components/piece/board";
+import Image from "next/image";
 
 // Type based on your database schema
 interface Move {
@@ -54,9 +56,17 @@ export default function GameReplayClient({
   whiteUsername,
   blackUsername,
 }: GameReplayClientProps) {
-  const [currentMoveIndex, setCurrentMoveIndex] = useState(-1); // -1 = starting position
+  const [currentMoveIndex, setCurrentMoveIndex] = useState(-1);
   const [isAutoPlaying, setIsAutoPlaying] = useState(false);
-  const [autoPlaySpeed, setAutoPlaySpeed] = useState(2000); // 2 seconds per move
+  const [autoPlaySpeed, setAutoPlaySpeed] = useState(2000);
+  const [capturedPieces, setCapturedPieces] = useState<CapturedPiece[]>([]);
+
+  // Get moves up to current index for the board
+  const movesUpToCurrent = currentMoveIndex === -1 ? [] : moves.slice(0, currentMoveIndex + 1);
+
+  // Separate captured pieces by color
+  const whiteCaptured = capturedPieces.filter((p) => p.color === "wht");
+  const blackCaptured = capturedPieces.filter((p) => p.color === "blk");
 
   // Auto-play functionality
   useEffect(() => {
@@ -72,7 +82,6 @@ export default function GameReplayClient({
     return () => clearTimeout(timer);
   }, [isAutoPlaying, currentMoveIndex, moves.length, autoPlaySpeed]);
 
-  // Navigation handlers
   const handleFirst = () => {
     setCurrentMoveIndex(-1);
     setIsAutoPlaying(false);
@@ -143,33 +152,93 @@ export default function GameReplayClient({
           </div>
         </div>
 
-        <div className="grid lg:grid-cols-2 gap-6">
-          {/* Left side: Board would go here */}
+        <div className="grid lg:grid-cols-[140px_1fr_1fr] gap-6">
+          {/* Left sidebar: Captured Pieces */}
+          <div className="w-[140px] border-4 border-black bg-white rounded-lg p-3 flex flex-col h-[900px] shrink-0">
+            <div className="text-sm font-bold mb-3 uppercase text-center border-b-2 border-black pb-2">
+              Captured
+              <br />
+              Pieces
+            </div>
+
+            <div className="flex-1 overflow-y-auto space-y-4">
+              {/* White captured */}
+              <div>
+                <div className="text-xs font-bold text-gray-600 mb-1 text-center">
+                  White ♔
+                </div>
+                <div className="flex flex-col gap-1 items-center">
+                  {whiteCaptured.length === 0 ? (
+                    <span className="text-xs text-gray-400 italic">None</span>
+                  ) : (
+                    whiteCaptured.map((piece, idx) => (
+                      <div
+                        key={`white-${piece.type}-${idx}`}
+                        className="animate-slide-in"
+                        style={{ animationDelay: `${idx * 0.1}s` }}
+                      >
+                        <img
+                          src={`/pieces/${piece.type}-${piece.color}.png`}
+                          alt={`${piece.color} ${piece.type}`}
+                          className="w-14 h-14 opacity-80"
+                        />
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+
+              {/* Divider */}
+              <div className="border-t-2 border-gray-300"></div>
+
+              {/* Black captured */}
+              <div>
+                <div className="text-xs font-bold text-gray-600 mb-1 text-center">
+                  Black ♚
+                </div>
+                <div className="flex flex-col gap-1 items-center">
+                  {blackCaptured.length === 0 ? (
+                    <span className="text-xs text-gray-400 italic">None</span>
+                  ) : (
+                    blackCaptured.map((piece, idx) => (
+                      <div
+                        key={`black-${piece.type}-${idx}`}
+                        className="animate-slide-in"
+                        style={{ animationDelay: `${idx * 0.1}s` }}
+                      >
+                        <img
+                          src={`/pieces/${piece.type}-${piece.color}.png`}
+                          alt={`${piece.color} ${piece.type}`}
+                          className="w-14 h-14 opacity-80"
+                        />
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Middle: Board */}
           <div>
             <Card className="bg-white border-4 border-black">
-              <CardHeader className="border-b-4 border-black">
-                <CardTitle className="text-2xl font-bold uppercase">
-                  Board View
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-8">
-                <div className="aspect-square bg-gray-100 border-4 border-black flex items-center justify-center relative">
-                  {/* Your chess board component would go here */}
-                  {/* Pass currentMoveIndex to determine which position to show */}
-                  <div className="text-center">
-                    <p className="text-gray-500 text-lg mb-4">
-                      Your circular chess board
-                      <br />
-                      would render here
-                    </p>
-                    {currentMoveIndex >= 0 && (
-                      <div className="mt-4 p-4 bg-white border-2 border-black inline-block">
-                        <p className="font-bold">
-                          Move {currentMoveIndex + 1}: {moves[currentMoveIndex].fromSquare} →{" "}
-                          {moves[currentMoveIndex].toSquare}
-                        </p>
-                      </div>
-                    )}
+              <CardContent className="p-4">
+                <div className="relative w-[900px] h-[900px]">
+                  <Image
+                    src="/cc/ccboard.png"
+                    alt="Chess board"
+                    width={900}
+                    height={900}
+                    className="absolute top-0 left-0"
+                    priority
+                  />
+                  <div className="absolute top-0 left-0 w-full h-full">
+                    <Board
+                      moves={movesUpToCurrent}
+                      onMove={() => {}}
+                      onCapturedPiecesChange={setCapturedPieces}
+                      isReplayMode={true}
+                    />
                   </div>
                 </div>
                 <div className="mt-4 text-center">
@@ -325,7 +394,6 @@ export default function GameReplayClient({
               <CardContent className="p-0">
                 <div className="max-h-96 overflow-y-auto">
                   <div className="p-2 space-y-1">
-                    {/* Starting position */}
                     <button
                       onClick={() => handleJumpToMove(-1)}
                       className={`w-full text-left p-3 border-2 font-bold transition-colors ${
@@ -337,7 +405,6 @@ export default function GameReplayClient({
                       Starting Position
                     </button>
 
-                    {/* All moves */}
                     {moves.map((move, index) => (
                       <button
                         key={move.id}
