@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -111,8 +111,25 @@ export default function GameReplayClient({
     return { initial, snapshots };
   }, [baseClock, game.createdAt, game.whiteTimeLeft, game.blackTimeLeft, moves]);
 
-  const movesUpToCurrent =
-    currentMoveIndex === -1 ? [] : moves.slice(0, currentMoveIndex + 1);
+  const movesUpToCurrent = useMemo(
+    () => (currentMoveIndex === -1 ? [] : moves.slice(0, currentMoveIndex + 1)),
+    [currentMoveIndex, moves],
+  );
+
+  const handleCapturedPiecesChange = useCallback((next: CapturedPiece[]) => {
+    setCapturedPieces((prev) => {
+      if (
+        prev.length === next.length &&
+        prev.every((piece, index) => {
+          const other = next[index];
+          return piece.type === other?.type && piece.color === other?.color;
+        })
+      ) {
+        return prev;
+      }
+      return next;
+    });
+  }, []);
   const replayTurn = movesUpToCurrent.length % 2 === 0 ? "wht" : "blk";
 
   const whiteCaptured = capturedPieces.filter((p) => p.color === "wht");
@@ -400,7 +417,7 @@ export default function GameReplayClient({
                 <Board
                   moves={movesUpToCurrent}
                   onMove={() => { }}
-                  onCapturedPiecesChange={setCapturedPieces}
+                  onCapturedPiecesChange={handleCapturedPiecesChange}
                   viewerSide={undefined}
                   currentTurn={replayTurn}
                   isSpectator
@@ -444,7 +461,7 @@ export default function GameReplayClient({
               <Board
                 moves={movesUpToCurrent}
                 onMove={() => { }}
-                onCapturedPiecesChange={setCapturedPieces}
+                onCapturedPiecesChange={handleCapturedPiecesChange}
                 viewerSide={undefined}
                 currentTurn={replayTurn}
                 isSpectator

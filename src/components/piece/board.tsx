@@ -132,18 +132,14 @@ export default function Board({
     pendingMove: null,
     capturedPieces: [],
   });
-  const [piecesReady, setPiecesReady] = useState(false);
   const [pendingPromotion, setPendingPromotion] =
     useState<PendingPromotion | null>(null);
 
   useEffect(() => {
-    setPiecesReady(true);
     const newPieces = computePiecesForMoves(variant, moves);
-    const newCaptured = trackCapturedPieces
-      ? computeCaptured(variant, moves)
-      : boardState.capturedPieces;
+    const newCaptured = trackCapturedPieces ? computeCaptured(variant, moves) : null;
 
-    if (trackCapturedPieces) {
+    if (trackCapturedPieces && newCaptured) {
       onCapturedPiecesChange?.(newCaptured);
     }
 
@@ -151,7 +147,7 @@ export default function Board({
     setBoardState((prev) => ({
       ...prev,
       pieces: newPieces,
-      capturedPieces: newCaptured,
+      capturedPieces: newCaptured ?? prev.capturedPieces,
       selectedPiece: null,
       selectedCell: null,
       legalMoves: [],
@@ -759,8 +755,7 @@ export default function Board({
             })()}
         </svg>
 
-        {piecesReady &&
-          boardState.pieces
+        {boardState.pieces
             .filter((piece) => {
               // Hide the piece at the pending destination — it will be captured
               if (boardState.pendingMove && boardState.selectedPiece) {
