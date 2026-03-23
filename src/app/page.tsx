@@ -35,7 +35,7 @@ export default function Home() {
           ♚
         </div>
 
-        <div className="container mx-auto px-4 py-16 lg:py-24 relative z-10">
+        <div className="container mx-auto px-4 py-8 lg:py-24 relative z-10">
           <div className="max-w-4xl mx-auto text-center space-y-8">
             <div className="inline-flex items-center gap-2 bg-black text-white px-6 py-3 border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
               <Trophy className="h-5 w-5 text-white" strokeWidth={2} />
@@ -45,7 +45,7 @@ export default function Home() {
             </div>
 
             <div className="space-y-4">
-              <div className="flex items-center justify-center gap-4 text-6xl lg:text-8xl">
+              <div className="flex items-center justify-center gap-4 text-4xl lg:text-8xl">
                 <span className="opacity-20">♜</span>
                 <h1 className="font-bold leading-none text-black tracking-wide">
                   CONCENTRIC & ARCHIMEDEAN
@@ -129,19 +129,49 @@ export default function Home() {
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
             {[
-              { icon: <Circle />, title: "Circular Board", desc: "72 cells in concentric rings create unique paths impossible on traditional square boards." },
-              { icon: <Crown />, title: "Special Pieces", desc: "Prince pieces, Berolina pawns, and unique royal movement rules." },
-              { icon: <Swords />, title: "Online Play", desc: "Challenge friends or join matchmaking with real-time gameplay." },
-              { icon: <Target />, title: "Strategic Depth", desc: "New tactical possibilities with crescents, half-moons, and twin cells." },
-              { icon: <ScrollText />, title: "Move History", desc: "Review games with complete move replay and analysis tools." },
-              { icon: <Zap />, title: "Fast & Free", desc: "No downloads required. Play instantly in your browser." },
+              {
+                icon: <Circle />,
+                title: "Circular Board",
+                desc: "72 cells in concentric rings create unique paths impossible on traditional square boards.",
+              },
+              {
+                icon: <Crown />,
+                title: "Special Pieces",
+                desc: "Prince pieces, Berolina pawns, and unique royal movement rules.",
+              },
+              {
+                icon: <Swords />,
+                title: "Online Play",
+                desc: "Challenge friends or join matchmaking with real-time gameplay.",
+              },
+              {
+                icon: <Target />,
+                title: "Strategic Depth",
+                desc: "New tactical possibilities with crescents, half-moons, and twin cells.",
+              },
+              {
+                icon: <ScrollText />,
+                title: "Move History",
+                desc: "Review games with complete move replay and analysis tools.",
+              },
+              {
+                icon: <Zap />,
+                title: "Fast & Free",
+                desc: "No downloads required. Play instantly in your browser.",
+              },
             ].map((feature, i) => (
-              <Card key={i} className="bg-white border-4 border-black hover:shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] transition-all">
+              <Card
+                key={i}
+                className="bg-white border-4 border-black hover:shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] transition-all"
+              >
                 <CardContent className="p-8 text-center space-y-4">
                   <div className="w-20 h-20 bg-white border-4 border-black flex items-center justify-center mx-auto">
-                    {feature.icon &&
-                      feature.icon.type &&
-                      <feature.icon.type className="h-10 w-10 text-black" strokeWidth={2} />}
+                    {feature.icon && feature.icon.type && (
+                      <feature.icon.type
+                        className="h-10 w-10 text-black"
+                        strokeWidth={2}
+                      />
+                    )}
                   </div>
                   <h3 className="text-2xl font-bold text-black uppercase tracking-wide">
                     {feature.title}
@@ -155,7 +185,6 @@ export default function Home() {
           </div>
         </div>
       </section>
-
 
       <section className="py-20 bg-gray-50 border-y-8 border-black">
         <div className="container mx-auto px-4">
@@ -180,15 +209,19 @@ export default function Home() {
                   />
                 </div>
                 <div className="p-8 space-y-4 bg-gray-50">
-                  <h3 className="text-3xl font-bold text-black uppercase">Concentric Chess</h3>
+                  <h3 className="text-3xl font-bold text-black uppercase">
+                    Concentric Chess
+                  </h3>
                   <p className="text-gray-700 text-lg leading-relaxed">
                     Classic circular board with 72 cells in concentric rings.
-                    Features unique movement patterns with crescents and half-moons.
+                    Features unique movement patterns with crescents and
+                    half-moons.
                   </p>
-                  <Button asChild className="w-full bg-black hover:bg-gray-900 text-white py-6 text-lg border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] font-bold">
-                    <Link href="/play?variant=concentric">
-                      PLAY NOW ♔
-                    </Link>
+                  <Button
+                    asChild
+                    className="w-full bg-black hover:bg-gray-900 text-white py-6 text-lg border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] font-bold"
+                  >
+                    <Link href="/play?variant=concentric">PLAY NOW ♔</Link>
                   </Button>
                 </div>
               </CardContent>
@@ -207,15 +240,18 @@ export default function Home() {
                   />
                 </div>
                 <div className="p-8 space-y-4 bg-gray-50">
-                  <h3 className="text-3xl font-bold text-black uppercase">Archimedes Spiral</h3>
+                  <h3 className="text-3xl font-bold text-black uppercase">
+                    Archimedes Spiral
+                  </h3>
                   <p className="text-gray-700 text-lg leading-relaxed">
-                    Spiral board layout based on the Archimedes spiral.
-                    Even more complex strategic possibilities await.
+                    Spiral board layout based on the Archimedes spiral. Even
+                    more complex strategic possibilities await.
                   </p>
-                  <Button asChild className="w-full bg-black hover:bg-gray-900 text-white py-6 text-lg border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] font-bold">
-                    <Link href="/play?variant=archimedean">
-                      PLAY NOW ♚
-                    </Link>
+                  <Button
+                    asChild
+                    className="w-full bg-black hover:bg-gray-900 text-white py-6 text-lg border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] font-bold"
+                  >
+                    <Link href="/play?variant=archimedean">PLAY NOW ♚</Link>
                   </Button>
                 </div>
               </CardContent>
@@ -224,7 +260,6 @@ export default function Home() {
         </div>
       </section>
 
-
       <section className="py-20 bg-white">
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
@@ -232,7 +267,9 @@ export default function Home() {
               GET STARTED
             </h2>
             <div className="w-32 h-2 bg-black mx-auto mb-4"></div>
-            <p className="text-xl text-gray-600">Three simple steps to your first game</p>
+            <p className="text-xl text-gray-600">
+              Three simple steps to your first game
+            </p>
           </div>
 
           <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
@@ -240,17 +277,19 @@ export default function Home() {
               <div className="w-24 h-24 bg-black text-white border-4 border-black flex items-center justify-center mx-auto text-4xl font-bold">
                 1
               </div>
-              <h3 className="text-2xl font-bold text-black uppercase">Sign Up</h3>
-              <p className="text-gray-700">
-                Create account or play as guest
-              </p>
+              <h3 className="text-2xl font-bold text-black uppercase">
+                Sign Up
+              </h3>
+              <p className="text-gray-700">Create account or play as guest</p>
             </div>
 
             <div className="text-center space-y-4">
               <div className="w-24 h-24 bg-black text-white border-4 border-black flex items-center justify-center mx-auto text-4xl font-bold">
                 2
               </div>
-              <h3 className="text-2xl font-bold text-black uppercase">Choose Mode</h3>
+              <h3 className="text-2xl font-bold text-black uppercase">
+                Choose Mode
+              </h3>
               <p className="text-gray-700">
                 Local, friend invite, or matchmaking
               </p>
@@ -261,16 +300,11 @@ export default function Home() {
                 3
               </div>
               <h3 className="text-2xl font-bold text-black uppercase">Play</h3>
-              <p className="text-gray-700">
-                Make moves and master the circle
-              </p>
+              <p className="text-gray-700">Make moves and master the circle</p>
             </div>
           </div>
         </div>
       </section>
-
-
-
 
       <section className="py-24 bg-black text-white relative overflow-hidden">
         <div className="absolute top-0 left-0 text-9xl opacity-10 select-none">
@@ -285,7 +319,8 @@ export default function Home() {
             READY TO PLAY?
           </h2>
           <p className="text-2xl mb-10 max-w-2xl mx-auto opacity-90">
-            Join players worldwide discovering new strategies on circular boards.
+            Join players worldwide discovering new strategies on circular
+            boards.
           </p>
 
           <div className="flex flex-wrap gap-4 justify-center">
@@ -296,11 +331,10 @@ export default function Home() {
             >
               <Link href="/signup">SIGN UP FREE</Link>
             </Button>
-
-          
           </div>
         </div>
       </section>
     </div>
   );
 }
+
