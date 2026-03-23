@@ -478,7 +478,14 @@ export default function Board({
   const BOARD_SCALE = 1730 / (variant === "concentric" ? 1250 : 1400);
 
   return (
-    <div style={{ position: "absolute", inset: 0, overflow: "hidden" }}>
+    <div
+      style={{
+        position: "absolute",
+        inset: 0,
+        overflow: "hidden",
+        pointerEvents: isReplayMode ? "none" : "auto",
+      }}
+    >
       <div
         style={{
           position: "absolute",

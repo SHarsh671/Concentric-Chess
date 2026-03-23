@@ -324,11 +324,10 @@ export default function GameReplayClient({
           <div className="p-2 space-y-1">
             <button
               onClick={() => handleJumpToMove(-1)}
-              className={`w-full text-left p-2.5 sm:p-3 border-2 font-bold transition-colors ${
-                currentMoveIndex === -1
-                  ? "bg-black text-white border-black"
-                  : "bg-white border-gray-300 hover:bg-gray-100"
-              }`}
+              className={`w-full text-left p-2.5 sm:p-3 border-2 font-bold transition-colors ${currentMoveIndex === -1
+                ? "bg-black text-white border-black"
+                : "bg-white border-gray-300 hover:bg-gray-100"
+                }`}
             >
               Starting Position
             </button>
@@ -337,11 +336,10 @@ export default function GameReplayClient({
               <button
                 key={move.id}
                 onClick={() => handleJumpToMove(index)}
-                className={`w-full text-left p-2.5 sm:p-3 border-2 transition-colors ${
-                  currentMoveIndex === index
-                    ? "bg-black text-white border-black"
-                    : "bg-white border-gray-300 hover:bg-gray-100"
-                }`}
+                className={`w-full text-left p-2.5 sm:p-3 border-2 transition-colors ${currentMoveIndex === index
+                  ? "bg-black text-white border-black"
+                  : "bg-white border-gray-300 hover:bg-gray-100"
+                  }`}
               >
                 <div className="flex items-center justify-between gap-2 text-sm sm:text-base">
                   <span className="font-bold shrink-0">{move.moveNumber}.</span>
@@ -401,7 +399,7 @@ export default function GameReplayClient({
               <div className="relative w-full aspect-square border-t-4 border-b-4 border-black overflow-hidden">
                 <Board
                   moves={movesUpToCurrent}
-                  onMove={() => {}}
+                  onMove={() => { }}
                   onCapturedPiecesChange={setCapturedPieces}
                   viewerSide={undefined}
                   currentTurn={replayTurn}
@@ -445,7 +443,7 @@ export default function GameReplayClient({
             <div className="relative w-full aspect-square border-t-4 border-b-4 border-black overflow-hidden">
               <Board
                 moves={movesUpToCurrent}
-                onMove={() => {}}
+                onMove={() => { }}
                 onCapturedPiecesChange={setCapturedPieces}
                 viewerSide={undefined}
                 currentTurn={replayTurn}
@@ -504,9 +502,8 @@ function ReplayPlayerBar({
 }) {
   return (
     <div
-      className={`flex items-center gap-2 sm:gap-3 px-2.5 sm:px-3 py-2 ${
-        isWhiteSide ? "bg-white text-black" : "bg-black text-white"
-      }`}
+      className={`flex items-center gap-2 sm:gap-3 px-2.5 sm:px-3 py-2 ${isWhiteSide ? "bg-white text-black" : "bg-black text-white"
+        }`}
     >
       <div className="shrink-0 min-w-[78px] sm:min-w-[90px]">
         <div className="font-black uppercase text-xs sm:text-sm leading-none truncate">{label}</div>
@@ -529,9 +526,8 @@ function ReplayPlayerBar({
       </div>
 
       <span
-        className={`shrink-0 flex items-center justify-center text-center font-mono font-black tabular-nums text-base sm:text-xl border-2 px-2 py-0.5 ${
-          isWhiteSide ? "border-black text-black" : "border-white text-white"
-        }`}
+        className={`shrink-0 flex items-center justify-center text-center font-mono font-black tabular-nums text-base sm:text-xl border-2 px-2 py-0.5 ${isWhiteSide ? "border-black text-black" : "border-white text-white"
+          }`}
       >
         <TimerDisplay timeLeft={timeLeft} />
       </span>
