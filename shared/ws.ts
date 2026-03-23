@@ -1,4 +1,5 @@
 import { Game, Move, Side } from "./schema";
+import { PieceType } from "./graph";
 
 export type ServerMsg =
     | {
@@ -30,6 +31,8 @@ export type ServerMsg =
             | "draw"
             | "white_resign"
             | "black_resign";
+            whiteTimeLeft: number | null;
+            blackTimeLeft: number | null;
         };
     }
     | {
@@ -57,6 +60,7 @@ export type ClientMsg =
             side: Side;
             from: string;
             to: string;
+            promotion?: PieceType | null;
         };
     }
     | {
@@ -70,9 +74,6 @@ export type ClientMsg =
     }
     | {
         type: "draw";
-    }
-    | {
-        type: "undo";
     }
     | {
         type: "draw_reject";

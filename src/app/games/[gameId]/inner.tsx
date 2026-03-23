@@ -11,8 +11,17 @@ import RulesDialog from "@/components/piece/rules-dialog";
 import { HelpCircle, LoaderCircle } from "lucide-react";
 import { pieceLabel, toNotation } from "@/lib/utils";
 import SpiralRulesDialog from "@/components/piece/spiral-rules-dialog";
-import { initialPieces, PieceType, Side } from "shared/concentric-rules";
+import { initialPieces } from "shared/concentric-rules";
+import { PieceType, Side } from "shared/graph";
 import Image from "next/image";
+import {
+  computePieceStateConcentric,
+  gameStatusConcentric,
+} from "shared/concentric-rules";
+import {
+  computePieceStateArchimedean,
+  gameStatusArchimedean,
+} from "shared/archimedean-rules";
 
 export default function GamePage({
   game: initialGame,
@@ -28,7 +37,10 @@ export default function GamePage({
   blackUsername: string | null;
 }) {
   const [game, setGame] = useState(initialGame);
-  const ws = useMemo(() => GameSocket.getInstance(initialGame.id), [initialGame.id]);
+  const ws = useMemo(
+    () => GameSocket.getInstance(initialGame.id),
+    [initialGame.id],
+  );
   const [moves, setMoves] = useState(initialMoves);
   const [showRules, setShowRules] = useState(false);
   // Flat array — filter by color where needed
@@ -42,7 +54,7 @@ export default function GamePage({
   const topBarRef = useRef<HTMLDivElement>(null);
   const botBarRef = useRef<HTMLDivElement>(null);
   const [boardPx, setBoardPx] = useState(0);
-  const computeBoardSize = useRef<() => void>(() => {});
+  const computeBoardSize = useRef<() => void>(() => { });
 
   useLayoutEffect(() => {
     if (!boardColEl) return;
@@ -61,30 +73,44 @@ export default function GamePage({
     return () => ro.disconnect();
   }, [boardColEl]);
 
-  const onMove = (from: string, to: string) => {
+  const onMove = (from: string, to: string, promotion?: PieceType | null) => {
     ws.send({
       type: "move",
       data: {
         side: game.nextMove % 2 === 1 ? "white" : "black",
         from,
         to,
+        promotion: promotion ?? null,
       },
     });
   };
 
   const groupedMoves = useMemo(() => {
-    const out: Record<number, { w?: (typeof moves[0]) & { piece: PieceType }; b?: typeof moves[0] & { piece: PieceType } }> = {};
-    const state = initialPieces.reduce((acc, piece) => {
-      acc[piece.position] = piece;
-      return acc;
-    }, {} as Record<string, { type: PieceType; color: string }>);
+    const out: Record<
+      number,
+      {
+        w?: (typeof moves)[0] & { piece: PieceType };
+        b?: (typeof moves)[0] & { piece: PieceType };
+      }
+    > = {};
+    const state = initialPieces.reduce(
+      (acc, piece) => {
+        acc[piece.position] = piece;
+        return acc;
+      },
+      {} as Record<string, { type: PieceType; color: string }>,
+    );
     for (const move of moves) {
       const turn = Math.floor((move.moveNumber - 1) / 2) + 1;
       const side = move.moveNumber % 2 === 1 ? "w" : "b";
 
       if (!out[turn]) out[turn] = {};
       if (!state[move.fromSquare]) {
-        console.error(`Invalid move from ${move.fromSquare} to ${move.toSquare}: no piece at fromSquare`, moves, state);
+        console.error(
+          `Invalid move from ${move.fromSquare} to ${move.toSquare}: no piece at fromSquare`,
+          moves,
+          state,
+        );
       }
       out[turn][side] = {
         piece: state[move.fromSquare].type,
@@ -93,7 +119,9 @@ export default function GamePage({
       state[move.toSquare] = state[move.fromSquare];
       delete state[move.fromSquare];
     }
-    return Object.entries(out).sort((a, b) => parseInt(b[0]) - parseInt(a[0])).map((entry) => entry);
+    return Object.entries(out)
+      .sort((a, b) => parseInt(b[0]) - parseInt(a[0]))
+      .map((entry) => entry);
   }, [moves]);
 
   useEffect(() => {
@@ -106,7 +134,9 @@ export default function GamePage({
         case "move": {
           const move = message.data.move;
           if (move.moveNumber !== gameRef.current.nextMove) {
-            console.error(`Received move ${move.moveNumber}, expected ${gameRef.current.nextMove}`);
+            console.error(
+              `Received move ${move.moveNumber}, expected ${gameRef.current.nextMove}`,
+            );
             ws.send({ type: "sync_request" });
           } else {
             setMoves((prev) => [...prev, move]);
@@ -121,7 +151,11 @@ export default function GamePage({
           break;
         }
         case "aborted":
-          setGame((prev) => ({ ...prev, status: "aborted", deletedAt: new Date().toISOString() }));
+          setGame((prev) => ({
+            ...prev,
+            status: "aborted",
+            deletedAt: new Date().toISOString(),
+          }));
           break;
         case "accepted":
           setGame((prev) => ({
@@ -133,7 +167,12 @@ export default function GamePage({
           }));
           break;
         case "game_over":
-          setGame((prev) => ({ ...prev, status: message.data.result }));
+          setGame((prev) => ({
+            ...prev,
+            status: message.data.result,
+            whiteTimeLeft: message.data.whiteTimeLeft,
+            blackTimeLeft: message.data.blackTimeLeft,
+          }));
           break;
         case "sync":
           setGame(message.data.game);
@@ -143,8 +182,14 @@ export default function GamePage({
           setGame((prev) => ({ ...prev, ...message.data }));
           break;
         case "draw_reject":
-          setGame((prev) => ({ ...prev, whiteDrawOffer: 0, blackDrawOffer: 0 }));
-          toast("Draw offer declined", { description: "Your opponent declined the draw." });
+          setGame((prev) => ({
+            ...prev,
+            whiteDrawOffer: 0,
+            blackDrawOffer: 0,
+          }));
+          toast("Draw offer declined", {
+            description: "Your opponent declined the draw.",
+          });
           break;
       }
     });
@@ -155,86 +200,123 @@ export default function GamePage({
   }, [game.id]);
 
   const timeSinceLastMove =
-    game.status === "ongoing" ? Date.now() - new Date(game.lastMoveAt || game.createdAt!).getTime() : 0;
+    game.status === "ongoing"
+      ? Date.now() - new Date(game.lastMoveAt || game.createdAt!).getTime()
+      : 0;
   const [timer, setTimer] = useState([
     game.nextMove % 2 === 1
-      ? game.whiteTimeLeft !== null ? Math.max(0, game.whiteTimeLeft - timeSinceLastMove) : null
+      ? game.whiteTimeLeft !== null
+        ? Math.max(0, game.whiteTimeLeft - timeSinceLastMove)
+        : null
       : game.whiteTimeLeft,
     game.nextMove % 2 === 0
-      ? game.blackTimeLeft !== null ? Math.max(0, game.blackTimeLeft - timeSinceLastMove) : null
+      ? game.blackTimeLeft !== null
+        ? Math.max(0, game.blackTimeLeft - timeSinceLastMove)
+        : null
       : game.blackTimeLeft,
   ]);
 
   useEffect(() => {
     if (game.status !== "ongoing") return;
     const interval = setInterval(() => {
-      const elapsed = Date.now() - new Date(game.lastMoveAt || game.createdAt!).getTime();
+      const elapsed =
+        Date.now() - new Date(game.lastMoveAt || game.createdAt!).getTime();
       if (game.nextMove % 2 === 1) {
         setTimer([
-          game.whiteTimeLeft !== null ? Math.max(0, game.whiteTimeLeft - elapsed) : null,
+          game.whiteTimeLeft !== null
+            ? Math.max(0, game.whiteTimeLeft - elapsed)
+            : null,
           game.blackTimeLeft,
         ]);
       } else {
         setTimer([
           game.whiteTimeLeft,
-          game.blackTimeLeft !== null ? Math.max(0, game.blackTimeLeft - elapsed) : null,
+          game.blackTimeLeft !== null
+            ? Math.max(0, game.blackTimeLeft - elapsed)
+            : null,
         ]);
       }
     }, 100);
     return () => clearInterval(interval);
-  }, [game.status, game.nextMove, game.whiteTimeLeft, game.blackTimeLeft, game.lastMoveAt, game.createdAt]);
+  }, [
+    game.status,
+    game.nextMove,
+    game.whiteTimeLeft,
+    game.blackTimeLeft,
+    game.lastMoveAt,
+    game.createdAt,
+  ]);
 
   // Freeze timer when game ends (snap to authoritative game-stored values)
   useEffect(() => {
     if (game.status !== "ongoing") {
       setTimer([game.whiteTimeLeft, game.blackTimeLeft]);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [game.status]);
 
-  // Recompute board size when banner appears/disappears (status change shifts layout)
+  // Recompute board size when top-banner conditions can change.
+  // `game.status` covers terminal banners, while `nextMove`/`moves.length` cover
+  // tactical banners like check that can appear/disappear during ongoing games.
   useEffect(() => {
     computeBoardSize.current();
-  }, [game.status]);
+  }, [game.status, game.nextMove, moves.length]);
 
-  if (!game) return (
-    <div className="min-h-screen bg-white flex items-center justify-center w-full">
-      <div className="border-4 border-black p-12 max-w-md w-full text-center shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
-        <div className="text-7xl mb-6 select-none opacity-30">♙</div>
-        <div className="inline-flex items-center gap-2 border-2 border-black px-4 py-1 mb-4 text-xs font-bold uppercase tracking-widest">
-          404
+  if (!game)
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center w-full">
+        <div className="border-4 border-black p-12 max-w-md w-full text-center shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
+          <div className="text-7xl mb-6 select-none opacity-30">♙</div>
+          <div className="inline-flex items-center gap-2 border-2 border-black px-4 py-1 mb-4 text-xs font-bold uppercase tracking-widest">
+            404
+          </div>
+          <h1 className="text-3xl font-bold uppercase tracking-wide mb-3">
+            Game Not Found
+          </h1>
+          <p className="text-gray-500">
+            This game doesn&apos;t exist or has been removed.
+          </p>
         </div>
-        <h1 className="text-3xl font-bold uppercase tracking-wide mb-3">Game Not Found</h1>
-        <p className="text-gray-500">This game doesn&apos;t exist or has been removed.</p>
       </div>
-    </div>
-  );
-  if (game.status === "aborted") return (
-    <div className="min-h-screen bg-white flex items-center justify-center w-full">
-      <div className="border-4 border-black p-12 max-w-md w-full text-center shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
-        <div className="text-7xl mb-6 select-none opacity-30">✕</div>
-        <div className="inline-flex items-center gap-2 border-2 border-black px-4 py-1 mb-4 text-xs font-bold uppercase tracking-widest">
-          Aborted
+    );
+  if (game.status === "aborted")
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center w-full">
+        <div className="border-4 border-black p-12 max-w-md w-full text-center shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
+          <div className="text-7xl mb-6 select-none opacity-30">✕</div>
+          <div className="inline-flex items-center gap-2 border-2 border-black px-4 py-1 mb-4 text-xs font-bold uppercase tracking-widest">
+            Aborted
+          </div>
+          <h1 className="text-3xl font-bold uppercase tracking-wide mb-3">
+            Game Aborted
+          </h1>
+          <p className="text-gray-500">
+            This game was aborted before it could begin.
+          </p>
         </div>
-        <h1 className="text-3xl font-bold uppercase tracking-wide mb-3">Game Aborted</h1>
-        <p className="text-gray-500">This game was aborted before it could begin.</p>
       </div>
-    </div>
-  );
-  if (game.deletedAt) return (
-    <div className="min-h-screen bg-white flex items-center justify-center w-full">
-      <div className="border-4 border-black p-12 max-w-md w-full text-center shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
-        <div className="text-7xl mb-6 select-none opacity-30">♙</div>
-        <div className="inline-flex items-center gap-2 border-2 border-black px-4 py-1 mb-4 text-xs font-bold uppercase tracking-widest">
-          404
+    );
+  if (game.deletedAt)
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center w-full">
+        <div className="border-4 border-black p-12 max-w-md w-full text-center shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
+          <div className="text-7xl mb-6 select-none opacity-30">♙</div>
+          <div className="inline-flex items-center gap-2 border-2 border-black px-4 py-1 mb-4 text-xs font-bold uppercase tracking-widest">
+            404
+          </div>
+          <h1 className="text-3xl font-bold uppercase tracking-wide mb-3">
+            Game Not Found
+          </h1>
+          <p className="text-gray-500">
+            This game doesn&apos;t exist or has been removed.
+          </p>
         </div>
-        <h1 className="text-3xl font-bold uppercase tracking-wide mb-3">Game Not Found</h1>
-        <p className="text-gray-500">This game doesn&apos;t exist or has been removed.</p>
       </div>
-    </div>
-  );
-  if ((game.blackPlayerId === playerId && game.blackAccepted === 0) ||
-    (game.whitePlayerId === playerId && game.whiteAccepted === 0))
+    );
+  if (
+    (game.blackPlayerId === playerId && game.blackAccepted === 0) ||
+    (game.whitePlayerId === playerId && game.whiteAccepted === 0)
+  )
     return (
       <div className="min-h-screen bg-white flex items-center justify-center w-full">
         <div className="border-4 border-black p-12 max-w-md w-full text-center shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
@@ -242,8 +324,12 @@ export default function GamePage({
           <div className="inline-flex items-center gap-2 border-2 border-black px-4 py-1 mb-4 text-xs font-bold uppercase tracking-widest">
             <span>⚔</span> Challenge Received
           </div>
-          <h1 className="text-3xl font-bold uppercase tracking-wide mb-3">Game Invite</h1>
-          <p className="text-gray-500 mb-8">An opponent is ready to play. Accept to start the game.</p>
+          <h1 className="text-3xl font-bold uppercase tracking-wide mb-3">
+            Game Invite
+          </h1>
+          <p className="text-gray-500 mb-8">
+            An opponent is ready to play. Accept to start the game.
+          </p>
           <Button
             onClick={() => ws.send({ type: "accept" })}
             className="w-full h-14 bg-black text-white border-4 border-black rounded-none font-bold uppercase tracking-widest text-base shadow-[6px_6px_0px_0px_rgba(0,0,0,0.2)] hover:shadow-none hover:translate-x-[6px] hover:translate-y-[6px] transition-all"
@@ -261,9 +347,15 @@ export default function GamePage({
           <div className="inline-flex items-center gap-3 border-2 border-black px-4 py-1 mb-4 text-xs font-bold uppercase tracking-widest">
             <LoaderCircle className="size-3 animate-spin" /> Matchmaking
           </div>
-          <h1 className="text-3xl font-bold uppercase tracking-wide mb-3">Waiting for Opponent</h1>
-          <p className="text-gray-500 mb-8">Your opponent hasn&apos;t accepted yet. Hang tight…</p>
-          <div className="text-3xl opacity-10 select-none tracking-widest">♜♞♝♛♚♝♞♜</div>
+          <h1 className="text-3xl font-bold uppercase tracking-wide mb-3">
+            Waiting for Opponent
+          </h1>
+          <p className="text-gray-500 mb-8">
+            Your opponent hasn&apos;t accepted yet. Hang tight…
+          </p>
+          <div className="text-3xl opacity-10 select-none tracking-widest">
+            ♜♞♝♛♚♝♞♜
+          </div>
         </div>
       </div>
     );
@@ -291,34 +383,90 @@ export default function GamePage({
   const topCaptured = topIsWhite ? blackCaptured : whiteCaptured;
   const botCaptured = topIsWhite ? whiteCaptured : blackCaptured;
   const topLabel = topIsWhite
-    ? (whiteUsername ?? "♔ White")
-    : (blackUsername ?? "♚ Black");
+    ? whiteUsername ?? "♔ White"
+    : blackUsername ?? "♚ Black";
   const botLabel = topIsWhite
-    ? (blackUsername ?? "♚ Black")
-    : (whiteUsername ?? "♔ White");
+    ? blackUsername ?? "♚ Black"
+    : whiteUsername ?? "♔ White";
   const topSideLabel = topIsWhite ? "♔ White" : "♚ Black";
   const botSideLabel = topIsWhite ? "♚ Black" : "♔ White";
-  const topRole = isSpectator ? topSideLabel : viewerSide ? `Opponent · ${topSideLabel}` : topSideLabel;
-  const botRole = isSpectator ? botSideLabel : viewerSide ? `You · ${botSideLabel}` : botSideLabel;
+  const topRole = isSpectator
+    ? topSideLabel
+    : viewerSide
+      ? `Opponent · ${topSideLabel}`
+      : topSideLabel;
+  const botRole = isSpectator
+    ? botSideLabel
+    : viewerSide
+      ? `You · ${botSideLabel}`
+      : botSideLabel;
 
   // Draw offer state
-  const myDrawOffer = viewerSide === "wht" ? game.whiteDrawOffer : viewerSide === "blk" ? game.blackDrawOffer : 0;
-  const opponentDrawOffer = viewerSide === "wht" ? game.blackDrawOffer : viewerSide === "blk" ? game.whiteDrawOffer : 0;
+  const myDrawOffer =
+    viewerSide === "wht"
+      ? game.whiteDrawOffer
+      : viewerSide === "blk"
+        ? game.blackDrawOffer
+        : 0;
+  const opponentDrawOffer =
+    viewerSide === "wht"
+      ? game.blackDrawOffer
+      : viewerSide === "blk"
+        ? game.whiteDrawOffer
+        : 0;
 
+  const boardVariant = game.variant.split("-")[0] as
+    | "concentric"
+    | "archimedean";
+  const positionState = (() => {
+    const pieces =
+      boardVariant === "concentric"
+        ? computePieceStateConcentric(moves)
+        : computePieceStateArchimedean(moves);
+    return boardVariant === "concentric"
+      ? gameStatusConcentric(pieces, currentTurn, moves)
+      : gameStatusArchimedean(pieces, currentTurn, moves);
+  })();
   const statusMessage =
-    game.status === "white_win" ? "♔ White Wins!" :
-      game.status === "black_win" ? "♚ Black Wins!" :
-        game.status === "draw" ? "Game Drawn" :
-          game.status === "white_resign" ? "White Resigned — Black Wins" :
-            game.status === "black_resign" ? "Black Resigned — White Wins" :
-              null;
-
-  const boardVariant = game.variant.split("-")[0] as "concentric" | "archimedean";
+    game.status === "white_win"
+      ? positionState === "checkmate"
+        ? "♔ White Wins by Checkmate"
+        : "♔ White Wins!"
+      : game.status === "black_win"
+        ? positionState === "checkmate"
+          ? "♚ Black Wins by Checkmate"
+          : "♚ Black Wins!"
+        : game.status === "draw"
+          ? positionState === "stalemate"
+            ? "Draw by Stalemate"
+            : "Game Drawn"
+          : game.status === "white_resign"
+            ? "White Resigned — Black Wins"
+            : game.status === "black_resign"
+              ? "Black Resigned — White Wins"
+              : null;
+  const tacticalStatusMessage =
+    positionState === "check"
+      ? `${currentTurn === "wht" ? "♔ White" : "♚ Black"} in Check`
+      : positionState === "checkmate"
+        ? "Checkmate"
+        : positionState === "stalemate"
+          ? "Stalemate"
+          : positionState === "draw"
+            ? "Draw"
+            : null;
+  const topBannerMessage = statusMessage ?? tacticalStatusMessage;
+  const desktopBoardReady = boardPx > 0;
 
   const sharedBoardProps = {
-    moves, onMove,
+    moves,
+    onMove,
     onCapturedPiecesChange: setCapturedPieces,
-    viewerSide, currentTurn, isSpectator, canControlBoth,
+    viewerSide,
+    currentTurn,
+    isSpectator,
+    canControlBoth,
+    gameOngoing: game.status === "ongoing",
     variant: boardVariant,
   };
 
@@ -328,40 +476,59 @@ export default function GamePage({
   return (
     <div className="bg-white flex-1 flex flex-col overflow-hidden min-h-0">
       {/* Game over banner */}
-      {statusMessage && (
+      {topBannerMessage && (
         <div className="shrink-0 bg-black text-white text-center py-2.5 font-black uppercase tracking-widest text-sm">
-          {statusMessage}
+          {topBannerMessage}
         </div>
       )}
 
       {/* ── DESKTOP (≥1024px): board + sidebar, full height ── */}
       <div className="hidden lg:flex flex-1 min-h-0 overflow-hidden">
-
         {/* Board column — ResizeObserver measures this to compute board size */}
-        <div ref={setBoardColEl} className="flex-1 min-w-0 min-h-0 flex flex-col items-center justify-center overflow-hidden">
-          {/* Outer border wraps bars + board; inner horizontal dividers separate them */}
-          <div className="border-4 border-black flex flex-col" style={{ width: boardPx + 8 || undefined }}>
-            <div ref={topBarRef}>
-              <PlayerBar
-                isWhiteSide={topIsWhite} timeLeft={topTimer} isActive={topActive}
-                captured={topCaptured} label={topLabel} role={topRole}
-                gameOngoing={game.status === "ongoing"}
-              />
-            </div>
+        <div
+          ref={setBoardColEl}
+          className="flex-1 min-w-0 min-h-0 flex flex-col items-center justify-center overflow-hidden"
+        >
+          {desktopBoardReady ? (
+            // Outer border wraps bars + board; inner horizontal dividers separate them
             <div
-              className="relative border-t-4 border-b-4 border-black overflow-hidden shrink-0"
-              style={{ width: boardPx || "100%", height: boardPx || "auto", aspectRatio: boardPx ? undefined : "1/1" }}
+              className="border-4 border-black flex flex-col"
+              style={{ width: boardPx + 8 }}
             >
-              <Board {...sharedBoardProps} />
+              <div ref={topBarRef}>
+                <PlayerBar
+                  isWhiteSide={topIsWhite}
+                  timeLeft={topTimer}
+                  isActive={topActive}
+                  captured={topCaptured}
+                  label={topLabel}
+                  role={topRole}
+                  gameOngoing={game.status === "ongoing"}
+                />
+              </div>
+              <div
+                className="relative border-t-4 border-b-4 border-black overflow-hidden shrink-0"
+                style={{ width: boardPx, height: boardPx }}
+              >
+                <Board {...sharedBoardProps} />
+              </div>
+              <div ref={botBarRef}>
+                <PlayerBar
+                  isWhiteSide={!topIsWhite}
+                  timeLeft={botTimer}
+                  isActive={botActive}
+                  captured={botCaptured}
+                  label={botLabel}
+                  role={botRole}
+                  gameOngoing={game.status === "ongoing"}
+                />
+              </div>
             </div>
-            <div ref={botBarRef}>
-              <PlayerBar
-                isWhiteSide={!topIsWhite} timeLeft={botTimer} isActive={botActive}
-                captured={botCaptured} label={botLabel} role={botRole}
-                gameOngoing={game.status === "ongoing"}
-              />
+          ) : (
+            <div className="w-full max-w-4xl border-4 border-black bg-white/60 px-4 py-10 text-center text-xs font-bold uppercase tracking-widest text-gray-500">
+              Loading board…
             </div>
-          </div>
+          )}
         </div>
 
         {/* Sidebar */}
@@ -369,7 +536,13 @@ export default function GamePage({
           {/* Turn indicator */}
           <div className="shrink-0 flex items-center justify-between px-4 py-2.5 border-b-2 border-black">
             <span className="text-xs font-bold uppercase tracking-widest text-gray-400">
-              {isSpectator ? "Spectating" : canControlBoth ? "Both Sides" : viewerSide === "wht" ? "Playing White" : "Playing Black"}
+              {isSpectator
+                ? "Spectating"
+                : canControlBoth
+                  ? "Both Sides"
+                  : viewerSide === "wht"
+                    ? "Playing White"
+                    : "Playing Black"}
             </span>
             <span className="text-[11px] font-black uppercase border-2 border-black px-2 py-0.5 bg-black text-white">
               {currentTurn === "wht" ? "♔ White" : "♚ Black"}
@@ -382,7 +555,7 @@ export default function GamePage({
               Move History
             </div>
             <div className="flex-1 overflow-y-auto flex flex-col-reverse">
-              <MoveList groupedMoves={groupedMoves} />
+              <MoveList groupedMoves={groupedMoves} variant={boardVariant} />
             </div>
           </div>
 
@@ -417,19 +590,30 @@ export default function GamePage({
         <div className="border-4 border-black">
           <div>
             <PlayerBar
-              isWhiteSide={topIsWhite} timeLeft={topTimer} isActive={topActive}
-              captured={topCaptured} label={topLabel} role={topRole}
+              isWhiteSide={topIsWhite}
+              timeLeft={topTimer}
+              isActive={topActive}
+              captured={topCaptured}
+              label={topLabel}
+              role={topRole}
               gameOngoing={game.status === "ongoing"}
             />
           </div>
           {/* Board: full width, square via aspect-ratio */}
-          <div className="relative w-full border-t-4 border-b-4 border-black overflow-hidden" style={{ aspectRatio: "1 / 1" }}>
+          <div
+            className="relative w-full border-t-4 border-b-4 border-black overflow-hidden"
+            style={{ aspectRatio: "1 / 1" }}
+          >
             <Board {...sharedBoardProps} />
           </div>
           <div>
             <PlayerBar
-              isWhiteSide={!topIsWhite} timeLeft={botTimer} isActive={botActive}
-              captured={botCaptured} label={botLabel} role={botRole}
+              isWhiteSide={!topIsWhite}
+              timeLeft={botTimer}
+              isActive={botActive}
+              captured={botCaptured}
+              label={botLabel}
+              role={botRole}
               gameOngoing={game.status === "ongoing"}
             />
           </div>
@@ -451,7 +635,7 @@ export default function GamePage({
             Move History
           </div>
           <div className="max-h-64 overflow-y-auto flex flex-col-reverse">
-            <MoveList groupedMoves={groupedMoves} />
+            <MoveList groupedMoves={groupedMoves} variant={boardVariant} />
           </div>
         </div>
         <button
@@ -462,41 +646,78 @@ export default function GamePage({
         </button>
       </div>
 
-      {
-        game.variant.startsWith("concentric")
-          ? <RulesDialog isOpen={showRules} onClose={() => setShowRules(false)} />
-          : <SpiralRulesDialog isOpen={showRules} onClose={() => setShowRules(false)} />
-      }
-    </div >
+      {game.variant.startsWith("concentric") ? (
+        <RulesDialog isOpen={showRules} onClose={() => setShowRules(false)} />
+      ) : (
+        <SpiralRulesDialog
+          isOpen={showRules}
+          onClose={() => setShowRules(false)}
+        />
+      )}
+    </div>
   );
 }
 
 function TimerDisplay({ timeLeft }: { timeLeft: number | null }) {
   if (timeLeft === null) return <span>∞</span>;
   const s = Math.floor(timeLeft / 1000);
-  return <span>{Math.floor(s / 60)}:{String(s % 60).padStart(2, "0")}</span>;
+  return (
+    <span>
+      {Math.floor(s / 60)}:{String(s % 60).padStart(2, "0")}
+    </span>
+  );
 }
 
-function PlayerBar({ isWhiteSide, timeLeft, isActive, captured, label, role, gameOngoing }: {
-  isWhiteSide: boolean; timeLeft: number | null; isActive: boolean;
-  captured: CapturedPiece[]; label: string; role: string; gameOngoing: boolean;
+function PlayerBar({
+  isWhiteSide,
+  timeLeft,
+  isActive,
+  captured,
+  label,
+  role,
+  gameOngoing,
+}: {
+  isWhiteSide: boolean;
+  timeLeft: number | null;
+  isActive: boolean;
+  captured: CapturedPiece[];
+  label: string;
+  role: string;
+  gameOngoing: boolean;
 }) {
   return (
-    <div className={`flex items-center gap-3 px-3 py-2 ${isWhiteSide ? "bg-white text-black" : "bg-black text-white"}`}>
+    <div
+      className={`flex items-center gap-3 px-3 py-2 ${isWhiteSide ? "bg-white text-black" : "bg-black text-white"
+        }`}
+    >
       <div className="shrink-0 min-w-[90px]">
         <div className="font-black uppercase text-sm leading-none">{label}</div>
-        {role && <div className={`text-[10px] uppercase tracking-wider font-bold leading-none mt-0.5 ${isWhiteSide ? "text-gray-400" : "text-gray-400"}`}>{role}</div>}
+        {role && (
+          <div
+            className={`text-[10px] uppercase tracking-wider font-bold leading-none mt-0.5 ${isWhiteSide ? "text-gray-400" : "text-gray-400"
+              }`}
+          >
+            {role}
+          </div>
+        )}
       </div>
       <div className="flex flex-wrap gap-0.5 flex-1 min-w-0">
         {captured.map((p, i) => (
-          <Image key={i} src={`/pieces/${p.type}-${p.color}.png`} alt="" width={24} height={24} className="w-6 h-6" />
+          <Image
+            key={i}
+            src={`/pieces/${p.type}-${p.color}.png`}
+            alt=""
+            width={24}
+            height={24}
+            className="w-6 h-6"
+          />
         ))}
       </div>
       <div className="shrink-0 flex items-center gap-1.5">
         {isActive && gameOngoing && (
           <span className="w-1.5 h-1.5 rounded-full bg-current animate-pulse" />
         )}
-        <span className={`font-mono font-black tabular-nums text-xl border-2 px-2 py-0.5 ${isWhiteSide ? "border-black text-black" : "border-white text-white"}`}>
+        <span className={`flex items-center justify-center text-center font-mono font-black tabular-nums text-xl border-2 px-2 py-0.5 ${isWhiteSide ? "border-black text-black" : "border-white text-white"}`}>
           <TimerDisplay timeLeft={timeLeft} />
         </span>
       </div>
@@ -504,19 +725,40 @@ function PlayerBar({ isWhiteSide, timeLeft, isActive, captured, label, role, gam
   );
 }
 
-function MoveList({ groupedMoves }: {
-  groupedMoves: [string, { w?: { piece: PieceType; fromSquare: string; toSquare: string }; b?: { piece: PieceType; fromSquare: string; toSquare: string } }][];
+function MoveList({
+  groupedMoves,
+  variant,
+}: {
+  groupedMoves: [
+    string,
+    {
+      w?: { piece: PieceType; fromSquare: string; toSquare: string };
+      b?: { piece: PieceType; fromSquare: string; toSquare: string };
+    },
+  ][];
+  variant: "concentric" | "archimedean";
 }) {
   return (
     <>
       {groupedMoves.map(([turn, move]) => (
-        <div key={turn} className="grid grid-cols-[28px_1fr_1fr] items-center px-3 py-1 border-b border-gray-100 last:border-0 hover:bg-gray-50">
+        <div
+          key={turn}
+          className="grid grid-cols-[28px_1fr_1fr] items-center px-3 py-1 border-b border-gray-100 last:border-0 hover:bg-gray-50"
+        >
           <span className="font-bold text-gray-400">{turn}.</span>
           <span className="truncate">
-            {move.w && `${pieceLabel(move.w.piece)} ${toNotation(move.w.fromSquare)}-${toNotation(move.w.toSquare)}`}
+            {move.w &&
+              `${pieceLabel(move.w.piece)} ${toNotation(
+                move.w.fromSquare,
+                variant,
+              )}-${toNotation(move.w.toSquare, variant)}`}
           </span>
           <span className="truncate">
-            {move.b && `${pieceLabel(move.b.piece)} ${toNotation(move.b.fromSquare)}-${toNotation(move.b.toSquare)}`}
+            {move.b &&
+              `${pieceLabel(move.b.piece)} ${toNotation(
+                move.b.fromSquare,
+                variant,
+              )}-${toNotation(move.b.toSquare, variant)}`}
           </span>
         </div>
       ))}
@@ -525,17 +767,11 @@ function MoveList({ groupedMoves }: {
 }
 
 function ActionButtons({ onSend, drawOffered }: {
-  onSend: (type: "undo" | "draw" | "resign") => void;
+  onSend: (type: "draw" | "resign") => void;
   drawOffered: boolean;
 }) {
   return (
     <div className="flex gap-2">
-      <button
-        onClick={() => onSend("undo")}
-        className="flex-1 py-2 font-bold uppercase text-xs bg-white border-4 border-black hover:bg-black hover:text-white transition-colors shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-none"
-      >
-        Undo
-      </button>
       {drawOffered ? (
         <div className="flex-1 py-2 font-bold uppercase text-xs text-center border-4 border-black bg-gray-100 text-gray-500">
           Draw Offered
@@ -558,10 +794,16 @@ function ActionButtons({ onSend, drawOffered }: {
   );
 }
 
-function DrawOfferPrompt({ onSend }: { onSend: (type: "draw" | "draw_reject") => void }) {
+function DrawOfferPrompt({
+  onSend,
+}: {
+  onSend: (type: "draw" | "draw_reject") => void;
+}) {
   return (
     <div className="flex flex-col gap-2">
-      <div className="text-xs font-bold uppercase tracking-wide text-center">Opponent offers a draw</div>
+      <div className="text-xs font-bold uppercase tracking-wide text-center">
+        Opponent offers a draw
+      </div>
       <div className="flex gap-2">
         <button
           onClick={() => onSend("draw")}

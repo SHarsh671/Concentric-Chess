@@ -31,7 +31,7 @@ export default function Piece({
 
   return (
     <div
-      className={`absolute cursor-pointer transition-all duration-200 size-piece select-none ${variant === "concentric" ? position : position.concat("a")}`}
+      className={`absolute cursor-pointer size-piece select-none ${variant === "concentric" ? position : position.concat("a")}`}
       style={{
         // left: `${scaledX}px`,
         // top: `${scaledY}px`,

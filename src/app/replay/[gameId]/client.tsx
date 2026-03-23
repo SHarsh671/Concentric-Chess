@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -13,8 +13,10 @@ import {
   ArrowLeft,
 } from "lucide-react";
 import Link from "next/link";
+import Board, { CapturedPiece } from "@/components/piece/board";
+import Image from "next/image";
+import { startingTime } from "shared/rules";
 
-// Type based on your database schema
 interface Move {
   id: string;
   gameId: string;
@@ -39,6 +41,8 @@ interface Game {
   whiteDisconnectedAt: string | null;
   blackDisconnectedAt: string | null;
   deletedAt: string | null;
+  whiteTimeLeft: number | null;
+  blackTimeLeft: number | null;
 }
 
 interface GameReplayClientProps {
@@ -48,17 +52,89 @@ interface GameReplayClientProps {
   blackUsername: string;
 }
 
+function parseTimestamp(value: string | null | undefined): number | null {
+  if (!value) return null;
+  const ts = Date.parse(value);
+  return Number.isNaN(ts) ? null : ts;
+}
+
 export default function GameReplayClient({
   game,
   moves,
   whiteUsername,
   blackUsername,
 }: GameReplayClientProps) {
-  const [currentMoveIndex, setCurrentMoveIndex] = useState(-1); // -1 = starting position
+  const [currentMoveIndex, setCurrentMoveIndex] = useState(-1);
   const [isAutoPlaying, setIsAutoPlaying] = useState(false);
-  const [autoPlaySpeed, setAutoPlaySpeed] = useState(2000); // 2 seconds per move
+  const [autoPlaySpeed, setAutoPlaySpeed] = useState(2000);
+  const [capturedPieces, setCapturedPieces] = useState<CapturedPiece[]>([]);
 
-  // Auto-play functionality
+  const boardVariant = game.variant.split("-")[0] as "concentric" | "archimedean";
+  const baseClock = useMemo(() => startingTime(game.variant as never), [game.variant]);
+
+  const replayClocks = useMemo(() => {
+    const initial: [number | null, number | null] = [baseClock, baseClock];
+    if (baseClock === null) {
+      return {
+        initial,
+        snapshots: moves.map(() => [null, null] as [number | null, number | null]),
+      };
+    }
+
+    let whiteTime = baseClock;
+    let blackTime = baseClock;
+    let previousTs =
+      parseTimestamp(game.createdAt) ?? parseTimestamp(moves[0]?.createdAt) ?? Date.now();
+
+    const snapshots: [number | null, number | null][] = [];
+
+    for (const move of moves) {
+      const moveTs = parseTimestamp(move.createdAt) ?? previousTs;
+      const elapsed = Math.max(0, moveTs - previousTs);
+      if (move.moveNumber % 2 === 1) {
+        whiteTime = Math.max(0, whiteTime - elapsed);
+      } else {
+        blackTime = Math.max(0, blackTime - elapsed);
+      }
+      snapshots.push([whiteTime, blackTime]);
+      previousTs = moveTs;
+    }
+
+    if (
+      snapshots.length > 0 &&
+      typeof game.whiteTimeLeft === "number" &&
+      typeof game.blackTimeLeft === "number"
+    ) {
+      snapshots[snapshots.length - 1] = [game.whiteTimeLeft, game.blackTimeLeft];
+    }
+
+    return { initial, snapshots };
+  }, [baseClock, game.createdAt, game.whiteTimeLeft, game.blackTimeLeft, moves]);
+
+  const movesUpToCurrent =
+    currentMoveIndex === -1 ? [] : moves.slice(0, currentMoveIndex + 1);
+  const replayTurn = movesUpToCurrent.length % 2 === 0 ? "wht" : "blk";
+
+  const whiteCaptured = capturedPieces.filter((p) => p.color === "wht");
+  const blackCaptured = capturedPieces.filter((p) => p.color === "blk");
+
+  const [whiteClock, blackClock] =
+    currentMoveIndex === -1
+      ? replayClocks.initial
+      : replayClocks.snapshots[currentMoveIndex] ?? replayClocks.initial;
+
+  const topLabel = blackUsername;
+  const botLabel = whiteUsername;
+  const topRole = "♚ Black";
+  const botRole = "♔ White";
+  const topCaptured = whiteCaptured;
+  const botCaptured = blackCaptured;
+  const topTimer = blackClock;
+  const botTimer = whiteClock;
+
+  const progressPercent =
+    moves.length === 0 ? 0 : Math.round(((currentMoveIndex + 1) / moves.length) * 100);
+
   useEffect(() => {
     if (!isAutoPlaying || currentMoveIndex >= moves.length - 1) {
       setIsAutoPlaying(false);
@@ -72,7 +148,6 @@ export default function GameReplayClient({
     return () => clearTimeout(timer);
   }, [isAutoPlaying, currentMoveIndex, moves.length, autoPlaySpeed]);
 
-  // Navigation handlers
   const handleFirst = () => {
     setCurrentMoveIndex(-1);
     setIsAutoPlaying(false);
@@ -110,263 +185,356 @@ export default function GameReplayClient({
     }
   };
 
-  const getCurrentPlayer = () => {
-    if (currentMoveIndex === -1) return "White to move";
+  const getMoveActor = () => {
+    if (currentMoveIndex === -1) return "No move yet";
     const moveNum = moves[currentMoveIndex].moveNumber;
-    return moveNum % 2 === 1 ? "White" : "Black";
+    return moveNum % 2 === 1 ? "White moved" : "Black moved";
   };
 
+  const renderControls = () => (
+    <Card className="bg-white border-4 border-black">
+      <CardHeader className="border-b-4 border-black p-4 sm:p-6">
+        <CardTitle className="text-xl sm:text-2xl font-bold uppercase">Controls</CardTitle>
+      </CardHeader>
+      <CardContent className="p-4 sm:p-6 space-y-5">
+        <div className="space-y-2">
+          <div className="flex justify-between text-xs sm:text-sm font-bold">
+            <span>
+              MOVE {Math.max(0, currentMoveIndex + 1)} / {moves.length}
+            </span>
+            <span>{progressPercent}%</span>
+          </div>
+          <div className="w-full h-3 sm:h-4 bg-gray-200 border-4 border-black">
+            <div
+              className="h-full bg-black transition-all duration-300"
+              style={{ width: `${progressPercent}%` }}
+            />
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          <label className="text-xs sm:text-sm font-bold uppercase">Playback Speed</label>
+          <div className="grid grid-cols-2 sm:flex gap-2">
+            {[
+              { label: "0.5x", value: 4000 },
+              { label: "1x", value: 2000 },
+              { label: "2x", value: 1000 },
+              { label: "4x", value: 500 },
+            ].map(({ label, value }) => (
+              <Button
+                key={label}
+                onClick={() => setAutoPlaySpeed(value)}
+                variant={autoPlaySpeed === value ? "default" : "outline"}
+                className={
+                  autoPlaySpeed === value
+                    ? "bg-black text-white border-2 border-black"
+                    : "bg-white text-black border-2 border-black hover:bg-gray-100"
+                }
+                size="sm"
+              >
+                {label}
+              </Button>
+            ))}
+          </div>
+        </div>
+
+        <div className="flex items-center justify-center gap-2 sm:gap-3">
+          <Button
+            onClick={handleFirst}
+            disabled={currentMoveIndex === -1}
+            variant="outline"
+            size="icon"
+            className="border-4 border-black hover:bg-gray-100 disabled:opacity-30"
+          >
+            <SkipBack className="h-4 w-4" />
+          </Button>
+
+          <Button
+            onClick={handlePrevious}
+            disabled={currentMoveIndex === -1}
+            variant="outline"
+            size="icon"
+            className="border-4 border-black hover:bg-gray-100 disabled:opacity-30"
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+
+          <Button
+            onClick={toggleAutoPlay}
+            className="bg-black text-white hover:bg-gray-800 border-4 border-black px-4 sm:px-8 font-bold"
+          >
+            {isAutoPlaying ? (
+              <>
+                <Pause className="h-4 w-4 mr-2" />
+                PAUSE
+              </>
+            ) : (
+              <>
+                <Play className="h-4 w-4 mr-2" />
+                PLAY
+              </>
+            )}
+          </Button>
+
+          <Button
+            onClick={handleNext}
+            disabled={currentMoveIndex >= moves.length - 1}
+            variant="outline"
+            size="icon"
+            className="border-4 border-black hover:bg-gray-100 disabled:opacity-30"
+          >
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+
+          <Button
+            onClick={handleLast}
+            disabled={currentMoveIndex >= moves.length - 1}
+            variant="outline"
+            size="icon"
+            className="border-4 border-black hover:bg-gray-100 disabled:opacity-30"
+          >
+            <SkipForward className="h-4 w-4" />
+          </Button>
+        </div>
+
+        {currentMoveIndex >= 0 && (
+          <div className="p-3 sm:p-4 bg-gray-50 border-4 border-black">
+            <div className="text-xs sm:text-sm font-bold text-gray-600 mb-1 uppercase">
+              Current Move:
+            </div>
+            <div className="text-lg sm:text-2xl font-bold break-words">
+              {moves[currentMoveIndex].moveNumber}. {moves[currentMoveIndex].fromSquare} →{" "}
+              {moves[currentMoveIndex].toSquare}
+              {moves[currentMoveIndex].promotion && ` =${moves[currentMoveIndex].promotion}`}
+            </div>
+            <div className="text-xs sm:text-sm text-gray-600 mt-2">{getMoveActor()}</div>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+
+  const renderMoveList = () => (
+    <Card className="bg-white border-4 border-black">
+      <CardHeader className="border-b-4 border-black p-4 sm:p-6">
+        <CardTitle className="text-lg sm:text-xl font-bold uppercase">Move History</CardTitle>
+      </CardHeader>
+      <CardContent className="p-0">
+        <div className="max-h-[24rem] sm:max-h-[30rem] overflow-y-auto">
+          <div className="p-2 space-y-1">
+            <button
+              onClick={() => handleJumpToMove(-1)}
+              className={`w-full text-left p-2.5 sm:p-3 border-2 font-bold transition-colors ${
+                currentMoveIndex === -1
+                  ? "bg-black text-white border-black"
+                  : "bg-white border-gray-300 hover:bg-gray-100"
+              }`}
+            >
+              Starting Position
+            </button>
+
+            {moves.map((move, index) => (
+              <button
+                key={move.id}
+                onClick={() => handleJumpToMove(index)}
+                className={`w-full text-left p-2.5 sm:p-3 border-2 transition-colors ${
+                  currentMoveIndex === index
+                    ? "bg-black text-white border-black"
+                    : "bg-white border-gray-300 hover:bg-gray-100"
+                }`}
+              >
+                <div className="flex items-center justify-between gap-2 text-sm sm:text-base">
+                  <span className="font-bold shrink-0">{move.moveNumber}.</span>
+                  <span className="flex-1 min-w-0 truncate">
+                    {move.fromSquare} → {move.toSquare}
+                    {move.promotion && ` =${move.promotion}`}
+                  </span>
+                  <span className="text-xs sm:text-sm opacity-70 shrink-0">
+                    {move.moveNumber % 2 === 1 ? "White" : "Black"}
+                  </span>
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+
   return (
-    <div className="min-h-screen bg-gray-50 p-4">
-      <div className="container mx-auto max-w-7xl">
-        {/* Header */}
-        <div className="mb-6">
+    <div className="min-h-screen bg-gray-50 px-3 py-4 sm:px-4 sm:py-5">
+      <div className="mx-auto max-w-[1500px]">
+        <div className="mb-4 sm:mb-6">
           <Link
             href="/history"
-            className="inline-flex items-center gap-2 text-sm font-medium hover:underline mb-4"
+            className="inline-flex items-center gap-2 text-sm font-medium hover:underline mb-3"
           >
             <ArrowLeft className="h-4 w-4" />
             Back to History
           </Link>
-          <div className="bg-white border-4 border-black p-6">
-            <h1 className="text-3xl font-bold text-black mb-2">GAME REPLAY</h1>
-            <div className="flex items-center justify-between">
-              <div className="text-lg">
+
+          <div className="bg-white border-4 border-black p-4 sm:p-6">
+            <h1 className="text-2xl sm:text-3xl font-bold text-black mb-2">GAME REPLAY</h1>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <div className="text-base sm:text-lg">
                 <span className="font-bold">{whiteUsername}</span>
                 <span className="mx-2">vs</span>
                 <span className="font-bold">{blackUsername}</span>
               </div>
-              <div className="text-sm font-medium px-4 py-2 bg-black text-white border-2 border-black uppercase">
+              <div className="text-xs sm:text-sm font-medium px-3 py-1.5 bg-black text-white border-2 border-black uppercase w-fit">
                 {game.status}
               </div>
             </div>
           </div>
         </div>
 
-        <div className="grid lg:grid-cols-2 gap-6">
-          {/* Left side: Board would go here */}
-          <div>
-            <Card className="bg-white border-4 border-black">
-              <CardHeader className="border-b-4 border-black">
-                <CardTitle className="text-2xl font-bold uppercase">
-                  Board View
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-8">
-                <div className="aspect-square bg-gray-100 border-4 border-black flex items-center justify-center relative">
-                  {/* Your chess board component would go here */}
-                  {/* Pass currentMoveIndex to determine which position to show */}
-                  <div className="text-center">
-                    <p className="text-gray-500 text-lg mb-4">
-                      Your circular chess board
-                      <br />
-                      would render here
-                    </p>
-                    {currentMoveIndex >= 0 && (
-                      <div className="mt-4 p-4 bg-white border-2 border-black inline-block">
-                        <p className="font-bold">
-                          Move {currentMoveIndex + 1}: {moves[currentMoveIndex].fromSquare} →{" "}
-                          {moves[currentMoveIndex].toSquare}
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                </div>
-                <div className="mt-4 text-center">
-                  <p className="text-sm text-gray-600">
-                    {currentMoveIndex === -1
-                      ? "Starting Position"
-                      : `After move ${currentMoveIndex + 1} of ${moves.length}`}
-                  </p>
-                  <p className="font-bold mt-2">{getCurrentPlayer()}</p>
-                </div>
-              </CardContent>
-            </Card>
+        <div className="hidden lg:grid lg:grid-cols-[minmax(0,1fr)_360px] gap-5 xl:gap-6 items-start">
+          <div className="min-w-0">
+            <div className="border-4 border-black bg-white max-w-[940px] mx-auto">
+              <ReplayPlayerBar
+                isWhiteSide={false}
+                label={topLabel}
+                role={topRole}
+                timeLeft={topTimer}
+                captured={topCaptured}
+              />
+              <div className="relative w-full aspect-square border-t-4 border-b-4 border-black overflow-hidden">
+                <Board
+                  moves={movesUpToCurrent}
+                  onMove={() => {}}
+                  onCapturedPiecesChange={setCapturedPieces}
+                  viewerSide={undefined}
+                  currentTurn={replayTurn}
+                  isSpectator
+                  canControlBoth={false}
+                  gameOngoing={false}
+                  isReplayMode
+                  variant={boardVariant}
+                />
+              </div>
+              <ReplayPlayerBar
+                isWhiteSide
+                label={botLabel}
+                role={botRole}
+                timeLeft={botTimer}
+                captured={botCaptured}
+              />
+            </div>
+
+            <div className="mt-3 text-center">
+              <p className="text-sm text-gray-600">
+                {currentMoveIndex === -1
+                  ? "Starting Position"
+                  : `After move ${currentMoveIndex + 1} of ${moves.length}`}
+              </p>
+            </div>
           </div>
 
-          {/* Right side: Replay controls */}
-          <div className="space-y-6">
-            {/* Control Panel */}
-            <Card className="bg-white border-4 border-black">
-              <CardHeader className="border-b-4 border-black">
-                <CardTitle className="text-2xl font-bold uppercase">Controls</CardTitle>
-              </CardHeader>
-              <CardContent className="p-6 space-y-6">
-                {/* Progress Bar */}
-                <div className="space-y-2">
-                  <div className="flex justify-between text-sm font-bold">
-                    <span>
-                      MOVE {currentMoveIndex + 1} / {moves.length}
-                    </span>
-                    <span>{Math.round(((currentMoveIndex + 1) / moves.length) * 100)}%</span>
-                  </div>
-                  <div className="w-full h-4 bg-gray-200 border-4 border-black">
-                    <div
-                      className="h-full bg-black transition-all duration-300"
-                      style={{
-                        width: `${((currentMoveIndex + 1) / moves.length) * 100}%`,
-                      }}
-                    />
-                  </div>
-                </div>
+          <div className="space-y-4">{renderControls()}{renderMoveList()}</div>
+        </div>
 
-                {/* Playback Speed */}
-                <div className="space-y-2">
-                  <label className="text-sm font-bold uppercase">Playback Speed</label>
-                  <div className="flex gap-2">
-                    {[
-                      { label: "0.5x", value: 4000 },
-                      { label: "1x", value: 2000 },
-                      { label: "2x", value: 1000 },
-                      { label: "4x", value: 500 },
-                    ].map(({ label, value }) => (
-                      <Button
-                        key={label}
-                        onClick={() => setAutoPlaySpeed(value)}
-                        variant={autoPlaySpeed === value ? "default" : "outline"}
-                        className={
-                          autoPlaySpeed === value
-                            ? "bg-black text-white border-2 border-black"
-                            : "bg-white text-black border-2 border-black hover:bg-gray-100"
-                        }
-                        size="sm"
-                      >
-                        {label}
-                      </Button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Control Buttons */}
-                <div className="flex items-center justify-center gap-2">
-                  <Button
-                    onClick={handleFirst}
-                    disabled={currentMoveIndex === -1}
-                    variant="outline"
-                    size="icon"
-                    className="border-4 border-black hover:bg-gray-100 disabled:opacity-30"
-                  >
-                    <SkipBack className="h-4 w-4" />
-                  </Button>
-
-                  <Button
-                    onClick={handlePrevious}
-                    disabled={currentMoveIndex === -1}
-                    variant="outline"
-                    size="icon"
-                    className="border-4 border-black hover:bg-gray-100 disabled:opacity-30"
-                  >
-                    <ChevronLeft className="h-4 w-4" />
-                  </Button>
-
-                  <Button
-                    onClick={toggleAutoPlay}
-                    className="bg-black text-white hover:bg-gray-800 border-4 border-black px-8 font-bold"
-                  >
-                    {isAutoPlaying ? (
-                      <>
-                        <Pause className="h-4 w-4 mr-2" />
-                        PAUSE
-                      </>
-                    ) : (
-                      <>
-                        <Play className="h-4 w-4 mr-2" />
-                        PLAY
-                      </>
-                    )}
-                  </Button>
-
-                  <Button
-                    onClick={handleNext}
-                    disabled={currentMoveIndex >= moves.length - 1}
-                    variant="outline"
-                    size="icon"
-                    className="border-4 border-black hover:bg-gray-100 disabled:opacity-30"
-                  >
-                    <ChevronRight className="h-4 w-4" />
-                  </Button>
-
-                  <Button
-                    onClick={handleLast}
-                    disabled={currentMoveIndex >= moves.length - 1}
-                    variant="outline"
-                    size="icon"
-                    className="border-4 border-black hover:bg-gray-100 disabled:opacity-30"
-                  >
-                    <SkipForward className="h-4 w-4" />
-                  </Button>
-                </div>
-
-                {/* Current Move Display */}
-                {currentMoveIndex >= 0 && (
-                  <div className="p-4 bg-gray-50 border-4 border-black">
-                    <div className="text-sm font-bold text-gray-600 mb-1 uppercase">
-                      Current Move:
-                    </div>
-                    <div className="text-2xl font-bold">
-                      {moves[currentMoveIndex].moveNumber}.{" "}
-                      {moves[currentMoveIndex].fromSquare} → {moves[currentMoveIndex].toSquare}
-                      {moves[currentMoveIndex].promotion &&
-                        ` =${moves[currentMoveIndex].promotion}`}
-                    </div>
-                    <div className="text-sm text-gray-600 mt-2">
-                      Player: {getCurrentPlayer()}
-                    </div>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-
-            {/* Move List */}
-            <Card className="bg-white border-4 border-black">
-              <CardHeader className="border-b-4 border-black">
-                <CardTitle className="text-xl font-bold uppercase">Move History</CardTitle>
-              </CardHeader>
-              <CardContent className="p-0">
-                <div className="max-h-96 overflow-y-auto">
-                  <div className="p-2 space-y-1">
-                    {/* Starting position */}
-                    <button
-                      onClick={() => handleJumpToMove(-1)}
-                      className={`w-full text-left p-3 border-2 font-bold transition-colors ${
-                        currentMoveIndex === -1
-                          ? "bg-black text-white border-black"
-                          : "bg-white border-gray-300 hover:bg-gray-100"
-                      }`}
-                    >
-                      Starting Position
-                    </button>
-
-                    {/* All moves */}
-                    {moves.map((move, index) => (
-                      <button
-                        key={move.id}
-                        onClick={() => handleJumpToMove(index)}
-                        className={`w-full text-left p-3 border-2 transition-colors ${
-                          currentMoveIndex === index
-                            ? "bg-black text-white border-black"
-                            : "bg-white border-gray-300 hover:bg-gray-100"
-                        }`}
-                      >
-                        <div className="flex items-center justify-between">
-                          <span className="font-bold">{move.moveNumber}.</span>
-                          <span className="flex-1 ml-3">
-                            {move.fromSquare} → {move.toSquare}
-                            {move.promotion && ` =${move.promotion}`}
-                          </span>
-                          <span className="text-sm opacity-70">
-                            {move.moveNumber % 2 === 1 ? "White" : "Black"}
-                          </span>
-                        </div>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+        <div className="lg:hidden space-y-4">
+          <div className="border-4 border-black bg-white">
+            <ReplayPlayerBar
+              isWhiteSide={false}
+              label={topLabel}
+              role={topRole}
+              timeLeft={topTimer}
+              captured={topCaptured}
+            />
+            <div className="relative w-full aspect-square border-t-4 border-b-4 border-black overflow-hidden">
+              <Board
+                moves={movesUpToCurrent}
+                onMove={() => {}}
+                onCapturedPiecesChange={setCapturedPieces}
+                viewerSide={undefined}
+                currentTurn={replayTurn}
+                isSpectator
+                canControlBoth={false}
+                gameOngoing={false}
+                isReplayMode
+                variant={boardVariant}
+              />
+            </div>
+            <ReplayPlayerBar
+              isWhiteSide
+              label={botLabel}
+              role={botRole}
+              timeLeft={botTimer}
+              captured={botCaptured}
+            />
           </div>
+
+          <div className="text-center text-sm text-gray-600">
+            {currentMoveIndex === -1
+              ? "Starting Position"
+              : `After move ${currentMoveIndex + 1} of ${moves.length}`}
+          </div>
+
+          {renderControls()}
+          {renderMoveList()}
         </div>
       </div>
+    </div>
+  );
+}
+
+function TimerDisplay({ timeLeft }: { timeLeft: number | null }) {
+  if (timeLeft === null) return <span>∞</span>;
+  const s = Math.floor(timeLeft / 1000);
+  return (
+    <span>
+      {Math.floor(s / 60)}:{String(s % 60).padStart(2, "0")}
+    </span>
+  );
+}
+
+function ReplayPlayerBar({
+  isWhiteSide,
+  label,
+  role,
+  timeLeft,
+  captured,
+}: {
+  isWhiteSide: boolean;
+  label: string;
+  role: string;
+  timeLeft: number | null;
+  captured: CapturedPiece[];
+}) {
+  return (
+    <div
+      className={`flex items-center gap-2 sm:gap-3 px-2.5 sm:px-3 py-2 ${
+        isWhiteSide ? "bg-white text-black" : "bg-black text-white"
+      }`}
+    >
+      <div className="shrink-0 min-w-[78px] sm:min-w-[90px]">
+        <div className="font-black uppercase text-xs sm:text-sm leading-none truncate">{label}</div>
+        <div className="text-[10px] uppercase tracking-wider font-bold leading-none mt-0.5 text-gray-400">
+          {role}
+        </div>
+      </div>
+
+      <div className="flex flex-wrap gap-0.5 flex-1 min-w-0">
+        {captured.map((p, i) => (
+          <Image
+            key={`${p.type}-${p.color}-${i}`}
+            src={`/pieces/${p.type}-${p.color}.png`}
+            alt=""
+            width={24}
+            height={24}
+            className="w-5 h-5 sm:w-6 sm:h-6"
+          />
+        ))}
+      </div>
+
+      <span
+        className={`shrink-0 flex items-center justify-center text-center font-mono font-black tabular-nums text-base sm:text-xl border-2 px-2 py-0.5 ${
+          isWhiteSide ? "border-black text-black" : "border-white text-white"
+        }`}
+      >
+        <TimerDisplay timeLeft={timeLeft} />
+      </span>
     </div>
   );
 }
