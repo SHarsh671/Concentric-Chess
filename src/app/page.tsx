@@ -48,7 +48,7 @@ export default function Home() {
               <div className="flex items-center justify-center gap-4 text-6xl lg:text-8xl">
                 <span className="opacity-20">♜</span>
                 <h1 className="font-bold leading-none text-black tracking-wide">
-                  CIRCULAR
+                  CONCENTRIC & ARCHIMEDEAN
                 </h1>
                 <span className="opacity-20">♞</span>
               </div>
@@ -292,19 +292,12 @@ export default function Home() {
             <Button
               asChild
               size="lg"
-              className="bg-black text-white text-xl px-12 py-8 border-4 border-white shadow-[8px_8px_0px_0px_rgba(255,255,255,1)] font-bold"
+              className="bg-black text-white text-xl px-12 py-8 border-4 border-whitev shadow-[8px_8px_0px_0px_rgba(255,255,255,1)] font-bold"
             >
               <Link href="/signup">SIGN UP FREE</Link>
             </Button>
 
-            <Button
-              asChild
-              size="lg"
-              variant="outline"
-              className="bg-black text-white border-4 border-white text-xl px-12 py-8 shadow-[8px_8px_0px_0px_rgba(255,255,255,1)] font-bold"
-            >
-              <Link href="/play">PLAY AS GUEST</Link>
-            </Button>
+          
           </div>
         </div>
       </section>
