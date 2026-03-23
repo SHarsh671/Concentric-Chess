@@ -48,7 +48,7 @@ export default function Home() {
               <div className="flex items-center justify-center gap-4 text-6xl lg:text-8xl">
                 <span className="opacity-20">♜</span>
                 <h1 className="font-bold leading-none text-black tracking-wide">
-                  CIRCULAR
+                  CONCENTRIC & ARCHIMEDEAN
                 </h1>
                 <span className="opacity-20">♞</span>
               </div>
@@ -186,7 +186,7 @@ export default function Home() {
                     Features unique movement patterns with crescents and half-moons.
                   </p>
                   <Button asChild className="w-full bg-black hover:bg-gray-900 text-white py-6 text-lg border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] font-bold">
-                    <Link href="/play">
+                    <Link href="/play?variant=concentric">
                       PLAY NOW ♔
                     </Link>
                   </Button>
@@ -195,7 +195,7 @@ export default function Home() {
             </Card>
 
             {/* Archimedes Chess */}
-            <Card className="bg-white border-8 border-black overflow-hidden opacity-60">
+            <Card className="bg-white border-8 border-black overflow-hidden hover:shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] transition-all">
               <CardContent className="p-0">
                 <div className="relative h-80 bg-white border-b-8 border-black p-8">
                   <Image
@@ -212,8 +212,10 @@ export default function Home() {
                     Spiral board layout based on the Archimedes spiral.
                     Even more complex strategic possibilities await.
                   </p>
-                  <Button disabled className="w-full bg-gray-300 text-gray-500 py-6 text-lg border-4 border-gray-300 font-bold cursor-not-allowed">
-                    COMING SOON
+                  <Button asChild className="w-full bg-black hover:bg-gray-900 text-white py-6 text-lg border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] font-bold">
+                    <Link href="/play?variant=archimedean">
+                      PLAY NOW ♚
+                    </Link>
                   </Button>
                 </div>
               </CardContent>
@@ -290,19 +292,12 @@ export default function Home() {
             <Button
               asChild
               size="lg"
-              className="bg-white text-black text-xl px-12 py-8 border-4 border-white shadow-[8px_8px_0px_0px_rgba(255,255,255,1)] font-bold"
+              className="bg-black text-white text-xl px-12 py-8 border-4 border-whitev shadow-[8px_8px_0px_0px_rgba(255,255,255,1)] font-bold"
             >
               <Link href="/signup">SIGN UP FREE</Link>
             </Button>
 
-            <Button
-              asChild
-              size="lg"
-              variant="outline"
-              className="bg-black text-white border-4 border-white text-xl px-12 py-8 shadow-[8px_8px_0px_0px_rgba(255,255,255,1)] font-bold"
-            >
-              <Link href="/play">PLAY AS GUEST</Link>
-            </Button>
+          
           </div>
         </div>
       </section>
