@@ -789,26 +789,26 @@ export default function Board({
                 />
               );
             })}
-        {spaces.map((s) => {
-          return (
-            <span
-              key={s.id}
-              className={`size-piece ${s.id}a`}
-              // className={`size-piece ${s.id}`}
-              style={{
-                position: "absolute",
-                fontSize: "10px",
-                transform: "translate(20%, 30%)",
-                fontWeight: "bold",
-                pointerEvents: "none",
-                color:
-                  CONCENTRIC_GRAPH.color[s.id] === "light" ? "#000" : "#fff",
-              }}
-            >
-              {toNotation(s.id, variant)}
-            </span>
-          );
-        })}
+        {/* {spaces.map((s) => { */}
+        {/*   return ( */}
+        {/*     <span */}
+        {/*       key={s.id} */}
+        {/*       className={`size-piece ${s.id}a`} */}
+        {/*       // className={`size-piece ${s.id}`} */}
+        {/*       style={{ */}
+        {/*         position: "absolute", */}
+        {/*         fontSize: "10px", */}
+        {/*         transform: "translate(20%, 30%)", */}
+        {/*         fontWeight: "bold", */}
+        {/*         pointerEvents: "none", */}
+        {/*         color: */}
+        {/*           CONCENTRIC_GRAPH.color[s.id] === "light" ? "#000" : "#fff", */}
+        {/*       }} */}
+        {/*     > */}
+        {/*       {toNotation(s.id, variant)} */}
+        {/*     </span> */}
+        {/*   ); */}
+        {/* })} */}
       </div>
       {pendingPromotion && (
         <div className="absolute inset-x-0 bottom-4 z-50 px-4">
