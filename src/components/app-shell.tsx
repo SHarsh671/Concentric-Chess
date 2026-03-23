@@ -20,8 +20,8 @@ const data = [
   { title: "Play", url: "/play", icon: Gamepad, piece: "♟" },
   { title: "History", url: "/history", icon: History, piece: "♜" },
   { title: "Rules", url: "/rules", icon: Book, piece: "♝" },
-  { title: "Test Board", url: "/test-board", icon: FlaskConical, piece: "♞" },
-  { title: "Test Replay", url: "/test-replay", icon: Film, piece: "♛" },
+  /*{ title: "Test Board", url: "/test-board", icon: FlaskConical, piece: "♞" },
+  { title: "Test Replay", url: "/test-replay", icon: Film, piece: "♛" }, */
 ];
 
 export async function AppShell({
@@ -69,7 +69,7 @@ export async function AppShell({
           </SidebarMenu>
 
           {/* Decorative chess row */}
-          <div className="mx-2 mt-4 border-t-2 border-b-2 border-black py-2 text-center text-xl tracking-widest opacity-10 select-none">
+          <div className="mx-2 mt-4 border-t-2 border-b-2 border-black py-2 text-center text-xl tracking-widest opacity-100 select-none">
             ♜♞♝♛♚♝♞♜
           </div>
 
