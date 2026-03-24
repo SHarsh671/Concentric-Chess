@@ -18,7 +18,7 @@ Queen:
 - Moves as either a bishop or a rook.
 King:
 - Moves across one edge or vertex in any direction.
-- First move may leap two cells in any direction, so long as the intermediary cell is not threatened. (can this be a capture?)
+- First move may leap two cells in any direction, so long as the intermediary cell is not threatened.
 - Cannot move or capture if it would put the king in check.
 Prince:
 - Moves across one edge or vertex in any direction.

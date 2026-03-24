@@ -88,7 +88,7 @@ type BoardState = {
   graph: BoardGraph;
   board: Map<CellId, Piece>;
   captured: Piece[];
-  enPassantTarget?: [CellId, CellId]; // the cell that can be captured en passant, and the cell that the captured pawn is actually on
+  enPassantTarget?: [CellId, CellId, Side]; // the cell that can be captured en passant, and the cell that the captured pawn is actually on
 };
 
 function copyState(state: BoardState): BoardState {
@@ -122,7 +122,8 @@ export function updateStateWithMove(
   if (
     state.enPassantTarget &&
     toId === state.enPassantTarget[0] &&
-    piece.type === "pawn"
+    piece.type === "pawn" &&
+    piece.color !== state.enPassantTarget[2]
   ) {
     // in this case, we need to remove the captured pawn from the board and add it to the captured array
     const capturedPawn = state.board.get(state.enPassantTarget[1]);
@@ -144,7 +145,7 @@ export function updateStateWithMove(
         const paths = state.graph.edgeNext[cellId];
         if (paths && paths[fromId] === toId) {
           // we have a path from -> cellId -> to, so cellId is the en passant target
-          state.enPassantTarget = [cellId, toId];
+          state.enPassantTarget = [cellId, toId, piece.color];
           console.log(
             `Setting en passant target to ${cellId} for pawn at ${fromId} moving to ${toId}`,
           );
@@ -578,7 +579,11 @@ function getPawnMoves(state: BoardState, piece: Piece): CellId[] {
       : // normal captures diagonally over vertices
         state.graph.vertexNbrs[piece.position]) || []
   ).filter((cellId) => {
-    if (state.enPassantTarget && state.enPassantTarget[0] === cellId) {
+    if (
+      state.enPassantTarget &&
+      state.enPassantTarget[0] === cellId &&
+      state.enPassantTarget[2] !== piece.color
+    ) {
       // in this case we have an en passant capture
       return true;
     }
