@@ -15,6 +15,7 @@ import { Move } from "./schema";
 type InternalPiece = RulesPiece & {
   _id: string;
   bishopColorChangeUsed: boolean;
+  hasMoved: boolean;
 };
 
 function pieceAt<T extends { position: CellId }>(
@@ -145,6 +146,7 @@ function initialInternalPieces(): InternalPiece[] {
     ...p,
     _id: `${p.color}:${p.type}:${idx}`,
     bishopColorChangeUsed: false,
+    hasMoved: false,
   }));
 }
 
@@ -177,6 +179,18 @@ function forwardVertexTargets(from: CellId, color: Side): CellId[] {
   );
 }
 
+function isHomeHalfBerolinaCell(cell: CellId, color: Side): boolean {
+  const { r } = parseCell(cell);
+  if (!(hasTag(cell, "crescent") || hasTag(cell, "halfMoon"))) return false;
+  return color === "wht" ? r <= 6 : r >= 7;
+}
+
+function isAwayHalfBerolinaCell(cell: CellId, color: Side): boolean {
+  const { r } = parseCell(cell);
+  if (!(hasTag(cell, "crescent") || hasTag(cell, "halfMoon"))) return false;
+  return color === "wht" ? r >= 7 : r <= 6;
+}
+
 function pawnForwardTargets(from: CellId, color: Side): CellId[] {
   const berolina = hasTag(from, "crescent") || hasTag(from, "halfMoon");
   return berolina ? forwardVertexTargets(from, color) : forwardEdgeTargets(from, color);
@@ -184,7 +198,13 @@ function pawnForwardTargets(from: CellId, color: Side): CellId[] {
 
 function pawnAttackTargets(from: CellId, color: Side): CellId[] {
   const berolina = hasTag(from, "crescent") || hasTag(from, "halfMoon");
-  return berolina ? forwardEdgeTargets(from, color) : forwardVertexTargets(from, color);
+
+  if (!berolina) return forwardVertexTargets(from, color);
+  if (isHomeHalfBerolinaCell(from, color)) return forwardEdgeTargets(from, color);
+  if (isAwayHalfBerolinaCell(from, color)) {
+    return (CONCENTRIC_GRAPH.edgeNbrs[from] ?? []).filter((to) => hasTag(to, "twin"));
+  }
+  return [];
 }
 
 function promotionRowFor(color: Side): number {
@@ -264,6 +284,7 @@ function computeInternalState(moves: Move[]): InternalPiece[] {
     }
 
     mover.position = to;
+    mover.hasMoved = true;
 
     const promo = normalizePromotionForApply(mover, to, mv.promotion);
     if (promo) mover.type = promo;
@@ -273,7 +294,7 @@ function computeInternalState(moves: Move[]): InternalPiece[] {
 }
 
 function internalToRulesPieces(pieces: InternalPiece[]): RulesPiece[] {
-  return pieces.map(({ _id, bishopColorChangeUsed, ...rest }) => ({ ...rest }));
+  return pieces.map(({ _id, bishopColorChangeUsed, hasMoved, ...rest }) => ({ ...rest }));
 }
 
 function currentInternalPiece(piece: RulesPiece, moves: Move[]): InternalPiece | undefined {
@@ -284,6 +305,11 @@ function currentInternalPiece(piece: RulesPiece, moves: Move[]): InternalPiece |
       p.color === piece.color &&
       p.type === piece.type,
   );
+}
+
+function pieceHasMovedBefore(piece: RulesPiece, moves: Move[]): boolean {
+  const internal = currentInternalPiece(piece, moves);
+  return internal?.hasMoved ?? false;
 }
 
 /* -------------------------------------------------------
@@ -324,6 +350,28 @@ function rayFrom(
   }
 
   return out;
+}
+
+function sameDirectionSecondVertex(
+  graph: {
+    vertexNext: Record<CellId, Partial<Record<CellId, CellId | null>>>;
+  },
+  from: CellId,
+  mid: CellId,
+  candidateSeconds: CellId[],
+): CellId[] {
+  const out = new Set<CellId>();
+
+  const direct = graph.vertexNext[mid]?.[from] ?? null;
+  if (direct && candidateSeconds.includes(direct)) out.add(direct);
+
+  for (const to of candidateSeconds) {
+    if (to === from) continue;
+    const cont = graph.vertexNext[to]?.[mid] ?? null;
+    if (cont && cont !== from) out.add(to);
+  }
+
+  return Array.from(out);
 }
 
 /* -------------------------------------------------------
@@ -375,6 +423,20 @@ function kingLeapCandidates(
     if (!occ || isEnemy(occ, color)) out.push({ to: second, via: first });
   }
 
+  for (const mid of CONCENTRIC_GRAPH.vertexNbrs[from] ?? []) {
+    const candidates = sameDirectionSecondVertex(
+      CONCENTRIC_GRAPH,
+      from,
+      mid,
+      (CONCENTRIC_GRAPH.vertexNbrs[mid] ?? []).filter((to) => to !== from),
+    );
+
+    for (const to of candidates) {
+      const occ = pieceAt(pieces, to);
+      if (!occ || isEnemy(occ, color)) out.push({ to, via: mid });
+    }
+  }
+
   for (const e1 of CONCENTRIC_GRAPH.edgeNbrs[from] ?? []) {
     for (const v2 of CONCENTRIC_GRAPH.vertexNbrs[e1] ?? []) {
       if (v2 === from) continue;
@@ -395,14 +457,14 @@ function kingLeapCandidates(
 }
 
 function kingMovesRaw(
+  piece: RulesPiece,
   pieces: RulesPiece[],
-  from: CellId,
-  color: Side,
+  moves: Move[],
 ): CellId[] {
+  const { position: from, color } = piece;
   const out = new Set<CellId>(kingStepMoves(pieces, from, color));
 
-  const start = initialPieces.find((p) => p.type === "king" && p.color === color)?.position;
-  if (start && start === from) {
+  if (!pieceHasMovedBefore(piece, moves)) {
     for (const cand of kingLeapCandidates(pieces, from, color)) {
       out.add(cand.to);
     }
@@ -412,19 +474,33 @@ function kingMovesRaw(
 }
 
 function princeMovesRaw(
+  piece: RulesPiece,
   pieces: RulesPiece[],
-  from: CellId,
-  color: Side,
+  moves: Move[],
 ): CellId[] {
+  const { position: from, color } = piece;
   const out = new Set<CellId>(kingStepMoves(pieces, from, color));
 
-  const start = initialPieces.find((p) => p.type === "prince" && p.color === color)?.position;
-  if (start && start === from) {
-    const one = forwardEdgeTargets(from, color);
-    for (const mid of one) {
+  if (!pieceHasMovedBefore(piece, moves)) {
+    const oneEdges = forwardEdgeTargets(from, color);
+    for (const mid of oneEdges) {
       if (pieceAt(pieces, mid)) continue;
-      const two = forwardEdgeTargets(mid, color);
-      for (const to of two) {
+      const to = CONCENTRIC_GRAPH.edgeNext[mid]?.[from] ?? null;
+      if (to && !pieceAt(pieces, to) && forwardEdgeTargets(mid, color).includes(to)) {
+        out.add(to);
+      }
+    }
+
+    const oneVertices = forwardVertexTargets(from, color);
+    for (const mid of oneVertices) {
+      if (pieceAt(pieces, mid)) continue;
+      const candidates = sameDirectionSecondVertex(
+        CONCENTRIC_GRAPH,
+        from,
+        mid,
+        forwardVertexTargets(mid, color),
+      );
+      for (const to of candidates) {
         if (!pieceAt(pieces, to)) out.add(to);
       }
     }
@@ -551,8 +627,24 @@ function enPassantTargets(
 
   let passedOver: CellId | null = null;
   for (const mid of oneSteps) {
-    const twoSteps = pawnForwardTargets(mid, movedBefore.color).filter((sq) => sq === lastTo);
-    if (twoSteps.length > 0) {
+    let candidates: CellId[] = [];
+    const berolina = hasTag(lastFrom, "crescent") || hasTag(lastFrom, "halfMoon");
+
+    if (berolina) {
+      candidates = sameDirectionSecondVertex(
+        CONCENTRIC_GRAPH,
+        lastFrom,
+        mid,
+        pawnForwardTargets(mid, movedBefore.color),
+      );
+    } else {
+      const to = CONCENTRIC_GRAPH.edgeNext[mid]?.[lastFrom] ?? null;
+      if (to && pawnForwardTargets(mid, movedBefore.color).includes(to)) {
+        candidates = [to];
+      }
+    }
+
+    if (candidates.includes(lastTo)) {
       passedOver = mid;
       break;
     }
@@ -582,10 +674,26 @@ function pawnMovesRaw(
   const { r } = parseCell(from);
   const startRow = color === "wht" ? 4 : 9;
   if (r === startRow) {
+    const berolina = hasTag(from, "crescent") || hasTag(from, "halfMoon");
+
     for (const mid of pawnForwardTargets(from, color)) {
       if (pieceAt(pieces, mid)) continue;
-      for (const to of pawnForwardTargets(mid, color)) {
-        if (!pieceAt(pieces, to)) out.push(to);
+
+      if (berolina) {
+        const candidates = sameDirectionSecondVertex(
+          CONCENTRIC_GRAPH,
+          from,
+          mid,
+          pawnForwardTargets(mid, color),
+        );
+        for (const to of candidates) {
+          if (!pieceAt(pieces, to)) out.push(to);
+        }
+      } else {
+        const to = CONCENTRIC_GRAPH.edgeNext[mid]?.[from] ?? null;
+        if (to && !pieceAt(pieces, to) && pawnForwardTargets(mid, color).includes(to)) {
+          out.push(to);
+        }
       }
     }
   }
@@ -609,9 +717,9 @@ function generatePseudoLegalMovesRaw(
 
   switch (type) {
     case "king":
-      return kingMovesRaw(allPieces, position, color);
+      return kingMovesRaw(piece, allPieces, moves);
     case "prince":
-      return princeMovesRaw(allPieces, position, color);
+      return princeMovesRaw(piece, allPieces, moves);
     case "queen":
       return queenMoves(allPieces, position, color);
     case "rook":
@@ -750,12 +858,7 @@ function legalMovesForPiece(
 
     // Additional king first-move leap legality:
     // intermediary cell may be occupied but must not be threatened.
-    if (piece.type === "king") {
-      const start = initialPieces.find(
-        (p) => p.type === "king" && p.color === piece.color,
-      )?.position;
-
-      if (start && start === piece.position) {
+    if (piece.type === "king" && !pieceHasMovedBefore(piece, moves)) {
         const leap = kingLeapCandidates(pieces, piece.position, piece.color).find(
           (cand) => cand.to === to,
         );
@@ -771,7 +874,6 @@ function legalMovesForPiece(
           if (viaThreatened) continue;
         }
       }
-    }
 
     if (!isKingInCheckConcentric(after, piece.color, moves)) {
       legal.push(to);
