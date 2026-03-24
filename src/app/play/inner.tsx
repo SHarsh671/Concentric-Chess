@@ -30,16 +30,20 @@ const TIME_CONTROLS = [
   { id: "unlimited", label: "Unlimited", time: "∞", sublabel: "No time limit" },
 ] as const;
 
-export default function PlayInner({ isAuthenticated }: { isAuthenticated: boolean }) {
+export default function PlayInner({
+  isAuthenticated,
+}: {
+  isAuthenticated: boolean;
+}) {
   const [state, formAction, pending] = useActionState(play, null);
   const [mode, setMode] = useState<"online" | "local">(state?.mode ?? "online");
 
   const defaultVariant = state?.variant ?? GAME_VARIANTS[0].variant;
   const [gameType, setGameType] = useState<"concentric" | "archimedean">(
-    defaultVariant.startsWith("archimedean") ? "archimedean" : "concentric"
+    defaultVariant.startsWith("archimedean") ? "archimedean" : "concentric",
   );
   const [timeControl, setTimeControl] = useState(
-    defaultVariant.split("-")[1] as "rapid" | "blitz" | "bullet" | "unlimited"
+    defaultVariant.split("-")[1] as "rapid" | "blitz" | "bullet" | "unlimited",
   );
   const variant = `${gameType}-${timeControl}`;
 
@@ -48,8 +52,12 @@ export default function PlayInner({ isAuthenticated }: { isAuthenticated: boolea
       <div className="max-w-lg mx-auto px-6 py-16">
         <div className="mb-12 text-center">
           <div className="text-7xl mb-3 select-none leading-none">♟</div>
-          <h1 className="text-4xl font-black uppercase tracking-tight">New Game</h1>
-          <p className="text-gray-400 mt-1 text-sm uppercase tracking-widest">Concentric Chess</p>
+          <h1 className="text-4xl font-black uppercase tracking-tight">
+            New Game
+          </h1>
+          <p className="text-gray-400 mt-1 text-sm uppercase tracking-widest">
+            Concentric Chess
+          </p>
         </div>
 
         {!isAuthenticated && (
@@ -57,8 +65,12 @@ export default function PlayInner({ isAuthenticated }: { isAuthenticated: boolea
             <div className="flex items-start gap-3">
               <AlertCircleIcon className="size-5 shrink-0 mt-0.5" />
               <div>
-                <p className="font-black uppercase tracking-widest text-xs">Login Required</p>
-                <p className="font-bold text-sm mt-1">You must be logged in to start a game.</p>
+                <p className="font-black uppercase tracking-widest text-xs">
+                  Login Required
+                </p>
+                <p className="font-bold text-sm mt-1">
+                  You must be logged in to start a game.
+                </p>
                 <Link
                   href="/login"
                   className="inline-block mt-3 border-2 border-white px-3 py-1 text-xs font-black uppercase tracking-widest hover:bg-white hover:text-black transition-colors"
@@ -93,18 +105,23 @@ export default function PlayInner({ isAuthenticated }: { isAuthenticated: boolea
                     type="button"
                     key={gt.id}
                     onClick={() => setGameType(gt.id)}
-                    className={`border-4 p-5 text-left transition-all cursor-pointer focus:outline-none ${selected
-                      ? "border-black bg-black text-white"
-                      : "border-gray-200 bg-white hover:border-gray-400"
-                      }`}
+                    className={`border-4 p-5 text-left transition-all cursor-pointer focus:outline-none ${
+                      selected
+                        ? "border-black bg-black text-white"
+                        : "border-gray-200 bg-white hover:border-gray-400"
+                    }`}
                   >
-                    <div className={`text-3xl mb-2 leading-none select-none ${selected ? "opacity-80" : "opacity-30"}`}>
+                    <div
+                      className={`text-3xl mb-2 leading-none select-none ${selected ? "opacity-80" : "opacity-30"}`}
+                    >
                       {gt.piece}
                     </div>
                     <div className="font-bold uppercase tracking-wide text-sm leading-none">
                       {gt.label}
                     </div>
-                    <div className={`text-xs mt-1 ${selected ? "text-gray-400" : "text-gray-400"}`}>
+                    <div
+                      className={`text-xs mt-1 ${selected ? "text-gray-400" : "text-gray-400"}`}
+                    >
                       {gt.description}
                     </div>
                   </button>
@@ -125,10 +142,11 @@ export default function PlayInner({ isAuthenticated }: { isAuthenticated: boolea
                     type="button"
                     key={tc.id}
                     onClick={() => setTimeControl(tc.id)}
-                    className={`border-4 p-5 text-left transition-all cursor-pointer focus:outline-none ${selected
-                      ? "border-black bg-black text-white"
-                      : "border-gray-200 bg-white hover:border-gray-400"
-                      }`}
+                    className={`border-4 p-5 text-left transition-all cursor-pointer focus:outline-none ${
+                      selected
+                        ? "border-black bg-black text-white"
+                        : "border-gray-200 bg-white hover:border-gray-400"
+                    }`}
                   >
                     <div className="font-black text-3xl font-mono leading-none mb-2 tabular-nums">
                       {tc.time}
@@ -136,7 +154,9 @@ export default function PlayInner({ isAuthenticated }: { isAuthenticated: boolea
                     <div className="font-bold uppercase tracking-wide text-sm leading-none">
                       {tc.label}
                     </div>
-                    <div className={`text-xs mt-1 ${selected ? "text-gray-400" : "text-gray-400"}`}>
+                    <div
+                      className={`text-xs mt-1 ${selected ? "text-gray-400" : "text-gray-400"}`}
+                    >
                       {tc.sublabel}
                     </div>
                   </button>
@@ -153,28 +173,42 @@ export default function PlayInner({ isAuthenticated }: { isAuthenticated: boolea
               <button
                 type="button"
                 onClick={() => setMode("online")}
-                className={`border-4 p-5 text-left transition-all cursor-pointer focus:outline-none ${mode === "online"
-                  ? "border-black bg-black text-white"
-                  : "border-gray-200 bg-white hover:border-gray-400"
-                  }`}
+                className={`border-4 p-5 text-left transition-all cursor-pointer focus:outline-none ${
+                  mode === "online"
+                    ? "border-black bg-black text-white"
+                    : "border-gray-200 bg-white hover:border-gray-400"
+                }`}
               >
-                <Globe className={`size-5 mb-3 ${mode === "online" ? "text-gray-300" : "text-gray-400"}`} />
-                <div className="font-bold uppercase tracking-wide text-sm leading-none">Online</div>
-                <div className={`text-xs mt-1 ${mode === "online" ? "text-gray-400" : "text-gray-400"}`}>
+                <Globe
+                  className={`size-5 mb-3 ${mode === "online" ? "text-gray-300" : "text-gray-400"}`}
+                />
+                <div className="font-bold uppercase tracking-wide text-sm leading-none">
+                  Online
+                </div>
+                <div
+                  className={`text-xs mt-1 ${mode === "online" ? "text-gray-400" : "text-gray-400"}`}
+                >
                   Challenge players worldwide
                 </div>
               </button>
               <button
                 type="button"
                 onClick={() => setMode("local")}
-                className={`border-4 p-5 text-left transition-all cursor-pointer focus:outline-none ${mode === "local"
-                  ? "border-black bg-black text-white"
-                  : "border-gray-200 bg-white hover:border-gray-400"
-                  }`}
+                className={`border-4 p-5 text-left transition-all cursor-pointer focus:outline-none ${
+                  mode === "local"
+                    ? "border-black bg-black text-white"
+                    : "border-gray-200 bg-white hover:border-gray-400"
+                }`}
               >
-                <Monitor className={`size-5 mb-3 ${mode === "local" ? "text-gray-300" : "text-gray-400"}`} />
-                <div className="font-bold uppercase tracking-wide text-sm leading-none">Local</div>
-                <div className={`text-xs mt-1 ${mode === "local" ? "text-gray-400" : "text-gray-400"}`}>
+                <Monitor
+                  className={`size-5 mb-3 ${mode === "local" ? "text-gray-300" : "text-gray-400"}`}
+                />
+                <div className="font-bold uppercase tracking-wide text-sm leading-none">
+                  Local
+                </div>
+                <div
+                  className={`text-xs mt-1 ${mode === "local" ? "text-gray-400" : "text-gray-400"}`}
+                >
                   Two players, one screen
                 </div>
               </button>
@@ -184,7 +218,10 @@ export default function PlayInner({ isAuthenticated }: { isAuthenticated: boolea
           {mode === "online" && (
             <section>
               <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3">
-                Opponent <span className="normal-case font-normal tracking-normal text-gray-300">(leave blank to find a random match)</span>
+                Opponent{" "}
+                <span className="normal-case font-normal tracking-normal text-gray-300">
+                  (leave blank to find a random match)
+                </span>
               </p>
               <Input
                 type="text"

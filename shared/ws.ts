@@ -2,80 +2,78 @@ import { Game, Move, Side } from "./schema";
 import { PieceType } from "./graph";
 
 export type ServerMsg =
-    | {
-        type: "accepted";
-        data: {
-            whitePlayerId: string | null;
-            blackPlayerId: string | null;
-        };
+  | {
+      type: "accepted";
+      data: {
+        whitePlayerId: string | null;
+        blackPlayerId: string | null;
+      };
     }
-    | {
-        type: "aborted";
+  | {
+      type: "aborted";
     }
-    | {
-        type: "move";
-        data: {
-            move: Move;
-            nextMove: number;
-            lastMoveAt: string;
-            whiteTimeLeft: number | null;
-            blackTimeLeft: number | null;
-        };
+  | {
+      type: "move";
+      data: {
+        move: Move;
+        nextMove: number;
+        lastMoveAt: string;
+        whiteTimeLeft: number | null;
+        blackTimeLeft: number | null;
+      };
     }
-    | {
-        type: "game_over";
-        data: {
-            result:
-            | "white_win"
-            | "black_win"
-            | "draw"
-            | "white_resign"
-            | "black_resign";
-            whiteTimeLeft: number | null;
-            blackTimeLeft: number | null;
-        };
+  | {
+      type: "game_over";
+      data: {
+        result:
+          | "white_win"
+          | "black_win"
+          | "draw"
+          | "white_resign"
+          | "black_resign";
+        whiteTimeLeft: number | null;
+        blackTimeLeft: number | null;
+      };
     }
-    | {
-        type: "draw_offer";
-        data: {
-            whiteDrawOffer: number;
-            blackDrawOffer: number;
-        }
+  | {
+      type: "draw_offer";
+      data: {
+        whiteDrawOffer: number;
+        blackDrawOffer: number;
+      };
     }
-    | {
-        type: "sync";
-        data: {
-            game: Game;
-            moves: Move[];
-        };
+  | {
+      type: "sync";
+      data: {
+        game: Game;
+        moves: Move[];
+      };
     }
-    | {
-        type: "draw_reject";
-    }
-    ;
+  | {
+      type: "draw_reject";
+    };
 export type ClientMsg =
-    | {
-        type: "move";
-        data: {
-            side: Side;
-            from: string;
-            to: string;
-            promotion?: PieceType | null;
-        };
+  | {
+      type: "move";
+      data: {
+        side: Side;
+        from: string;
+        to: string;
+        promotion?: PieceType | null;
+      };
     }
-    | {
-        type: "accept";
+  | {
+      type: "accept";
     }
-    | {
-        type: "sync_request";
+  | {
+      type: "sync_request";
     }
-    | {
-        type: "resign";
+  | {
+      type: "resign";
     }
-    | {
-        type: "draw";
+  | {
+      type: "draw";
     }
-    | {
-        type: "draw_reject";
-    }
-    ;
+  | {
+      type: "draw_reject";
+    };

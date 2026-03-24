@@ -1,21 +1,22 @@
 import { DurableObject } from "cloudflare:workers";
 import { drizzle, DrizzleD1Database } from "drizzle-orm/d1";
 import { parse } from "cookie";
-import { ClientMsg, schema, ServerMsg, sessionsTable } from "../shared";
+import {
+  ClientMsg,
+  GameVariant,
+  schema,
+  ServerMsg,
+  sessionsTable,
+} from "../shared";
 import * as t from "drizzle-orm";
 import { getMovesForGame, recordMove } from "shared/moves";
 import {
-  computePieceStateConcentric,
-  gameStatusConcentric,
-  generatePseudoLegalMovesForPieceConcentric,
-  validPromotionOptionsForMoveConcentric,
-} from "shared/concentric-rules";
-import {
-  computePieceStateArchimedean,
-  gameStatusArchimedean,
-  generatePseudoLegalMovesForPieceArchimedean,
-  validPromotionOptionsForMoveArchimedean,
-} from "shared/archimedean-rules";
+  getBoardStatusFromState,
+  getLegalMovesFromState,
+  getPromotionOptionsForMove,
+  getState,
+  updateStateWithMove,
+} from "shared/rules";
 
 export class GameObject extends DurableObject<CloudflareEnv> {
   db: DrizzleD1Database<typeof schema>;
@@ -43,7 +44,6 @@ export class GameObject extends DurableObject<CloudflareEnv> {
     this.ctx.setWebSocketAutoResponse(
       new WebSocketRequestResponsePair("ping", "pong"),
     );
-
   }
 
   async getGame(gameId: string) {
@@ -235,10 +235,10 @@ export class GameObject extends DurableObject<CloudflareEnv> {
 
   private terminalResultFromPosition(
     positionState: "ongoing" | "check" | "checkmate" | "stalemate" | "draw",
-    sideToMove: "white" | "black",
+    sideToMove: "wht" | "blk",
   ): { status: "white_win" | "black_win" | "draw" } | null {
     if (positionState === "checkmate") {
-      return sideToMove === "white"
+      return sideToMove === "wht"
         ? { status: "black_win" }
         : { status: "white_win" };
     }
@@ -260,11 +260,11 @@ export class GameObject extends DurableObject<CloudflareEnv> {
     gameId: string,
     update: {
       status:
-      | "white_win"
-      | "black_win"
-      | "draw"
-      | "white_resign"
-      | "black_resign";
+        | "white_win"
+        | "black_win"
+        | "draw"
+        | "white_resign"
+        | "black_resign";
       whiteTimeLeft?: number | null;
       blackTimeLeft?: number | null;
     },
@@ -392,10 +392,8 @@ export class GameObject extends DurableObject<CloudflareEnv> {
               // check valid move
               const moves = await getMovesForGame(this.db, game.id);
               console.log("Existing moves:", moves);
-              const pieces = game.variant.startsWith("concentric")
-                ? computePieceStateConcentric(moves)
-                : computePieceStateArchimedean(moves);
-              const piece = pieces.find((p) => p.position === msg.data.from);
+              const state = getState(game.variant as GameVariant, moves);
+              const piece = state.board.get(msg.data.from);
               if (!piece) {
                 console.log("No piece at from position");
                 return;
@@ -407,19 +405,22 @@ export class GameObject extends DurableObject<CloudflareEnv> {
                 console.log("Piece at from position does not belong to player");
                 return;
               }
-              const pseudoLegalMoves = game.variant.startsWith("concentric")
-                ? generatePseudoLegalMovesForPieceConcentric(piece, pieces, moves)
-                : generatePseudoLegalMovesForPieceArchimedean(piece, pieces, moves);
-              const isValid = pseudoLegalMoves.includes(msg.data.to);
+              const legalMoves = getLegalMovesFromState(state, msg.data.from);
+              const isValid = legalMoves.includes(msg.data.to);
               if (!isValid) {
                 console.log("Move is not valid");
                 return;
               }
-              const promotionOptions = game.variant.startsWith("concentric")
-                ? validPromotionOptionsForMoveConcentric(piece, msg.data.to)
-                : validPromotionOptionsForMoveArchimedean(piece, msg.data.to);
+              const promotionOptions = getPromotionOptionsForMove(
+                piece.type,
+                piece.color,
+                msg.data.to,
+              );
               if (promotionOptions.length > 0) {
-                if (!msg.data.promotion || !promotionOptions.includes(msg.data.promotion)) {
+                if (
+                  !msg.data.promotion ||
+                  !promotionOptions.includes(msg.data.promotion)
+                ) {
                   console.log("Promotion is required and must be valid");
                   return;
                 }
@@ -467,14 +468,22 @@ export class GameObject extends DurableObject<CloudflareEnv> {
                 createdAt: now.toISOString(),
               };
               const movesAfter = [...moves, move];
-              const nextSide = turn === "white" ? "black" : "white";
-              const piecesAfter = game.variant.startsWith("concentric")
-                ? computePieceStateConcentric(movesAfter)
-                : computePieceStateArchimedean(movesAfter);
-              const positionState = game.variant.startsWith("concentric")
-                ? gameStatusConcentric(piecesAfter, nextSide === "white" ? "wht" : "blk", movesAfter)
-                : gameStatusArchimedean(piecesAfter, nextSide === "white" ? "wht" : "blk", movesAfter);
-              const terminal = this.terminalResultFromPosition(positionState, nextSide);
+              const nextSide = turn === "white" ? "blk" : "wht";
+              updateStateWithMove(
+                state,
+                move.fromSquare,
+                move.toSquare,
+                move.promotion,
+              );
+              const positionState = getBoardStatusFromState(
+                state,
+                movesAfter,
+                nextSide,
+              );
+              const terminal = this.terminalResultFromPosition(
+                positionState,
+                nextSide,
+              );
 
               await this.db
                 .update(schema.gamesTable)
@@ -590,7 +599,8 @@ export class GameObject extends DurableObject<CloudflareEnv> {
                 : "black";
           const now = new Date();
           const elapsed =
-            now.getTime() - new Date(game.lastMoveAt || game.createdAt!).getTime();
+            now.getTime() -
+            new Date(game.lastMoveAt || game.createdAt!).getTime();
           const whiteTimeLeft =
             game.nextMove % 2 === 1 && game.whiteTimeLeft !== null
               ? Math.max(0, game.whiteTimeLeft - elapsed)
@@ -621,7 +631,8 @@ export class GameObject extends DurableObject<CloudflareEnv> {
           if (game.whitePlayerId === game.blackPlayerId) {
             const now = new Date();
             const elapsed =
-              now.getTime() - new Date(game.lastMoveAt || game.createdAt!).getTime();
+              now.getTime() -
+              new Date(game.lastMoveAt || game.createdAt!).getTime();
             const whiteTimeLeft =
               game.nextMove % 2 === 1 && game.whiteTimeLeft !== null
                 ? Math.max(0, game.whiteTimeLeft - elapsed)
@@ -726,12 +737,7 @@ export class GameObject extends DurableObject<CloudflareEnv> {
     }
   }
 
-  async webSocketClose(
-    ws: WebSocket,
-    _code: number,
-    _reason: string,
-    _wasClean: boolean,
-  ) {
+  async webSocketClose(ws: WebSocket) {
     await this.lock.acquire();
     try {
       const socketInfo = this.sockets.get(ws);
@@ -788,7 +794,7 @@ export class GameObject extends DurableObject<CloudflareEnv> {
 
 const URL_PATTERN = /\/games\/([a-f0-9\-]+)\//;
 
-export default {
+const exports = {
   fetch(request: Request, env: CloudflareEnv) {
     const gameId = request.url.match(URL_PATTERN)?.[1];
     if (!gameId) {
@@ -797,6 +803,7 @@ export default {
     return env.GAME_OBJECT.getByName(gameId).fetch(request);
   },
 };
+export default exports;
 
 class Lock {
   private locked: boolean = false;
