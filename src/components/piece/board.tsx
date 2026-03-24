@@ -137,7 +137,9 @@ export default function Board({
 
   useEffect(() => {
     const newPieces = computePiecesForMoves(variant, moves);
-    const newCaptured = trackCapturedPieces ? computeCaptured(variant, moves) : null;
+    const newCaptured = trackCapturedPieces
+      ? computeCaptured(variant, moves)
+      : null;
 
     if (trackCapturedPieces && newCaptured) {
       onCapturedPiecesChange?.(newCaptured);
@@ -202,15 +204,15 @@ export default function Board({
     };
     return variant === "concentric"
       ? generatePseudoLegalMovesForPieceConcentric(
-        rulesPiece,
-        rulesPieces,
-        moves,
-      )
+          rulesPiece,
+          rulesPieces,
+          moves,
+        )
       : generatePseudoLegalMovesForPieceArchimedean(
-        rulesPiece,
-        rulesPieces,
-        moves,
-      );
+          rulesPiece,
+          rulesPieces,
+          moves,
+        );
   };
 
   const handleCellClick = (cellId: string) => {
@@ -225,7 +227,12 @@ export default function Board({
     console.log("Cell clicked:", cellId);
     const pieceAtCell = boardState.pieces.find((p) => p.position === cellId);
 
-    if (canCommitMove && boardState.pendingMove === cellId && boardState.selectedPiece && boardState.selectedPiece.color === currentTurn) {
+    if (
+      canCommitMove &&
+      boardState.pendingMove === cellId &&
+      boardState.selectedPiece &&
+      boardState.selectedPiece.color === currentTurn
+    ) {
       console.log(
         "Move confirmed:",
         boardState.selectedPiece.position,
@@ -235,13 +242,13 @@ export default function Board({
       const promotionOptions =
         variant === "concentric"
           ? validPromotionOptionsForMoveConcentric(
-            boardState.selectedPiece,
-            cellId,
-          )
+              boardState.selectedPiece,
+              cellId,
+            )
           : validPromotionOptionsForMoveArchimedean(
-            boardState.selectedPiece,
-            cellId,
-          );
+              boardState.selectedPiece,
+              cellId,
+            );
       if (promotionOptions.length > 0) {
         setPendingPromotion({
           from: boardState.selectedPiece.position,
@@ -486,8 +493,9 @@ export default function Board({
         style={{
           position: "absolute",
           inset: 0,
-          transform: `scale(${BOARD_SCALE})${viewerSide === "blk" ? " rotate(180deg)" : ""
-            }`,
+          transform: `scale(${BOARD_SCALE})${
+            viewerSide === "blk" ? " rotate(180deg)" : ""
+          }`,
           transformOrigin: "center center",
         }}
       >
@@ -519,7 +527,7 @@ export default function Board({
                   cursor: isReplayMode
                     ? "default"
                     : isLegal ||
-                      boardState.pieces.some((p) => p.position === s.id)
+                        boardState.pieces.some((p) => p.position === s.id)
                       ? "pointer"
                       : "default",
                 }}
@@ -554,72 +562,74 @@ export default function Board({
             (() => {
               const FONT = 40;
               const isFlipped = viewerSide === "blk";
-              const topItems = isFlipped ?
-                [
-                  { label: "a", y: 385, x: 680 },
-                  { label: "k", y: 385, x: 1070 },
+              const topItems = isFlipped
+                ? [
+                    { label: "a", y: 385, x: 680 },
+                    { label: "k", y: 385, x: 1070 },
 
-                  { label: "b", y: 485, x: 675 },
-                  { label: "j", y: 490, x: 1060 },
+                    { label: "b", y: 485, x: 675 },
+                    { label: "j", y: 490, x: 1060 },
 
-                  { label: "c", y: 585, x: 730 },
-                  { label: "i", y: 585, x: 1025 },
+                    { label: "c", y: 585, x: 730 },
+                    { label: "i", y: 585, x: 1025 },
 
-                  { label: "d", y: 685, x: 760 },
-                  { label: "h", y: 685, x: 995 },
+                    { label: "d", y: 685, x: 760 },
+                    { label: "h", y: 685, x: 995 },
 
-                  { label: "e", y: 785, x: 795 },
-                  { label: "g", y: 790, x: 965 },
+                    { label: "e", y: 785, x: 795 },
+                    { label: "g", y: 790, x: 965 },
 
-                  { label: "f", y: 325, x: 675 },
-                  { label: "f", y: 325, x: 1065 },
-                ] : [
-                  { label: "a", y: 385, x: 650 },
-                  { label: "k", y: 385, x: 1070 },
+                    { label: "f", y: 325, x: 675 },
+                    { label: "f", y: 325, x: 1065 },
+                  ]
+                : [
+                    { label: "a", y: 385, x: 650 },
+                    { label: "k", y: 385, x: 1070 },
 
-                  { label: "b", y: 485, x: 675 },
-                  { label: "j", y: 485, x: 1055 },
+                    { label: "b", y: 485, x: 675 },
+                    { label: "j", y: 485, x: 1055 },
 
-                  { label: "c", y: 585, x: 700 },
-                  { label: "i", y: 585, x: 1015 },
+                    { label: "c", y: 585, x: 700 },
+                    { label: "i", y: 585, x: 1015 },
 
-                  { label: "d", y: 685, x: 725 },
-                  { label: "h", y: 685, x: 980 },
+                    { label: "d", y: 685, x: 725 },
+                    { label: "h", y: 685, x: 980 },
 
-                  { label: "e", y: 780, x: 770 },
-                  { label: "g", y: 780, x: 945 },
+                    { label: "e", y: 780, x: 770 },
+                    { label: "g", y: 780, x: 945 },
 
-                  { label: "f", y: 325, x: 655 },
-                  { label: "f", y: 325, x: 1070 },
-                ];
-              const botItems = isFlipped ?
-                [
-                  { label: "e", y: 955, x: 800 },
-                  { label: "g", y: 955, x: 960 },
-                  { label: "d", y: 1045, x: 755 },
-                  { label: "h", y: 1045, x: 1000 },
-                  { label: "c", y: 1155, x: 745 },
-                  { label: "i", y: 1145, x: 1015 },
-                  { label: "b", y: 1245, x: 695 },
-                  { label: "j", y: 1245, x: 1055 },
-                  { label: "a", y: 1355, x: 695 },
-                  { label: "k", y: 1345, x: 1075 },
-                  { label: "f", y: 1400, x: 690 },
-                  { label: "f", y: 1400, x: 1070 },
-                ] : [
-                  { label: "e", y: 945, x: 770 },
-                  { label: "g", y: 935, x: 945 },
-                  { label: "d", y: 1045, x: 725 },
-                  { label: "h", y: 1045, x: 980 },
-                  { label: "c", y: 1145, x: 700 },
-                  { label: "i", y: 1145, x: 1015 },
-                  { label: "b", y: 1245, x: 675 },
-                  { label: "j", y: 1235, x: 1055 },
-                  { label: "a", y: 1345, x: 650 },
-                  { label: "k", y: 1345, x: 1070 },
-                  { label: "f", y: 1400, x: 655 },
-                  { label: "f", y: 1400, x: 1070 },
-                ];
+                    { label: "f", y: 325, x: 655 },
+                    { label: "f", y: 325, x: 1070 },
+                  ];
+              const botItems = isFlipped
+                ? [
+                    { label: "e", y: 955, x: 800 },
+                    { label: "g", y: 955, x: 960 },
+                    { label: "d", y: 1045, x: 755 },
+                    { label: "h", y: 1045, x: 1000 },
+                    { label: "c", y: 1155, x: 745 },
+                    { label: "i", y: 1145, x: 1015 },
+                    { label: "b", y: 1245, x: 695 },
+                    { label: "j", y: 1245, x: 1055 },
+                    { label: "a", y: 1355, x: 695 },
+                    { label: "k", y: 1345, x: 1075 },
+                    { label: "f", y: 1400, x: 690 },
+                    { label: "f", y: 1400, x: 1070 },
+                  ]
+                : [
+                    { label: "e", y: 945, x: 770 },
+                    { label: "g", y: 935, x: 945 },
+                    { label: "d", y: 1045, x: 725 },
+                    { label: "h", y: 1045, x: 980 },
+                    { label: "c", y: 1145, x: 700 },
+                    { label: "i", y: 1145, x: 1015 },
+                    { label: "b", y: 1245, x: 675 },
+                    { label: "j", y: 1235, x: 1055 },
+                    { label: "a", y: 1345, x: 650 },
+                    { label: "k", y: 1345, x: 1070 },
+                    { label: "f", y: 1400, x: 655 },
+                    { label: "f", y: 1400, x: 1070 },
+                  ];
               const labelStyle: React.CSSProperties = {
                 userSelect: "none",
                 pointerEvents: "none",
@@ -676,31 +686,54 @@ export default function Board({
             (() => {
               const FONT = 40;
               const isFlipped = viewerSide === "blk";
-              const lightItems = [
-                { label: "a", y: 380, x: 610 },
-                { label: "k", y: 385, x: 1040 },
-                { label: "b", y: 485, x: 635 },
-                { label: "j", y: 485, x: 1030 },
-                { label: "c", y: 575, x: 660 },
-                { label: "i", y: 580, x: 1000 },
-                { label: "d", y: 680, x: 685 },
-                { label: "h", y: 680, x: 960 },
-                { label: "e", y: 770, x: 720 },
-                { label: "h", y: 775, x: 925 },
-                { label: "f", y: 960, x: 790 },
-                { label: "e", y: 960, x: 980 },
-                { label: "e", y: 1050, x: 760 },
-                { label: "j", y: 1045, x: 1035 },
-                { label: "d", y: 1145, x: 710 },
-                { label: "k", y: 1145, x: 1065 },
-                { label: "c", y: 1245, x: 695 },
-                { label: "l", y: 1245, x: 1080 },
-                { label: "b", y: 1345, x: 675 },
-                { label: "m", y: 1345, x: 1080 },
-              ];
-              const darkItems = [
-                { label: "g", y: 860, x: 825 },
-              ];
+              const lightItems = isFlipped
+                ? [
+                    { label: "a", y: 380, x: 660 },
+                    { label: "l", y: 380, x: 1040 },
+                    { label: "b", y: 480, x: 660 },
+                    { label: "k", y: 480, x: 1020 },
+                    { label: "c", y: 575, x: 700 },
+                    { label: "j", y: 580, x: 1000 },
+                    { label: "d", y: 675, x: 715 },
+                    { label: "i", y: 675, x: 965 },
+                    { label: "e", y: 770, x: 750 },
+                    { label: "h", y: 770, x: 935 },
+                    { label: "f", y: 960, x: 810 },
+                    { label: "i", y: 960, x: 1000 },
+                    { label: "e", y: 1060, x: 785 },
+                    { label: "j", y: 1050, x: 1045 },
+                    { label: "d", y: 1145, x: 740 },
+                    { label: "k", y: 1150, x: 1070 },
+                    { label: "c", y: 1250, x: 720 },
+                    { label: "l", y: 1245, x: 1085 },
+                    { label: "b", y: 1345, x: 695 },
+                    { label: "m", y: 1355, x: 1105 },
+                  ]
+                : [
+                    { label: "a", y: 380, x: 610 },
+                    { label: "l", y: 385, x: 1040 },
+                    { label: "b", y: 485, x: 635 },
+                    { label: "k", y: 485, x: 1030 },
+                    { label: "c", y: 575, x: 660 },
+                    { label: "j", y: 580, x: 1000 },
+                    { label: "d", y: 680, x: 685 },
+                    { label: "i", y: 680, x: 960 },
+                    { label: "e", y: 770, x: 720 },
+                    { label: "h", y: 775, x: 925 },
+                    { label: "f", y: 960, x: 790 },
+                    { label: "i", y: 960, x: 990 },
+                    { label: "e", y: 1050, x: 760 },
+                    { label: "j", y: 1045, x: 1035 },
+                    { label: "d", y: 1145, x: 710 },
+                    { label: "k", y: 1145, x: 1065 },
+                    { label: "c", y: 1245, x: 695 },
+                    { label: "l", y: 1245, x: 1080 },
+                    { label: "b", y: 1345, x: 675 },
+                    { label: "m", y: 1345, x: 1080 },
+                  ];
+              const darkItems = isFlipped
+                ? [{ label: "g", y: 865, x: 905 }]
+                : [{ label: "g", y: 860, x: 825 }];
               const labelStyle: React.CSSProperties = {
                 userSelect: "none",
                 pointerEvents: "none",
@@ -756,61 +789,61 @@ export default function Board({
         </svg>
 
         {boardState.pieces
-            .filter((piece) => {
-              // Hide the piece at the pending destination — it will be captured
-              if (boardState.pendingMove && boardState.selectedPiece) {
-                if (
-                  piece.position === boardState.pendingMove &&
-                  piece !== boardState.selectedPiece
-                ) {
-                  return false;
-                }
+          .filter((piece) => {
+            // Hide the piece at the pending destination — it will be captured
+            if (boardState.pendingMove && boardState.selectedPiece) {
+              if (
+                piece.position === boardState.pendingMove &&
+                piece !== boardState.selectedPiece
+              ) {
+                return false;
               }
-              return true;
-            })
-            .map((piece) => {
-              // Show the selected piece at its pending destination for preview
-              const isMoving = !!(
-                boardState.pendingMove && piece === boardState.selectedPiece
-              );
-              const displayPosition = isMoving
-                ? boardState.pendingMove!
-                : piece.position;
-              const center = getCellCenter(displayPosition);
-              return (
-                <Piece
-                  key={`${piece.position}-${piece.type}-${piece.color}`}
-                  {...piece}
-                  position={displayPosition}
-                  x={center.x}
-                  y={center.y}
-                  onClick={() => handleCellClick(piece.position)}
-                  isSelected={!isMoving && boardState.selectedPiece === piece}
-                  variant={variant}
-                  flipped={viewerSide === "blk"}
-                />
-              );
-            })}
-        {/* {spaces.map((s) => { */}
-        {/*   return ( */}
-        {/*     <span */}
-        {/*       key={s.id} */}
-        {/*       className={`size-piece ${s.id}a`} */}
-        {/*       // className={`size-piece ${s.id}`} */}
-        {/*       style={{ */}
-        {/*         position: "absolute", */}
-        {/*         fontSize: "10px", */}
-        {/*         transform: "translate(20%, 30%)", */}
-        {/*         fontWeight: "bold", */}
-        {/*         pointerEvents: "none", */}
-        {/*         color: */}
-        {/*           CONCENTRIC_GRAPH.color[s.id] === "light" ? "#000" : "#fff", */}
-        {/*       }} */}
-        {/*     > */}
-        {/*       {toNotation(s.id, variant)} */}
-        {/*     </span> */}
-        {/*   ); */}
-        {/* })} */}
+            }
+            return true;
+          })
+          .map((piece) => {
+            // Show the selected piece at its pending destination for preview
+            const isMoving = !!(
+              boardState.pendingMove && piece === boardState.selectedPiece
+            );
+            const displayPosition = isMoving
+              ? boardState.pendingMove!
+              : piece.position;
+            const center = getCellCenter(displayPosition);
+            return (
+              <Piece
+                key={`${piece.position}-${piece.type}-${piece.color}`}
+                {...piece}
+                position={displayPosition}
+                x={center.x}
+                y={center.y}
+                onClick={() => handleCellClick(piece.position)}
+                isSelected={!isMoving && boardState.selectedPiece === piece}
+                variant={variant}
+                flipped={viewerSide === "blk"}
+              />
+            );
+          })}
+        {spaces.map((s) => {
+          return (
+            <span
+              key={s.id}
+              className={`size-piece ${s.id}a`}
+              // className={`size-piece ${s.id}`}
+              style={{
+                position: "absolute",
+                fontSize: "10px",
+                transform: "translate(20%, 30%)",
+                fontWeight: "bold",
+                pointerEvents: "none",
+                color:
+                  CONCENTRIC_GRAPH.color[s.id] === "light" ? "#000" : "#fff",
+              }}
+            >
+              {toNotation(s.id, variant)}
+            </span>
+          );
+        })}
       </div>
       {pendingPromotion && (
         <div className="absolute inset-x-0 bottom-4 z-50 px-4">
