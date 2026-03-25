@@ -592,22 +592,22 @@ function getPawnMoves(state: BoardState, piece: Piece): CellId[] {
   });
   moves.push(...captureMoves);
 
+  const filteredMoves = filterForwardMoves(piece.position, piece.color, moves);
   // special archimedean rules for pawns on the innermost and outermost columns
   if (
     state.variant.startsWith("archimedean") &&
     piece.color === "wht" &&
     piece.position === "r6c11"
   ) {
-    moves.push("r7c11");
+    filteredMoves.push("r6c10");
   } else if (
     state.variant.startsWith("archimedean") &&
     piece.color === "blk" &&
     piece.position === "r7c1"
   ) {
-    moves.push("r6c1");
+    filteredMoves.push("r7c2");
   }
 
-  const filteredMoves = filterForwardMoves(piece.position, piece.color, moves);
   if (
     isBerolina &&
     ((piece.color === "wht" && currentRow >= 7) ||
@@ -709,7 +709,11 @@ function getQueenMoves(state: BoardState, piece: Piece): CellId[] {
   return moves;
 }
 
-function getKnightMoves(state: BoardState, piece: Piece): CellId[] {
+function getKnightMoves(
+  state: BoardState,
+  piece: Piece,
+  intermediaryNotThreatened: boolean = false,
+): CellId[] {
   const moves: CellId[] = [];
   const edgeNeighbors = state.graph.edgeNbrs[piece.position] || [];
   const vertexNeighbors = state.graph.vertexNbrs[piece.position] || [];
@@ -723,6 +727,12 @@ function getKnightMoves(state: BoardState, piece: Piece): CellId[] {
       }
       const at = state.board.get(nextCell);
       if (!at || at.color !== piece.color) {
+        if (
+          intermediaryNotThreatened &&
+          isThreatenedFor(state, edgeNeighbor, piece.color)
+        ) {
+          continue;
+        }
         moves.push(nextCell);
       }
     }
@@ -736,6 +746,12 @@ function getKnightMoves(state: BoardState, piece: Piece): CellId[] {
       }
       const at = state.board.get(nextCell);
       if (!at || at.color !== piece.color) {
+        if (
+          intermediaryNotThreatened &&
+          isThreatenedFor(state, vertexNeighbor, piece.color)
+        ) {
+          continue;
+        }
         moves.push(nextCell);
       }
     }
@@ -793,6 +809,11 @@ function getKingMoves(
       }
     }
   }
+
+  // if not moved, can also leap like a knight
+  if (!piece.hasMoved) {
+    moves.push(...getKnightMoves(state, piece, !ignoreCheck));
+  }
   return moves;
 }
 
@@ -804,6 +825,7 @@ function getPrinceMoves(state: BoardState, piece: Piece): CellId[] {
       moves.push(neighbor);
     }
     if (
+      !at &&
       !piece.hasMoved &&
       isForwardMove(piece.position, piece.color, neighbor)
     ) {
@@ -824,6 +846,7 @@ function getPrinceMoves(state: BoardState, piece: Piece): CellId[] {
       moves.push(neighbor);
     }
     if (
+      !at &&
       !piece.hasMoved &&
       isForwardMove(piece.position, piece.color, neighbor)
     ) {

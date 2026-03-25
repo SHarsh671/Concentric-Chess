@@ -272,6 +272,7 @@ export default function Board({
         }));
       } else {
         setPendingPromotion(null);
+        console.log("Piece selected:", pieceAtCell);
         const legalMoves = calculateLegalMoves(pieceAtCell);
         setBoardState((prev) => ({
           ...prev,

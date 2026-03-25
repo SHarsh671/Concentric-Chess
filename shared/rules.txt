@@ -9,7 +9,7 @@ Berolina pawn (pawns when in the center of the board):
 - Captures along forward edges, once past the middle along adjacent edges.
 Bishop:
 - Moves any number of spaces across a vertex.
-- Can move across an edge or vertex once to a cell of the opposite color. (can this be a capture?)
+- Can move across an edge or vertex once to a cell of the opposite color.
 Rook:
 - Moves any number of spaces across an edge.
 Knight:
@@ -19,6 +19,7 @@ Queen:
 King:
 - Moves across one edge or vertex in any direction.
 - First move may leap two cells in any direction, so long as the intermediary cell is not threatened.
+  - May also make the knight's move as a first move, so long as the intermediary cell is not threatened.
 - Cannot move or capture if it would put the king in check.
 Prince:
 - Moves across one edge or vertex in any direction.
@@ -28,7 +29,7 @@ En passant:
 - If a pawn moves two spaces forward, all enemy pawns can capture it as if it had only moved a single space.
 
 Archimedean updates:
-- Pawns on the two far columns may move across a vertex in the forward direction when they reach the end of their spirals.
+- Pawns on the two far columns may move across a sideways edge when they reach the end of their spirals.
 
 Draw conditions:
 - If the same board state occurs three times.
