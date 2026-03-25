@@ -17,14 +17,15 @@ export default function SignupPage() {
         </div>
         <div className="relative z-10 space-y-4">
           <h2 className="text-5xl font-bold uppercase leading-tight">
-            Join the<br />Board.
+            Join the
+            <br />
+            Board.
           </h2>
           <p className="text-gray-400 text-lg leading-relaxed">
-            Create your account and start playing circular chess online instantly.
+            Create your account and start playing circular chess online
+            instantly.
           </p>
-          <div className="flex gap-4 text-2xl opacity-30">
-            ♟♟♟♟♟♟♟♟
-          </div>
+          <div className="flex gap-4 text-2xl opacity-30">♟♟♟♟♟♟♟♟</div>
         </div>
         <div className="relative z-10 text-xs text-gray-600 uppercase tracking-widest">
           ♜♞♝♛♚♝♞♜
@@ -38,7 +39,9 @@ export default function SignupPage() {
             <div className="inline-flex items-center gap-2 border-2 border-black px-3 py-1 text-xs font-bold uppercase tracking-widest mb-4">
               <span>♟</span> New Account
             </div>
-            <h1 className="text-4xl font-bold uppercase tracking-wide">Sign Up</h1>
+            <h1 className="text-4xl font-bold uppercase tracking-wide">
+              Sign Up
+            </h1>
           </div>
           <SignupForm />
         </div>

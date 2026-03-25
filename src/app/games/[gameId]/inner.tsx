@@ -4,24 +4,16 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { GameSocket } from "@/lib/ws";
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { Game, Move } from "shared";
+import { Game, GameVariant, Move } from "shared";
 import "client-only";
 import Board, { CapturedPiece } from "@/components/piece/board";
 import RulesDialog from "@/components/piece/rules-dialog";
 import { HelpCircle, LoaderCircle } from "lucide-react";
 import { pieceLabel, toNotation } from "@/lib/utils";
 import SpiralRulesDialog from "@/components/piece/spiral-rules-dialog";
-import { initialPieces } from "shared/concentric-rules";
 import { PieceType, Side } from "shared/graph";
 import Image from "next/image";
-import {
-  computePieceStateConcentric,
-  gameStatusConcentric,
-} from "shared/concentric-rules";
-import {
-  computePieceStateArchimedean,
-  gameStatusArchimedean,
-} from "shared/archimedean-rules";
+import { getBoardStatus, initialPieces } from "shared/rules";
 
 export default function GamePage({
   game: initialGame,
@@ -54,7 +46,7 @@ export default function GamePage({
   const topBarRef = useRef<HTMLDivElement>(null);
   const botBarRef = useRef<HTMLDivElement>(null);
   const [boardPx, setBoardPx] = useState(0);
-  const computeBoardSize = useRef<() => void>(() => { });
+  const computeBoardSize = useRef<() => void>(() => {});
 
   useLayoutEffect(() => {
     if (!boardColEl) return;
@@ -197,7 +189,7 @@ export default function GamePage({
       ws.setListener(null);
       ws.disconnect();
     };
-  }, [game.id]);
+  }, [game.id, ws]);
 
   const timeSinceLastMove =
     game.status === "ongoing"
@@ -254,6 +246,10 @@ export default function GamePage({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [game.status]);
+  const currentTurn: Side = game.nextMove % 2 === 1 ? "wht" : "blk";
+  const positionState = useMemo(() => {
+    return getBoardStatus(game.variant as GameVariant, moves, currentTurn);
+  }, [game.variant, moves, currentTurn]);
 
   // Recompute board size when top-banner conditions can change.
   // `game.status` covers terminal banners, while `nextMove`/`moves.length` cover
@@ -332,7 +328,7 @@ export default function GamePage({
           </p>
           <Button
             onClick={() => ws.send({ type: "accept" })}
-            className="w-full h-14 bg-black text-white border-4 border-black rounded-none font-bold uppercase tracking-widest text-base shadow-[6px_6px_0px_0px_rgba(0,0,0,0.2)] hover:shadow-none hover:translate-x-[6px] hover:translate-y-[6px] transition-all"
+            className="w-full h-14 bg-black text-white border-4 border-black rounded-none font-bold uppercase tracking-widest text-base shadow-[6px_6px_0px_0px_rgba(0,0,0,0.2)] hover:shadow-none hover:translate-x-1.5 hover:translate-y-1.5 transition-all"
           >
             ♚ Accept Game
           </Button>
@@ -370,7 +366,6 @@ export default function GamePage({
 
   const viewerSide: Side | undefined =
     isWhite && !isBlack ? "wht" : isBlack && !isWhite ? "blk" : undefined;
-  const currentTurn: Side = game.nextMove % 2 === 1 ? "wht" : "blk";
 
   // Board orientation: white on bottom unless you're playing black.
   // Local game (canControlBoth) → white bottom. Spectating → white bottom. Playing white → white bottom. Playing black → black bottom.
@@ -383,11 +378,11 @@ export default function GamePage({
   const topCaptured = topIsWhite ? blackCaptured : whiteCaptured;
   const botCaptured = topIsWhite ? whiteCaptured : blackCaptured;
   const topLabel = topIsWhite
-    ? whiteUsername ?? "♔ White"
-    : blackUsername ?? "♚ Black";
+    ? (whiteUsername ?? "♔ White")
+    : (blackUsername ?? "♚ Black");
   const botLabel = topIsWhite
-    ? blackUsername ?? "♚ Black"
-    : whiteUsername ?? "♔ White";
+    ? (blackUsername ?? "♚ Black")
+    : (whiteUsername ?? "♔ White");
   const topSideLabel = topIsWhite ? "♔ White" : "♚ Black";
   const botSideLabel = topIsWhite ? "♚ Black" : "♔ White";
   const topRole = isSpectator
@@ -418,15 +413,6 @@ export default function GamePage({
   const boardVariant = game.variant.split("-")[0] as
     | "concentric"
     | "archimedean";
-  const positionState = (() => {
-    const pieces =
-      boardVariant === "concentric"
-        ? computePieceStateConcentric(moves)
-        : computePieceStateArchimedean(moves);
-    return boardVariant === "concentric"
-      ? gameStatusConcentric(pieces, currentTurn, moves)
-      : gameStatusArchimedean(pieces, currentTurn, moves);
-  })();
   const statusMessage =
     game.status === "white_win"
       ? positionState === "checkmate"
@@ -467,7 +453,7 @@ export default function GamePage({
     isSpectator,
     canControlBoth,
     gameOngoing: game.status === "ongoing",
-    variant: boardVariant,
+    variant: game.variant as GameVariant,
   };
 
   // Player info bar used above and below the board
@@ -577,7 +563,7 @@ export default function GamePage({
           <div className="shrink-0 border-t-2 border-black p-3">
             <button
               onClick={() => setShowRules(true)}
-              className="w-full py-2 font-bold uppercase text-xs border-4 border-black hover:bg-black hover:text-white transition-all flex items-center justify-center gap-2 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-none hover:translate-x-[3px] hover:translate-y-[3px]"
+              className="w-full py-2 font-bold uppercase text-xs border-4 border-black hover:bg-black hover:text-white transition-all flex items-center justify-center gap-2 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-none hover:translate-x-0.75 hover:translate-y-0.75"
             >
               <HelpCircle size={14} /> Game Rules
             </button>
@@ -687,15 +673,17 @@ function PlayerBar({
 }) {
   return (
     <div
-      className={`flex items-center gap-3 px-3 py-2 ${isWhiteSide ? "bg-white text-black" : "bg-black text-white"
-        }`}
+      className={`flex items-center gap-3 px-3 py-2 ${
+        isWhiteSide ? "bg-white text-black" : "bg-black text-white"
+      }`}
     >
-      <div className="shrink-0 min-w-[90px]">
+      <div className="shrink-0 min-w-22.5">
         <div className="font-black uppercase text-sm leading-none">{label}</div>
         {role && (
           <div
-            className={`text-[10px] uppercase tracking-wider font-bold leading-none mt-0.5 ${isWhiteSide ? "text-gray-400" : "text-gray-400"
-              }`}
+            className={`text-[10px] uppercase tracking-wider font-bold leading-none mt-0.5 ${
+              isWhiteSide ? "text-gray-400" : "text-gray-400"
+            }`}
           >
             {role}
           </div>
@@ -717,7 +705,9 @@ function PlayerBar({
         {isActive && gameOngoing && (
           <span className="w-1.5 h-1.5 rounded-full bg-current animate-pulse" />
         )}
-        <span className={`flex items-center justify-center text-center font-mono font-black tabular-nums text-xl border-2 px-2 py-0.5 ${isWhiteSide ? "border-black text-black" : "border-white text-white"}`}>
+        <span
+          className={`flex items-center justify-center text-center font-mono font-black tabular-nums text-xl border-2 px-2 py-0.5 ${isWhiteSide ? "border-black text-black" : "border-white text-white"}`}
+        >
           <TimerDisplay timeLeft={timeLeft} />
         </span>
       </div>
@@ -766,7 +756,10 @@ function MoveList({
   );
 }
 
-function ActionButtons({ onSend, drawOffered }: {
+function ActionButtons({
+  onSend,
+  drawOffered,
+}: {
   onSend: (type: "draw" | "resign") => void;
   drawOffered: boolean;
 }) {

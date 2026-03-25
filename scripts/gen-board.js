@@ -21,7 +21,9 @@ const lines = [
   { x1: 265, y1: 1365, x2: 1465, y2: 1365 },
 ];
 
+// eslint-disable-next-line
 const { intersect, shape } = require("svg-intersections");
+// eslint-disable-next-line
 const fs = require("fs");
 
 const isArchimedean = process.argv.includes("--archimedean");

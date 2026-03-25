@@ -22,14 +22,20 @@ export default async function GamePage({
   });
   const session = await getSession();
 
-  const playerIds = [game.whitePlayerId, game.blackPlayerId].filter(Boolean) as string[];
-  const players = playerIds.length > 0
-    ? await db().select({ id: playersTable.id, username: playersTable.username })
-        .from(playersTable)
-        .where(inArray(playersTable.id, playerIds))
-    : [];
-  const whiteUsername = players.find(p => p.id === game.whitePlayerId)?.username ?? null;
-  const blackUsername = players.find(p => p.id === game.blackPlayerId)?.username ?? null;
+  const playerIds = [game.whitePlayerId, game.blackPlayerId].filter(
+    Boolean,
+  ) as string[];
+  const players =
+    playerIds.length > 0
+      ? await db()
+          .select({ id: playersTable.id, username: playersTable.username })
+          .from(playersTable)
+          .where(inArray(playersTable.id, playerIds))
+      : [];
+  const whiteUsername =
+    players.find((p) => p.id === game.whitePlayerId)?.username ?? null;
+  const blackUsername =
+    players.find((p) => p.id === game.blackPlayerId)?.username ?? null;
 
   return (
     <div className="flex-1 flex flex-col overflow-hidden">

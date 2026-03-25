@@ -61,10 +61,23 @@ export default function RulesDialog({
               ))}
             </div>
             <div>
-              <div style={{ fontSize: "0.65rem", letterSpacing: "0.2em", color: "#aaa", textTransform: "uppercase" }}>
+              <div
+                style={{
+                  fontSize: "0.65rem",
+                  letterSpacing: "0.2em",
+                  color: "#aaa",
+                  textTransform: "uppercase",
+                }}
+              >
                 Variant I
               </div>
-              <h2 style={{ fontSize: "1.5rem", fontWeight: "bold", letterSpacing: "0.02em" }}>
+              <h2
+                style={{
+                  fontSize: "1.5rem",
+                  fontWeight: "bold",
+                  letterSpacing: "0.02em",
+                }}
+              >
                 Concentric Circle Chess
               </h2>
             </div>
@@ -85,7 +98,8 @@ export default function RulesDialog({
               (e.currentTarget as HTMLButtonElement).style.color = "#111";
             }}
             onMouseLeave={(e) => {
-              (e.currentTarget as HTMLButtonElement).style.background = "transparent";
+              (e.currentTarget as HTMLButtonElement).style.background =
+                "transparent";
               (e.currentTarget as HTMLButtonElement).style.color = "#fff";
             }}
           >
@@ -93,29 +107,50 @@ export default function RulesDialog({
           </button>
         </div>
 
-        <div className="p-8 space-y-8" style={{ background: "#fff", color: "#111" }}>
-
+        <div
+          className="p-8 space-y-8"
+          style={{ background: "#fff", color: "#111" }}
+        >
           {/* Board Overview */}
           <Section title="Board Overview">
             <InfoBox>
-              The board has <Strong>72 cells</Strong> arranged in concentric circles.
-              Each side has <Strong>16 pieces</Strong> — identical to standard chess except
-              for one <Strong>Prince</Strong>.
+              The board has <Strong>72 cells</Strong> arranged in concentric
+              circles. Each side has <Strong>16 pieces</Strong> — identical to
+              standard chess except for one <Strong>Prince</Strong>.
             </InfoBox>
           </Section>
 
           {/* Notation */}
           <Section title="Notation">
             <InfoBox>
-              <p>Cells are designated <Strong>a–f</Strong> on the left and <Strong>g–l</Strong> on the right. On the central vertical, light cells use a–f and dark cells use g–l.</p>
-              <p className="mt-2" style={{ fontSize: "0.85rem", color: "#555" }}>
+              <p>
+                Cells are designated <Strong>a–f</Strong> on the left and{" "}
+                <Strong>g–l</Strong> on the right. On the central vertical,
+                light cells use a–f and dark cells use g–l.
+              </p>
+              <p
+                className="mt-2"
+                style={{ fontSize: "0.85rem", color: "#555" }}
+              >
                 Example — clockwise from d7:{" "}
-                <span style={{ fontFamily: "monospace", background: "#f0f0f0", padding: "2px 6px", borderRadius: "3px", border: "1px solid #ccc" }}>
+                <span
+                  style={{
+                    fontFamily: "monospace",
+                    background: "#f0f0f0",
+                    padding: "2px 6px",
+                    borderRadius: "3px",
+                    border: "1px solid #ccc",
+                  }}
+                >
                   d7 d8 d9 i8 i7 i6 i5 i4 d5 d6
                 </span>
               </p>
-              <p className="mt-2" style={{ fontSize: "0.85rem", color: "#555" }}>
-                Every cell has neighbours across an <Strong>edge</Strong> (orthogonal) or a <Strong>vertex</Strong> (diagonal).
+              <p
+                className="mt-2"
+                style={{ fontSize: "0.85rem", color: "#555" }}
+              >
+                Every cell has neighbours across an <Strong>edge</Strong>{" "}
+                (orthogonal) or a <Strong>vertex</Strong> (diagonal).
               </p>
             </InfoBox>
           </Section>
@@ -124,13 +159,16 @@ export default function RulesDialog({
           <Section title="Special Cell Types">
             <div className="space-y-3">
               <SpecialCell label="Crescents" marker="◆">
-                Cells aligned vertically through the centre. Same-colour crescent cells are vertex neighbours.
+                Cells aligned vertically through the centre. Same-colour
+                crescent cells are vertex neighbours.
               </SpecialCell>
               <SpecialCell label="Half Moons" marker="◑">
-                The two central crescents with opposite colours. Each has 3 edge neighbours and 3 vertex neighbours.
+                The two central crescents with opposite colours. Each has 3 edge
+                neighbours and 3 vertex neighbours.
               </SpecialCell>
               <SpecialCell label="Twin Cells" marker="⟺">
-                The two horizontal cells one edge away from a crescent or half moon.
+                The two horizontal cells one edge away from a crescent or half
+                moon.
               </SpecialCell>
             </div>
           </Section>
@@ -146,13 +184,34 @@ export default function RulesDialog({
               }}
             >
               {[
-                { piece: "♔ King", rule: "1 cell in any direction. First move may leap 2 cells (even in check, even knight-style). Intermediate cell may be occupied but not threatened." },
-                { piece: "♙ Prince", rule: "Moves like a King but is not subject to check. On first move, may step 2 cells forward if it does not capture or leap." },
-                { piece: "♖ Rook", rule: "1 or more cells horizontally or around a circle. Cannot rotate a full 360° to its starting position. May move between g7 and f6 (and reverse)." },
-                { piece: "♗ Bishop", rule: "1 or more cells diagonally, keeping its colour. Landing on a crescent or half-moon from a non-crescent enables a swing on the same move. Can also swing via twin cells. Each bishop may change colour once by moving/capturing to a neighbouring cell of the other colour." },
-                { piece: "♕ Queen", rule: "Combines Rook and Bishop movement." },
-                { piece: "♞ Knight", rule: "Crosses an edge then a non-adjacent vertex, or a vertex then a non-adjacent edge. Near twins or half-moons may move a short distance like a rook." },
-                { piece: "♟ Pawn", rule: "1 cell forward onto a different colour. May move 2 cells on its initial move. On a crescent or half-moon it becomes a Berolina pawn (moves diagonally, captures across an edge)." },
+                {
+                  piece: "♔ King",
+                  rule: "1 cell in any direction. First move may leap 2 cells (even in check, even knight-style). Intermediate cell may be occupied but not threatened.",
+                },
+                {
+                  piece: "♙ Prince",
+                  rule: "Moves like a King but is not subject to check. On first move, may step 2 cells forward if it does not capture or leap.",
+                },
+                {
+                  piece: "♖ Rook",
+                  rule: "1 or more cells horizontally or around a circle. Cannot rotate a full 360° to its starting position. May move between g7 and f6 (and reverse).",
+                },
+                {
+                  piece: "♗ Bishop",
+                  rule: "1 or more cells diagonally, keeping its colour. Landing on a crescent or half-moon from a non-crescent enables a swing on the same move. Can also swing via twin cells. Each bishop may change colour once by moving/capturing to a neighbouring cell of the other colour.",
+                },
+                {
+                  piece: "♕ Queen",
+                  rule: "Combines Rook and Bishop movement.",
+                },
+                {
+                  piece: "♞ Knight",
+                  rule: "Crosses an edge then a non-adjacent vertex, or a vertex then a non-adjacent edge. Near twins or half-moons may move a short distance like a rook.",
+                },
+                {
+                  piece: "♟ Pawn",
+                  rule: "1 cell forward onto a different colour. May move 2 cells on its initial move. On a crescent or half-moon it becomes a Berolina pawn (moves diagonally, captures across an edge).",
+                },
               ].map(({ piece, rule }, i) => (
                 <div
                   key={piece}
@@ -176,7 +235,13 @@ export default function RulesDialog({
                   >
                     {piece}
                   </div>
-                  <div style={{ padding: "12px 16px", fontSize: "0.9rem", lineHeight: "1.5" }}>
+                  <div
+                    style={{
+                      padding: "12px 16px",
+                      fontSize: "0.9rem",
+                      lineHeight: "1.5",
+                    }}
+                  >
                     {rule}
                   </div>
                 </div>
@@ -186,7 +251,13 @@ export default function RulesDialog({
 
           {/* Pawn Details */}
           <Section title="Pawn Movement Details">
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "1fr 1fr",
+                gap: "16px",
+              }}
+            >
               <PawnTable
                 title="Regular Pawn"
                 rows={[
@@ -208,19 +279,34 @@ export default function RulesDialog({
             </div>
             <InfoBox>
               <span style={{ fontSize: "0.85rem", color: "#555" }}>
-                * All forward motion considers the opponent&apos;s vertex twins to the side as forward.
+                * All forward motion considers the opponent&apos;s vertex twins
+                to the side as forward.
               </span>
             </InfoBox>
           </Section>
 
           {/* Special Rules */}
           <Section title="Special Rules">
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "1fr 1fr",
+                gap: "12px",
+              }}
+            >
               {[
                 { rule: "Castling", detail: "Does not occur." },
                 { rule: "En Passant", detail: "As in standard chess." },
-                { rule: "Promotion", detail: "White promotes on row 10, Black on row 3. May become any piece except itself, the other pawn type, a Prince, or a King. Must be exercised at first opportunity if at all." },
-                { rule: "Prince Promotion", detail: "Like pawn promotion but may also become any standard piece — not itself, either pawn type, or King." },
+                {
+                  rule: "Promotion",
+                  detail:
+                    "White promotes on row 10, Black on row 3. May become any piece except itself, the other pawn type, a Prince, or a King. Must be exercised at first opportunity if at all.",
+                },
+                {
+                  rule: "Prince Promotion",
+                  detail:
+                    "Like pawn promotion but may also become any standard piece — not itself, either pawn type, or King.",
+                },
               ].map(({ rule, detail }) => (
                 <div
                   key={rule}
@@ -230,10 +316,24 @@ export default function RulesDialog({
                     overflow: "hidden",
                   }}
                 >
-                  <div style={{ background: "#111", color: "#fff", padding: "8px 14px", fontWeight: "bold", fontSize: "0.9rem" }}>
+                  <div
+                    style={{
+                      background: "#111",
+                      color: "#fff",
+                      padding: "8px 14px",
+                      fontWeight: "bold",
+                      fontSize: "0.9rem",
+                    }}
+                  >
                     {rule}
                   </div>
-                  <div style={{ padding: "10px 14px", fontSize: "0.88rem", lineHeight: "1.5" }}>
+                  <div
+                    style={{
+                      padding: "10px 14px",
+                      fontSize: "0.88rem",
+                      lineHeight: "1.5",
+                    }}
+                  >
                     {detail}
                   </div>
                 </div>
@@ -252,7 +352,8 @@ export default function RulesDialog({
               fontStyle: "italic",
             }}
           >
-            ♙ All forward motion considers the opponent&apos;s vertex twins to the side as forward. ♟
+            ♙ All forward motion considers the opponent&apos;s vertex twins to
+            the side as forward. ♟
           </div>
         </div>
       </div>
@@ -262,7 +363,13 @@ export default function RulesDialog({
 
 /* ─── Sub-components ─────────────────────────────────────── */
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
+function Section({
+  title,
+  children,
+}: {
+  title: string;
+  children: React.ReactNode;
+}) {
   return (
     <section>
       <h3
@@ -305,7 +412,15 @@ function Strong({ children }: { children: React.ReactNode }) {
   return <strong style={{ fontWeight: "bold" }}>{children}</strong>;
 }
 
-function SpecialCell({ label, marker, children }: { label: string; marker: string; children: React.ReactNode }) {
+function SpecialCell({
+  label,
+  marker,
+  children,
+}: {
+  label: string;
+  marker: string;
+  children: React.ReactNode;
+}) {
   return (
     <div
       style={{
@@ -318,10 +433,14 @@ function SpecialCell({ label, marker, children }: { label: string; marker: strin
         background: "#fafafa",
       }}
     >
-      <span style={{ fontSize: "1.3rem", lineHeight: 1, minWidth: "24px" }}>{marker}</span>
+      <span style={{ fontSize: "1.3rem", lineHeight: 1, minWidth: "24px" }}>
+        {marker}
+      </span>
       <div>
         <div style={{ fontWeight: "bold", marginBottom: "4px" }}>{label}</div>
-        <div style={{ fontSize: "0.9rem", color: "#444", lineHeight: "1.5" }}>{children}</div>
+        <div style={{ fontSize: "0.9rem", color: "#444", lineHeight: "1.5" }}>
+          {children}
+        </div>
       </div>
     </div>
   );
@@ -329,14 +448,34 @@ function SpecialCell({ label, marker, children }: { label: string; marker: strin
 
 function PawnTable({ title, rows }: { title: string; rows: string[][] }) {
   return (
-    <div style={{ border: "2px solid #111", borderRadius: "4px", overflow: "hidden" }}>
-      <div style={{ background: "#111", color: "#fff", padding: "8px 14px", fontWeight: "bold", fontSize: "0.88rem" }}>
+    <div
+      style={{
+        border: "2px solid #111",
+        borderRadius: "4px",
+        overflow: "hidden",
+      }}
+    >
+      <div
+        style={{
+          background: "#111",
+          color: "#fff",
+          padding: "8px 14px",
+          fontWeight: "bold",
+          fontSize: "0.88rem",
+        }}
+      >
         {title}
       </div>
       <table style={{ width: "100%", borderCollapse: "collapse" }}>
         <tbody>
           {rows.map((row, i) => (
-            <tr key={i} style={{ background: i === 0 ? "#e8e8e8" : i % 2 === 0 ? "#fafafa" : "#fff" }}>
+            <tr
+              key={i}
+              style={{
+                background:
+                  i === 0 ? "#e8e8e8" : i % 2 === 0 ? "#fafafa" : "#fff",
+              }}
+            >
               {row.map((cell, j) => (
                 <td
                   key={j}

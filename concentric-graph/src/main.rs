@@ -321,7 +321,7 @@ fn get_vertex_next(row: usize, col: usize) -> HashMap<(usize, usize), (usize, us
             next.insert((row + 1, col - 3), (row - 1, col + 1));
             next.insert((row + 1, col - 1), (row - 1, col - 1));
         } else {
-            next.insert((row + 1, col - 3), (row - 1, col - 3));
+            next.insert((row + 1, col - 3), (row - 1, col + 3));
             next.insert((row + 1, col - 1), (row - 1, col + 1));
         }
     }

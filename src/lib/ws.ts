@@ -11,7 +11,7 @@ export class GameSocket {
   private listener: ((message: ServerMsg) => void) | null = null;
   private queue: ClientMsg[] = [];
   private reconnecting: Promise<void> | null = null;
-  private reconnected: () => void = () => { };
+  private reconnected: () => void = () => {};
 
   public static getInstance(gameId: string): GameSocket {
     if (!this.instances.has(gameId)) {
@@ -30,7 +30,9 @@ export class GameSocket {
   }
 
   public reconnect(delay: number = 0, initial: boolean = false) {
-    if (this.socket) { return; }
+    if (this.socket) {
+      return;
+    }
     if (!initial) {
       if (!this.reconnecting) {
         this.reconnecting = new Promise((resolve) => {
@@ -44,7 +46,7 @@ export class GameSocket {
         error: "Failed to reconnect.",
         dismissible: true,
         closeButton: true,
-      })
+      });
     }
     console.log(`Reconnecting in ${delay}ms...`);
     if (delay > 0) {
@@ -55,7 +57,9 @@ export class GameSocket {
       return;
     }
     if (window.location.origin.startsWith("http://localhost")) {
-      this.socket = new WebSocket(`ws://localhost:8787/do/games/${this.gameId}/ws`);
+      this.socket = new WebSocket(
+        `ws://localhost:8787/do/games/${this.gameId}/ws`,
+      );
     } else {
       this.socket = new WebSocket(
         `wss://capstone.mrvillage.dev/do/games/${this.gameId}/ws`,
@@ -65,7 +69,7 @@ export class GameSocket {
       console.log("WebSocket connected");
       this.send({ type: "sync_request" });
       this.reconnected();
-      this.reconnected = () => { };
+      this.reconnected = () => {};
       this.reconnecting = null;
       while (this.queue.length > 0) {
         const message = this.queue.shift()!;
@@ -110,11 +114,23 @@ export class GameSocket {
     if (this.socket && this.socket.readyState === WebSocket.OPEN) {
       this.socket.send(JSON.stringify(message));
     } else {
-      console.warn("WebSocket not ready, queuing message:", message, this.socket?.readyState);
-      if (!this.queue.some((msg) => JSON.stringify(msg) === JSON.stringify(message))) {
+      console.warn(
+        "WebSocket not ready, queuing message:",
+        message,
+        this.socket?.readyState,
+      );
+      if (
+        !this.queue.some(
+          (msg) => JSON.stringify(msg) === JSON.stringify(message),
+        )
+      ) {
         this.queue.push(message);
       }
-      if (!this.socket || this.socket.readyState === WebSocket.CLOSED || this.socket.readyState === WebSocket.CLOSING) {
+      if (
+        !this.socket ||
+        this.socket.readyState === WebSocket.CLOSED ||
+        this.socket.readyState === WebSocket.CLOSING
+      ) {
         this.socket = null;
         this.reconnect(0);
       }
