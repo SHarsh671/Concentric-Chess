@@ -12,7 +12,7 @@ export default function RulesPage() {
         <div className="absolute top-0 right-0 text-9xl opacity-5 select-none font-bold leading-none">
           ♟
         </div>
-        <div className="max-w-4xl">
+        <div className="max-w-6xl mx-auto">
           <div className="inline-flex items-center gap-2 border-2 border-white px-4 py-1 mb-4 text-xs font-bold uppercase tracking-widest">
             <span>♔</span> Game Rules
           </div>
@@ -26,7 +26,7 @@ export default function RulesPage() {
       </div>
 
       {/* Tab switcher */}
-      <div className="flex border-b-4 border-black">
+      <div className="flex border-b-4 border-black justify-center">
         <button
           onClick={() => setTab("concentric")}
           className={`flex items-center gap-3 px-8 py-4 font-bold uppercase tracking-widest text-sm transition-colors border-r-4 border-black ${
@@ -52,7 +52,7 @@ export default function RulesPage() {
       </div>
 
       {/* Content */}
-      <div className="max-w-4xl px-8 py-10 space-y-10">
+      <div className="max-w-6xl mx-auto px-8 py-10 space-y-10">
         {tab === "concentric" ? <ConcentricRules /> : <SpiralRules />}
       </div>
     </div>
@@ -139,13 +139,13 @@ function ConcentricRules() {
             <div
               key={piece}
               className={`grid ${i !== 0 ? "border-t border-gray-200" : ""}`}
-              style={{ gridTemplateColumns: "160px 1fr" }}
+              style={{ gridTemplateColumns: "200px 1fr" }}
             >
-              <div className="p-3 font-bold text-sm border-r-4 border-black flex items-center bg-white">
+              <div className="p-4 font-bold text-sm border-r-4 border-black flex items-center bg-white">
                 {piece}
               </div>
               <div
-                className={`p-3 text-sm leading-relaxed ${
+                className={`p-4 text-sm leading-relaxed ${
                   i % 2 === 0 ? "bg-white" : "bg-gray-50"
                 }`}
               >
@@ -374,8 +374,8 @@ function PawnTable({ title, rows }: { title: string; rows: string[][] }) {
                 i === 0
                   ? "bg-gray-100"
                   : i % 2 === 0
-                    ? "bg-gray-50"
-                    : "bg-white"
+                  ? "bg-gray-50"
+                  : "bg-white"
               }
             >
               {row.map((cell, j) => (
