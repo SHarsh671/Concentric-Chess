@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Concentric Chess",
+  title: "Concentric & Archimedean Chess",
   description: "Play concentric or archimedean chess online!",
 };
 

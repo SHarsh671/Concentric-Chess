@@ -39,14 +39,37 @@ export default function SpiralRulesDialog({
           <div className="flex items-center gap-3">
             {/* Spiral icon made from nested arcs */}
             <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
-              <path d="M18 2 C28 2, 34 8, 34 18 C34 28, 28 34, 18 34 C8 34, 4 28, 4 18 C4 10, 9 6, 18 6 C26 6, 30 12, 30 18 C30 24, 26 28, 18 28 C12 28, 10 24, 10 18 C10 14, 13 12, 18 12 C22 12, 24 15, 24 18" stroke="#aaa" strokeWidth="1.5" fill="none" />
-              <path d="M18 15 C20 15, 22 16.5, 22 18 C22 20, 20 22, 18 22 C16 22, 14 20, 14 18 C14 16, 16 14, 18 14" stroke="#fff" strokeWidth="1.5" fill="none" />
+              <path
+                d="M18 2 C28 2, 34 8, 34 18 C34 28, 28 34, 18 34 C8 34, 4 28, 4 18 C4 10, 9 6, 18 6 C26 6, 30 12, 30 18 C30 24, 26 28, 18 28 C12 28, 10 24, 10 18 C10 14, 13 12, 18 12 C22 12, 24 15, 24 18"
+                stroke="#aaa"
+                strokeWidth="1.5"
+                fill="none"
+              />
+              <path
+                d="M18 15 C20 15, 22 16.5, 22 18 C22 20, 20 22, 18 22 C16 22, 14 20, 14 18 C14 16, 16 14, 18 14"
+                stroke="#fff"
+                strokeWidth="1.5"
+                fill="none"
+              />
             </svg>
             <div>
-              <div style={{ fontSize: "0.65rem", letterSpacing: "0.2em", color: "#aaa", textTransform: "uppercase" }}>
+              <div
+                style={{
+                  fontSize: "0.65rem",
+                  letterSpacing: "0.2em",
+                  color: "#aaa",
+                  textTransform: "uppercase",
+                }}
+              >
                 Variant II
               </div>
-              <h2 style={{ fontSize: "1.5rem", fontWeight: "bold", letterSpacing: "0.02em" }}>
+              <h2
+                style={{
+                  fontSize: "1.5rem",
+                  fontWeight: "bold",
+                  letterSpacing: "0.02em",
+                }}
+              >
                 Archimedes Spiral Chess
               </h2>
             </div>
@@ -67,7 +90,8 @@ export default function SpiralRulesDialog({
               (e.currentTarget as HTMLButtonElement).style.color = "#111";
             }}
             onMouseLeave={(e) => {
-              (e.currentTarget as HTMLButtonElement).style.background = "transparent";
+              (e.currentTarget as HTMLButtonElement).style.background =
+                "transparent";
               (e.currentTarget as HTMLButtonElement).style.color = "#fff";
             }}
           >
@@ -75,14 +99,18 @@ export default function SpiralRulesDialog({
           </button>
         </div>
 
-        <div className="p-8 space-y-8" style={{ background: "#fff", color: "#111" }}>
-
+        <div
+          className="p-8 space-y-8"
+          style={{ background: "#fff", color: "#111" }}
+        >
           {/* Intro */}
           <Section title="Overview">
             <InfoBox>
-              Archimedes Spiral Chess is played on a board of <Strong>two interlocking Archimedes spirals</Strong>.
-              All rules from Concentric Circle Chess apply, with the specific modifications listed below.
-              Understanding how diagonals behave on the spiral is key.
+              Archimedes Spiral Chess is played on a board of{" "}
+              <Strong>two interlocking Archimedes spirals</Strong>. All rules
+              from Concentric Circle Chess apply, with the specific
+              modifications listed below. Understanding how diagonals behave on
+              the spiral is key.
             </InfoBox>
           </Section>
 
@@ -135,15 +163,20 @@ export default function SpiralRulesDialog({
 
           {/* Rule Changes */}
           <Section title="Rule Modifications from Concentric Circle Chess">
-            <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+            <div
+              style={{ display: "flex", flexDirection: "column", gap: "12px" }}
+            >
               <RuleChange number="1" title="Bishop & Queen on Light Crescents">
-                A bishop or queen on a <Strong>light crescent</Strong> may move along the entire vertical
-                involving both <code>f7</code> and <code>g6</code> — effectively crossing the spiral junction in one move.
+                A bishop or queen on a <Strong>light crescent</Strong> may move
+                along the entire vertical involving both <code>f7</code> and{" "}
+                <code>g6</code> — effectively crossing the spiral junction in
+                one move.
               </RuleChange>
               <RuleChange number="2" title="Pawn at l6 / a7">
-                A <Strong>white pawn on l6</Strong> may advance one cell to <code>a7</code>.
-                Conversely, a <Strong>black pawn on a7</Strong> may advance to <code>l6</code>.
-                This crossing reflects the spiral topology of the board.
+                A <Strong>white pawn on l6</Strong> may advance one cell to{" "}
+                <code>a7</code>. Conversely, a <Strong>black pawn on a7</Strong>{" "}
+                may advance to <code>l6</code>. This crossing reflects the
+                spiral topology of the board.
               </RuleChange>
             </div>
           </Section>
@@ -151,24 +184,61 @@ export default function SpiralRulesDialog({
           {/* Inherited Rules Summary */}
           <Section title="Rules Inherited from Concentric Circle Chess">
             <InfoBox>
-              All other rules apply unchanged — including pawn types (regular vs Berolina on crescents),
-              the Prince, castling being absent, en passant, and promotion rows (row 10 for White, row 3 for Black).
+              All other rules apply unchanged — including pawn types (regular vs
+              Berolina on crescents), the Prince, castling being absent, en
+              passant, and promotion rows (row 10 for White, row 3 for Black).
               See the Concentric Circle Chess rules for full details.
             </InfoBox>
           </Section>
 
           {/* Quick reference */}
           <Section title="Quick Reference — What's Different?">
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "1fr 1fr",
+                gap: "12px",
+              }}
+            >
               {[
-                { label: "Board shape", value: "Two interlocking Archimedes spirals" },
-                { label: "Diagonals", "value": "Follow spiral wrapping — use table above" },
-                { label: "Bishop/Queen on f7 or g6", value: "Can traverse the full central vertical" },
-                { label: "Pawn wrap", value: "White l6→a7 and Black a7→l6 allowed" },
+                {
+                  label: "Board shape",
+                  value: "Two interlocking Archimedes spirals",
+                },
+                {
+                  label: "Diagonals",
+                  value: "Follow spiral wrapping — use table above",
+                },
+                {
+                  label: "Bishop/Queen on f7 or g6",
+                  value: "Can traverse the full central vertical",
+                },
+                {
+                  label: "Pawn wrap",
+                  value: "White l6→a7 and Black a7→l6 allowed",
+                },
               ].map(({ label, value }) => (
-                <div key={label} style={{ border: "1px solid #ddd", borderLeft: "4px solid #111", borderRadius: "0 4px 4px 0", padding: "10px 14px" }}>
-                  <div style={{ fontWeight: "bold", fontSize: "0.85rem", marginBottom: "4px" }}>{label}</div>
-                  <div style={{ fontSize: "0.88rem", color: "#444" }}>{value}</div>
+                <div
+                  key={label}
+                  style={{
+                    border: "1px solid #ddd",
+                    borderLeft: "4px solid #111",
+                    borderRadius: "0 4px 4px 0",
+                    padding: "10px 14px",
+                  }}
+                >
+                  <div
+                    style={{
+                      fontWeight: "bold",
+                      fontSize: "0.85rem",
+                      marginBottom: "4px",
+                    }}
+                  >
+                    {label}
+                  </div>
+                  <div style={{ fontSize: "0.88rem", color: "#444" }}>
+                    {value}
+                  </div>
                 </div>
               ))}
             </div>
@@ -185,7 +255,8 @@ export default function SpiralRulesDialog({
               fontStyle: "italic",
             }}
           >
-            ♙ Spiral topology changes where diagonals lead — always consult the reference table. ♟
+            ♙ Spiral topology changes where diagonals lead — always consult the
+            reference table. ♟
           </div>
         </div>
       </div>
@@ -195,7 +266,13 @@ export default function SpiralRulesDialog({
 
 /* ─── Sub-components ─────────────────────────────────────── */
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
+function Section({
+  title,
+  children,
+}: {
+  title: string;
+  children: React.ReactNode;
+}) {
   return (
     <section>
       <h3
@@ -238,15 +315,46 @@ function Strong({ children }: { children: React.ReactNode }) {
   return <strong style={{ fontWeight: "bold" }}>{children}</strong>;
 }
 
-function RuleChange({ number, title, children }: { number: string; title: string; children: React.ReactNode }) {
+function RuleChange({
+  number,
+  title,
+  children,
+}: {
+  number: string;
+  title: string;
+  children: React.ReactNode;
+}) {
   return (
-    <div style={{ display: "flex", gap: "14px", alignItems: "flex-start", border: "2px solid #111", borderRadius: "4px", overflow: "hidden" }}>
-      <div style={{ background: "#111", color: "#fff", padding: "14px 16px", fontWeight: "bold", fontSize: "1.1rem", minWidth: "44px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+    <div
+      style={{
+        display: "flex",
+        gap: "14px",
+        alignItems: "flex-start",
+        border: "2px solid #111",
+        borderRadius: "4px",
+        overflow: "hidden",
+      }}
+    >
+      <div
+        style={{
+          background: "#111",
+          color: "#fff",
+          padding: "14px 16px",
+          fontWeight: "bold",
+          fontSize: "1.1rem",
+          minWidth: "44px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
         {number}
       </div>
       <div style={{ padding: "12px 14px 12px 0" }}>
         <div style={{ fontWeight: "bold", marginBottom: "4px" }}>{title}</div>
-        <div style={{ fontSize: "0.9rem", color: "#444", lineHeight: "1.5" }}>{children}</div>
+        <div style={{ fontSize: "0.9rem", color: "#444", lineHeight: "1.5" }}>
+          {children}
+        </div>
       </div>
     </div>
   );

@@ -1,4 +1,4 @@
-import { Gamepad, Book, History, Settings, FlaskConical, Film } from "lucide-react";
+import { Gamepad, Book, History, Settings } from "lucide-react";
 import * as React from "react";
 import {
   Sidebar,
@@ -20,8 +20,6 @@ const data = [
   { title: "Play", url: "/play", icon: Gamepad, piece: "♟" },
   { title: "History", url: "/history", icon: History, piece: "♜" },
   { title: "Rules", url: "/rules", icon: Book, piece: "♝" },
-  { title: "Test Board", url: "/test-board", icon: FlaskConical, piece: "♞" },
-  { title: "Test Replay", url: "/test-replay", icon: Film, piece: "♛" },
 ];
 
 export async function AppShell({
@@ -69,7 +67,7 @@ export async function AppShell({
           </SidebarMenu>
 
           {/* Decorative chess row */}
-          <div className="mx-2 mt-4 border-t-2 border-b-2 border-black py-2 text-center text-xl tracking-widest opacity-10 select-none">
+          <div className="mx-2 mt-4 border-t-2 border-b-2 border-black py-2 text-center text-xl tracking-widest opacity-100 select-none">
             ♜♞♝♛♚♝♞♜
           </div>
 
@@ -93,13 +91,13 @@ export async function AppShell({
               <div className="flex flex-col gap-2">
                 <Link
                   href="/signup"
-                  className="w-full h-11 flex items-center justify-center bg-black text-white border-4 border-black font-bold uppercase tracking-widest text-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,0.3)] hover:shadow-none hover:translate-x-[3px] hover:translate-y-[3px] transition-all"
+                  className="w-full h-11 flex items-center justify-center bg-black text-white border-4 border-black font-bold uppercase tracking-widest text-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,0.3)] hover:shadow-none hover:translate-x-0.75 hover:translate-y-0.75 transition-all"
                 >
                   Sign Up
                 </Link>
                 <Link
                   href="/login"
-                  className="w-full h-11 flex items-center justify-center bg-white text-black border-4 border-black font-bold uppercase tracking-widest text-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-none hover:translate-x-[3px] hover:translate-y-[3px] transition-all"
+                  className="w-full h-11 flex items-center justify-center bg-white text-black border-4 border-black font-bold uppercase tracking-widest text-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-none hover:translate-x-0.75 hover:translate-y-0.75 transition-all"
                 >
                   Log In
                 </Link>
@@ -116,9 +114,7 @@ export async function AppShell({
             <SidebarTrigger />
           </div>
         </header>
-        <div className="flex flex-1 flex-col">
-          {children}
-        </div>
+        <div className="flex flex-1 flex-col">{children}</div>
       </SidebarInset>
     </SidebarProvider>
   );

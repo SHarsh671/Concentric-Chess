@@ -16,7 +16,6 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { playersTable, sessionsTable } from "shared";
 import * as t from "drizzle-orm";
-import { getCloudflareContext } from "@opennextjs/cloudflare";
 
 export type SignupState = {
   message: string;

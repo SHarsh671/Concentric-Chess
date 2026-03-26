@@ -16,19 +16,12 @@ export type PieceProps = {
 export default function Piece({
   type,
   color,
-  x = 0,
-  y = 0,
   onClick,
   isSelected,
   position,
   variant,
   flipped,
 }: PieceProps) {
-  // Scale factor to match the 900px board size
-  const scaleFactor = 900 / 1730;
-  const scaledX = x * scaleFactor;
-  const scaledY = y * scaleFactor;
-
   return (
     <div
       className={`absolute cursor-pointer size-piece select-none ${variant === "concentric" ? position : position.concat("a")}`}
@@ -39,10 +32,9 @@ export default function Piece({
         // zIndex: 10,
         // filter: isSelected ? "drop-shadow(0 0 10px yellow)" : "none",
         scale: isSelected ? "1.1" : "1",
-        pointerEvents: 'none',
+        pointerEvents: "none",
         transform: flipped ? "rotate(180deg)" : undefined,
-      }
-      }
+      }}
       onClick={(e) => {
         e.stopPropagation();
         onClick?.();
@@ -57,6 +49,6 @@ export default function Piece({
         // className={`pointer-events-none size-piece absolute ${position}`}
         draggable={false}
       />
-    </div >
+    </div>
   );
 }

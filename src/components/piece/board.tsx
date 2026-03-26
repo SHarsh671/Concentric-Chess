@@ -1,19 +1,6 @@
-"use client";
-
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import Piece from "./piece";
-import { initialPieces } from "shared/concentric-rules";
-import {
-  computePieceStateConcentric,
-  generatePseudoLegalMovesForPieceConcentric,
-  validPromotionOptionsForMoveConcentric,
-} from "shared/concentric-rules";
-import {
-  computePieceStateArchimedean,
-  generatePseudoLegalMovesForPieceArchimedean,
-  validPromotionOptionsForMoveArchimedean,
-} from "shared/archimedean-rules";
-import { Move } from "shared";
+import { GameVariant, Move } from "shared";
 import {
   CONCENTRIC_GRAPH,
   ARCHIMEDEAN_GRAPH,
@@ -22,7 +9,12 @@ import {
   Side,
 } from "shared/graph";
 import colors from "tailwindcss/colors";
-import { toNotation } from "@/lib/utils";
+import {
+  getLegalMovesFromState,
+  getPromotionOptionsForMove,
+  getState,
+  initialPieces,
+} from "shared/rules";
 
 type Space = {
   id: string;
@@ -51,52 +43,6 @@ type PendingPromotion = {
   options: PieceType[];
 };
 
-function computePiecesForMoves(
-  variant: "concentric" | "archimedean",
-  moves: Move[],
-): RulesPiece[] {
-  return variant === "concentric"
-    ? computePieceStateConcentric(moves)
-    : computePieceStateArchimedean(moves);
-}
-
-// Build captured list from per-move piece deltas so promotions are not counted as captures.
-function computeCaptured(
-  variant: "concentric" | "archimedean",
-  moves: Move[],
-): CapturedPiece[] {
-  const captured: CapturedPiece[] = [];
-  let prevPieces = computePiecesForMoves(variant, []);
-
-  for (let i = 0; i < moves.length; i++) {
-    const nextPieces = computePiecesForMoves(variant, moves.slice(0, i + 1));
-    if (nextPieces.length < prevPieces.length) {
-      const nextCounts = new Map<string, number>();
-      for (const p of nextPieces) {
-        const key = `${p.type}|${p.color}`;
-        nextCounts.set(key, (nextCounts.get(key) ?? 0) + 1);
-      }
-      const capturedColor = moves[i].moveNumber % 2 === 1 ? "blk" : "wht";
-      const prevCounts = new Map<string, number>();
-      for (const p of prevPieces) {
-        if (p.color !== capturedColor) continue;
-        const key = `${p.type}|${p.color}`;
-        prevCounts.set(key, (prevCounts.get(key) ?? 0) + 1);
-      }
-      for (const [key, prevCount] of prevCounts) {
-        const nextCount = nextCounts.get(key) ?? 0;
-        const diff = prevCount - nextCount;
-        if (diff <= 0) continue;
-        const [type, color] = key.split("|");
-        for (let j = 0; j < diff; j++) captured.push({ type, color });
-      }
-    }
-    prevPieces = nextPieces;
-  }
-
-  return captured;
-}
-
 export default function Board({
   moves,
   onMove,
@@ -117,7 +63,7 @@ export default function Board({
   isSpectator: boolean;
   canControlBoth: boolean;
   gameOngoing?: boolean;
-  variant: "concentric" | "archimedean";
+  variant: GameVariant;
   onCapturedPiecesChange?: (captured: CapturedPiece[]) => void;
   trackCapturedPieces?: boolean;
   isReplayMode?: boolean;
@@ -132,18 +78,18 @@ export default function Board({
     pendingMove: null,
     capturedPieces: [],
   });
-  const [piecesReady, setPiecesReady] = useState(false);
   const [pendingPromotion, setPendingPromotion] =
     useState<PendingPromotion | null>(null);
 
-  useEffect(() => {
-    setPiecesReady(true);
-    const newPieces = computePiecesForMoves(variant, moves);
-    const newCaptured = trackCapturedPieces
-      ? computeCaptured(variant, moves)
-      : boardState.capturedPieces;
+  const state = useMemo(() => {
+    return getState(variant, moves);
+  }, [variant, moves]);
 
-    if (trackCapturedPieces) {
+  useEffect(() => {
+    const newPieces = Array.from(state.board.values());
+    const newCaptured = trackCapturedPieces ? state.captured : null;
+
+    if (trackCapturedPieces && newCaptured) {
       onCapturedPiecesChange?.(newCaptured);
     }
 
@@ -151,7 +97,7 @@ export default function Board({
     setBoardState((prev) => ({
       ...prev,
       pieces: newPieces,
-      capturedPieces: newCaptured,
+      capturedPieces: newCaptured ?? prev.capturedPieces,
       selectedPiece: null,
       selectedCell: null,
       legalMoves: [],
@@ -159,10 +105,18 @@ export default function Board({
       pendingMove: null,
     }));
     setPendingPromotion(null);
-  }, [moves]);
+  }, [
+    moves,
+    state.board,
+    state.captured,
+    trackCapturedPieces,
+    onCapturedPiecesChange,
+  ]);
 
   useEffect(() => {
-    fetch(variant === "concentric" ? "/cc/ccboard.svg" : "/as/asboard.svg")
+    fetch(
+      variant.startsWith("concentric") ? "/cc/ccboard.svg" : "/as/asboard.svg",
+    )
       .then((res) => res.text())
       .then((svgText) => {
         const parser = new DOMParser();
@@ -176,7 +130,7 @@ export default function Board({
           })),
         );
       });
-  }, []);
+  }, [variant]);
 
   const getCellCenter = (cellId: string): { x: number; y: number } => {
     if (typeof window !== "undefined") {
@@ -194,27 +148,7 @@ export default function Board({
   };
 
   const calculateLegalMoves = (piece: RulesPiece): string[] => {
-    const rulesPieces: RulesPiece[] = boardState.pieces.map((p) => ({
-      type: p.type as PieceType,
-      color: p.color as Side,
-      position: p.position,
-    }));
-    const rulesPiece: RulesPiece = {
-      type: piece.type as PieceType,
-      color: piece.color as Side,
-      position: piece.position,
-    };
-    return variant === "concentric"
-      ? generatePseudoLegalMovesForPieceConcentric(
-        rulesPiece,
-        rulesPieces,
-        moves,
-      )
-      : generatePseudoLegalMovesForPieceArchimedean(
-        rulesPiece,
-        rulesPieces,
-        moves,
-      );
+    return getLegalMovesFromState(state, piece.position);
   };
 
   const handleCellClick = (cellId: string) => {
@@ -229,23 +163,23 @@ export default function Board({
     console.log("Cell clicked:", cellId);
     const pieceAtCell = boardState.pieces.find((p) => p.position === cellId);
 
-    if (canCommitMove && boardState.pendingMove === cellId && boardState.selectedPiece && boardState.selectedPiece.color === currentTurn) {
+    if (
+      canCommitMove &&
+      boardState.pendingMove === cellId &&
+      boardState.selectedPiece &&
+      boardState.selectedPiece.color === currentTurn
+    ) {
       console.log(
         "Move confirmed:",
         boardState.selectedPiece.position,
         "->",
         cellId,
       );
-      const promotionOptions =
-        variant === "concentric"
-          ? validPromotionOptionsForMoveConcentric(
-            boardState.selectedPiece,
-            cellId,
-          )
-          : validPromotionOptionsForMoveArchimedean(
-            boardState.selectedPiece,
-            cellId,
-          );
+      const promotionOptions = getPromotionOptionsForMove(
+        boardState.selectedPiece.type,
+        boardState.selectedPiece.color,
+        cellId,
+      );
       if (promotionOptions.length > 0) {
         setPendingPromotion({
           from: boardState.selectedPiece.position,
@@ -338,6 +272,7 @@ export default function Board({
         }));
       } else {
         setPendingPromotion(null);
+        console.log("Piece selected:", pieceAtCell);
         const legalMoves = calculateLegalMoves(pieceAtCell);
         setBoardState((prev) => ({
           ...prev,
@@ -374,14 +309,6 @@ export default function Board({
             : prev.hoveredMove,
       }));
     }
-  };
-
-  const handlePieceClick = (piece: RulesPiece) => {
-    if (isSpectator) return;
-    if (viewerSide !== currentTurn) return;
-    if (piece.color !== viewerSide) return;
-
-    handleCellClick(piece.position);
   };
 
   // ── Cell colour logic ─────────────────────────────────────────────────────
@@ -444,7 +371,7 @@ export default function Board({
       };
     }
     const color = (
-      variant === "concentric" ? CONCENTRIC_GRAPH : ARCHIMEDEAN_GRAPH
+      variant.startsWith("concentric") ? CONCENTRIC_GRAPH : ARCHIMEDEAN_GRAPH
     ).color[cellId];
     const getColor = (
       color: "dark" | "light" | "dark1" | "light1" | "dark2" | "light2",
@@ -475,16 +402,24 @@ export default function Board({
   // The SVG viewBox is 0 0 1730 1730, but the board circle has radius 600 centered at (865,865),
   // so it spans 265–1465 in both axes (1200×1200 of 1730×1730 = ~69.4%). Scale up by 1730/1200
   // from the center so the board circle fills the container; overflow is clipped by the parent.
-  const BOARD_SCALE = 1730 / (variant === "concentric" ? 1250 : 1400);
+  const BOARD_SCALE = 1730 / (variant.startsWith("concentric") ? 1250 : 1400);
 
   return (
-    <div style={{ position: "absolute", inset: 0, overflow: "hidden" }}>
+    <div
+      style={{
+        position: "absolute",
+        inset: 0,
+        overflow: "hidden",
+        pointerEvents: isReplayMode ? "none" : "auto",
+      }}
+    >
       <div
         style={{
           position: "absolute",
           inset: 0,
-          transform: `scale(${BOARD_SCALE})${viewerSide === "blk" ? " rotate(180deg)" : ""
-            }`,
+          transform: `scale(${BOARD_SCALE})${
+            viewerSide === "blk" ? " rotate(180deg)" : ""
+          }`,
           transformOrigin: "center center",
         }}
       >
@@ -516,7 +451,7 @@ export default function Board({
                   cursor: isReplayMode
                     ? "default"
                     : isLegal ||
-                      boardState.pieces.some((p) => p.position === s.id)
+                        boardState.pieces.some((p) => p.position === s.id)
                       ? "pointer"
                       : "default",
                 }}
@@ -547,76 +482,78 @@ export default function Board({
           })}
 
           {/* Row labels for concentric board */}
-          {variant === "concentric" &&
+          {variant.startsWith("concentric") &&
             (() => {
               const FONT = 40;
               const isFlipped = viewerSide === "blk";
-              const topItems = isFlipped ?
-                [
-                  { label: "a", y: 385, x: 680 },
-                  { label: "k", y: 385, x: 1070 },
+              const topItems = isFlipped
+                ? [
+                    { label: "a", y: 385, x: 680 },
+                    { label: "k", y: 385, x: 1070 },
 
-                  { label: "b", y: 485, x: 675 },
-                  { label: "j", y: 490, x: 1060 },
+                    { label: "b", y: 485, x: 675 },
+                    { label: "j", y: 490, x: 1060 },
 
-                  { label: "c", y: 585, x: 730 },
-                  { label: "i", y: 585, x: 1025 },
+                    { label: "c", y: 585, x: 730 },
+                    { label: "i", y: 585, x: 1025 },
 
-                  { label: "d", y: 685, x: 760 },
-                  { label: "h", y: 685, x: 995 },
+                    { label: "d", y: 685, x: 760 },
+                    { label: "h", y: 685, x: 995 },
 
-                  { label: "e", y: 785, x: 795 },
-                  { label: "g", y: 790, x: 965 },
+                    { label: "e", y: 785, x: 795 },
+                    { label: "g", y: 790, x: 965 },
 
-                  { label: "f", y: 325, x: 675 },
-                  { label: "f", y: 325, x: 1065 },
-                ] : [
-                  { label: "a", y: 385, x: 650 },
-                  { label: "k", y: 385, x: 1070 },
+                    { label: "f", y: 325, x: 675 },
+                    { label: "f", y: 325, x: 1065 },
+                  ]
+                : [
+                    { label: "a", y: 385, x: 650 },
+                    { label: "k", y: 385, x: 1070 },
 
-                  { label: "b", y: 485, x: 675 },
-                  { label: "j", y: 485, x: 1055 },
+                    { label: "b", y: 485, x: 675 },
+                    { label: "j", y: 485, x: 1055 },
 
-                  { label: "c", y: 585, x: 700 },
-                  { label: "i", y: 585, x: 1015 },
+                    { label: "c", y: 585, x: 700 },
+                    { label: "i", y: 585, x: 1015 },
 
-                  { label: "d", y: 685, x: 725 },
-                  { label: "h", y: 685, x: 980 },
+                    { label: "d", y: 685, x: 725 },
+                    { label: "h", y: 685, x: 980 },
 
-                  { label: "e", y: 780, x: 770 },
-                  { label: "g", y: 780, x: 945 },
+                    { label: "e", y: 780, x: 770 },
+                    { label: "g", y: 780, x: 945 },
 
-                  { label: "f", y: 325, x: 655 },
-                  { label: "f", y: 325, x: 1070 },
-                ];
-              const botItems = isFlipped ?
-                [
-                  { label: "e", y: 955, x: 800 },
-                  { label: "g", y: 955, x: 960 },
-                  { label: "d", y: 1045, x: 755 },
-                  { label: "h", y: 1045, x: 1000 },
-                  { label: "c", y: 1155, x: 745 },
-                  { label: "i", y: 1145, x: 1015 },
-                  { label: "b", y: 1245, x: 695 },
-                  { label: "j", y: 1245, x: 1055 },
-                  { label: "a", y: 1355, x: 695 },
-                  { label: "k", y: 1345, x: 1075 },
-                  { label: "f", y: 1400, x: 690 },
-                  { label: "f", y: 1400, x: 1070 },
-                ] : [
-                  { label: "e", y: 945, x: 770 },
-                  { label: "g", y: 935, x: 945 },
-                  { label: "d", y: 1045, x: 725 },
-                  { label: "h", y: 1045, x: 980 },
-                  { label: "c", y: 1145, x: 700 },
-                  { label: "i", y: 1145, x: 1015 },
-                  { label: "b", y: 1245, x: 675 },
-                  { label: "j", y: 1235, x: 1055 },
-                  { label: "a", y: 1345, x: 650 },
-                  { label: "k", y: 1345, x: 1070 },
-                  { label: "f", y: 1400, x: 655 },
-                  { label: "f", y: 1400, x: 1070 },
-                ];
+                    { label: "f", y: 325, x: 655 },
+                    { label: "f", y: 325, x: 1070 },
+                  ];
+              const botItems = isFlipped
+                ? [
+                    { label: "e", y: 955, x: 800 },
+                    { label: "g", y: 955, x: 960 },
+                    { label: "d", y: 1045, x: 755 },
+                    { label: "h", y: 1045, x: 1000 },
+                    { label: "c", y: 1155, x: 745 },
+                    { label: "i", y: 1145, x: 1015 },
+                    { label: "b", y: 1245, x: 695 },
+                    { label: "j", y: 1245, x: 1055 },
+                    { label: "a", y: 1355, x: 695 },
+                    { label: "k", y: 1345, x: 1075 },
+                    { label: "f", y: 1400, x: 690 },
+                    { label: "f", y: 1400, x: 1070 },
+                  ]
+                : [
+                    { label: "e", y: 945, x: 770 },
+                    { label: "g", y: 935, x: 945 },
+                    { label: "d", y: 1045, x: 725 },
+                    { label: "h", y: 1045, x: 980 },
+                    { label: "c", y: 1145, x: 700 },
+                    { label: "i", y: 1145, x: 1015 },
+                    { label: "b", y: 1245, x: 675 },
+                    { label: "j", y: 1235, x: 1055 },
+                    { label: "a", y: 1345, x: 650 },
+                    { label: "k", y: 1345, x: 1070 },
+                    { label: "f", y: 1400, x: 655 },
+                    { label: "f", y: 1400, x: 1070 },
+                  ];
               const labelStyle: React.CSSProperties = {
                 userSelect: "none",
                 pointerEvents: "none",
@@ -669,35 +606,58 @@ export default function Board({
                 </>
               );
             })()}
-          {variant === "archimedean" &&
+          {variant.startsWith("archimedean") &&
             (() => {
               const FONT = 40;
               const isFlipped = viewerSide === "blk";
-              const lightItems = [
-                { label: "a", y: 380, x: 610 },
-                { label: "k", y: 385, x: 1040 },
-                { label: "b", y: 485, x: 635 },
-                { label: "j", y: 485, x: 1030 },
-                { label: "c", y: 575, x: 660 },
-                { label: "i", y: 580, x: 1000 },
-                { label: "d", y: 680, x: 685 },
-                { label: "h", y: 680, x: 960 },
-                { label: "e", y: 770, x: 720 },
-                { label: "h", y: 775, x: 925 },
-                { label: "f", y: 960, x: 790 },
-                { label: "e", y: 960, x: 980 },
-                { label: "e", y: 1050, x: 760 },
-                { label: "j", y: 1045, x: 1035 },
-                { label: "d", y: 1145, x: 710 },
-                { label: "k", y: 1145, x: 1065 },
-                { label: "c", y: 1245, x: 695 },
-                { label: "l", y: 1245, x: 1080 },
-                { label: "b", y: 1345, x: 675 },
-                { label: "m", y: 1345, x: 1080 },
-              ];
-              const darkItems = [
-                { label: "g", y: 860, x: 825 },
-              ];
+              const lightItems = isFlipped
+                ? [
+                    { label: "a", y: 380, x: 660 },
+                    { label: "l", y: 380, x: 1040 },
+                    { label: "b", y: 480, x: 660 },
+                    { label: "k", y: 480, x: 1020 },
+                    { label: "c", y: 575, x: 700 },
+                    { label: "j", y: 580, x: 1000 },
+                    { label: "d", y: 675, x: 715 },
+                    { label: "i", y: 675, x: 965 },
+                    { label: "e", y: 770, x: 750 },
+                    { label: "h", y: 770, x: 935 },
+                    { label: "f", y: 960, x: 810 },
+                    { label: "i", y: 960, x: 1000 },
+                    { label: "e", y: 1060, x: 785 },
+                    { label: "j", y: 1050, x: 1045 },
+                    { label: "d", y: 1145, x: 740 },
+                    { label: "k", y: 1150, x: 1070 },
+                    { label: "c", y: 1250, x: 720 },
+                    { label: "l", y: 1245, x: 1085 },
+                    { label: "b", y: 1345, x: 695 },
+                    { label: "m", y: 1355, x: 1105 },
+                  ]
+                : [
+                    { label: "a", y: 380, x: 610 },
+                    { label: "l", y: 385, x: 1040 },
+                    { label: "b", y: 485, x: 635 },
+                    { label: "k", y: 485, x: 1030 },
+                    { label: "c", y: 575, x: 660 },
+                    { label: "j", y: 580, x: 1000 },
+                    { label: "d", y: 680, x: 685 },
+                    { label: "i", y: 680, x: 960 },
+                    { label: "e", y: 770, x: 720 },
+                    { label: "h", y: 775, x: 925 },
+                    { label: "f", y: 960, x: 790 },
+                    { label: "i", y: 960, x: 990 },
+                    { label: "e", y: 1050, x: 760 },
+                    { label: "j", y: 1045, x: 1035 },
+                    { label: "d", y: 1145, x: 710 },
+                    { label: "k", y: 1145, x: 1065 },
+                    { label: "c", y: 1245, x: 695 },
+                    { label: "l", y: 1245, x: 1080 },
+                    { label: "b", y: 1345, x: 675 },
+                    { label: "m", y: 1345, x: 1080 },
+                  ];
+              const darkItems = isFlipped
+                ? [{ label: "g", y: 865, x: 905 }]
+                : [{ label: "g", y: 860, x: 825 }];
               const labelStyle: React.CSSProperties = {
                 userSelect: "none",
                 pointerEvents: "none",
@@ -752,57 +712,60 @@ export default function Board({
             })()}
         </svg>
 
-        {piecesReady &&
-          boardState.pieces
-            .filter((piece) => {
-              // Hide the piece at the pending destination — it will be captured
-              if (boardState.pendingMove && boardState.selectedPiece) {
-                if (
-                  piece.position === boardState.pendingMove &&
-                  piece !== boardState.selectedPiece
-                ) {
-                  return false;
-                }
+        {boardState.pieces
+          .filter((piece) => {
+            // Hide the piece at the pending destination — it will be captured
+            if (boardState.pendingMove && boardState.selectedPiece) {
+              if (
+                piece.position === boardState.pendingMove &&
+                piece !== boardState.selectedPiece
+              ) {
+                return false;
               }
-              return true;
-            })
-            .map((piece) => {
-              // Show the selected piece at its pending destination for preview
-              const isMoving = !!(
-                boardState.pendingMove && piece === boardState.selectedPiece
-              );
-              const displayPosition = isMoving
-                ? boardState.pendingMove!
-                : piece.position;
-              const center = getCellCenter(displayPosition);
-              return (
-                <Piece
-                  key={`${piece.position}-${piece.type}-${piece.color}`}
-                  {...piece}
-                  position={displayPosition}
-                  x={center.x}
-                  y={center.y}
-                  onClick={() => handleCellClick(piece.position)}
-                  isSelected={!isMoving && boardState.selectedPiece === piece}
-                  variant={variant}
-                  flipped={viewerSide === "blk"}
-                />
-              );
-            })}
+            }
+            return true;
+          })
+          .map((piece) => {
+            // Show the selected piece at its pending destination for preview
+            const isMoving = !!(
+              boardState.pendingMove && piece === boardState.selectedPiece
+            );
+            const displayPosition = isMoving
+              ? boardState.pendingMove!
+              : piece.position;
+            const center = getCellCenter(displayPosition);
+            return (
+              <Piece
+                key={`${piece.position}-${piece.type}-${piece.color}`}
+                {...piece}
+                position={displayPosition}
+                x={center.x}
+                y={center.y}
+                onClick={() => handleCellClick(piece.position)}
+                isSelected={!isMoving && boardState.selectedPiece === piece}
+                variant={
+                  variant.startsWith("concentric")
+                    ? "concentric"
+                    : "archimedean"
+                }
+                flipped={viewerSide === "blk"}
+              />
+            );
+          })}
         {/* {spaces.map((s) => { */}
         {/*   return ( */}
         {/*     <span */}
         {/*       key={s.id} */}
-        {/*       className={`size-piece ${s.id}a`} */}
-        {/*       // className={`size-piece ${s.id}`} */}
+        {/*       // className={`size-piece ${s.id}a`} */}
+        {/*       className={`size-piece ${s.id}`} */}
         {/*       style={{ */}
         {/*         position: "absolute", */}
         {/*         fontSize: "10px", */}
         {/*         transform: "translate(20%, 30%)", */}
         {/*         fontWeight: "bold", */}
         {/*         pointerEvents: "none", */}
-        {/*         color: */}
-        {/*           CONCENTRIC_GRAPH.color[s.id] === "light" ? "#000" : "#fff", */}
+        {/*         color: "#f00", */}
+        {/*         // CONCENTRIC_GRAPH.color[s.id] === "light" ? "#000" : "#fff", */}
         {/*       }} */}
         {/*     > */}
         {/*       {toNotation(s.id, variant)} */}

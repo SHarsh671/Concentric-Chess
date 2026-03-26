@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -16,6 +16,7 @@ import Link from "next/link";
 import Board, { CapturedPiece } from "@/components/piece/board";
 import Image from "next/image";
 import { startingTime } from "shared/rules";
+import { GameVariant } from "shared";
 
 interface Move {
   id: string;
@@ -69,22 +70,28 @@ export default function GameReplayClient({
   const [autoPlaySpeed, setAutoPlaySpeed] = useState(2000);
   const [capturedPieces, setCapturedPieces] = useState<CapturedPiece[]>([]);
 
-  const boardVariant = game.variant.split("-")[0] as "concentric" | "archimedean";
-  const baseClock = useMemo(() => startingTime(game.variant as never), [game.variant]);
+  const baseClock = useMemo(
+    () => startingTime(game.variant as never),
+    [game.variant],
+  );
 
   const replayClocks = useMemo(() => {
     const initial: [number | null, number | null] = [baseClock, baseClock];
     if (baseClock === null) {
       return {
         initial,
-        snapshots: moves.map(() => [null, null] as [number | null, number | null]),
+        snapshots: moves.map(
+          () => [null, null] as [number | null, number | null],
+        ),
       };
     }
 
     let whiteTime = baseClock;
     let blackTime = baseClock;
     let previousTs =
-      parseTimestamp(game.createdAt) ?? parseTimestamp(moves[0]?.createdAt) ?? Date.now();
+      parseTimestamp(game.createdAt) ??
+      parseTimestamp(moves[0]?.createdAt) ??
+      Date.now();
 
     const snapshots: [number | null, number | null][] = [];
 
@@ -105,14 +112,40 @@ export default function GameReplayClient({
       typeof game.whiteTimeLeft === "number" &&
       typeof game.blackTimeLeft === "number"
     ) {
-      snapshots[snapshots.length - 1] = [game.whiteTimeLeft, game.blackTimeLeft];
+      snapshots[snapshots.length - 1] = [
+        game.whiteTimeLeft,
+        game.blackTimeLeft,
+      ];
     }
 
     return { initial, snapshots };
-  }, [baseClock, game.createdAt, game.whiteTimeLeft, game.blackTimeLeft, moves]);
+  }, [
+    baseClock,
+    game.createdAt,
+    game.whiteTimeLeft,
+    game.blackTimeLeft,
+    moves,
+  ]);
 
-  const movesUpToCurrent =
-    currentMoveIndex === -1 ? [] : moves.slice(0, currentMoveIndex + 1);
+  const movesUpToCurrent = useMemo(
+    () => (currentMoveIndex === -1 ? [] : moves.slice(0, currentMoveIndex + 1)),
+    [currentMoveIndex, moves],
+  );
+
+  const handleCapturedPiecesChange = useCallback((next: CapturedPiece[]) => {
+    setCapturedPieces((prev) => {
+      if (
+        prev.length === next.length &&
+        prev.every((piece, index) => {
+          const other = next[index];
+          return piece.type === other?.type && piece.color === other?.color;
+        })
+      ) {
+        return prev;
+      }
+      return next;
+    });
+  }, []);
   const replayTurn = movesUpToCurrent.length % 2 === 0 ? "wht" : "blk";
 
   const whiteCaptured = capturedPieces.filter((p) => p.color === "wht");
@@ -121,7 +154,7 @@ export default function GameReplayClient({
   const [whiteClock, blackClock] =
     currentMoveIndex === -1
       ? replayClocks.initial
-      : replayClocks.snapshots[currentMoveIndex] ?? replayClocks.initial;
+      : (replayClocks.snapshots[currentMoveIndex] ?? replayClocks.initial);
 
   const topLabel = blackUsername;
   const botLabel = whiteUsername;
@@ -133,7 +166,9 @@ export default function GameReplayClient({
   const botTimer = whiteClock;
 
   const progressPercent =
-    moves.length === 0 ? 0 : Math.round(((currentMoveIndex + 1) / moves.length) * 100);
+    moves.length === 0
+      ? 0
+      : Math.round(((currentMoveIndex + 1) / moves.length) * 100);
 
   useEffect(() => {
     if (!isAutoPlaying || currentMoveIndex >= moves.length - 1) {
@@ -194,7 +229,9 @@ export default function GameReplayClient({
   const renderControls = () => (
     <Card className="bg-white border-4 border-black">
       <CardHeader className="border-b-4 border-black p-4 sm:p-6">
-        <CardTitle className="text-xl sm:text-2xl font-bold uppercase">Controls</CardTitle>
+        <CardTitle className="text-xl sm:text-2xl font-bold uppercase">
+          Controls
+        </CardTitle>
       </CardHeader>
       <CardContent className="p-4 sm:p-6 space-y-5">
         <div className="space-y-2">
@@ -213,7 +250,9 @@ export default function GameReplayClient({
         </div>
 
         <div className="space-y-2">
-          <label className="text-xs sm:text-sm font-bold uppercase">Playback Speed</label>
+          <label className="text-xs sm:text-sm font-bold uppercase">
+            Playback Speed
+          </label>
           <div className="grid grid-cols-2 sm:flex gap-2">
             {[
               { label: "0.5x", value: 4000 },
@@ -303,11 +342,15 @@ export default function GameReplayClient({
               Current Move:
             </div>
             <div className="text-lg sm:text-2xl font-bold break-words">
-              {moves[currentMoveIndex].moveNumber}. {moves[currentMoveIndex].fromSquare} →{" "}
+              {moves[currentMoveIndex].moveNumber}.{" "}
+              {moves[currentMoveIndex].fromSquare} →{" "}
               {moves[currentMoveIndex].toSquare}
-              {moves[currentMoveIndex].promotion && ` =${moves[currentMoveIndex].promotion}`}
+              {moves[currentMoveIndex].promotion &&
+                ` =${moves[currentMoveIndex].promotion}`}
             </div>
-            <div className="text-xs sm:text-sm text-gray-600 mt-2">{getMoveActor()}</div>
+            <div className="text-xs sm:text-sm text-gray-600 mt-2">
+              {getMoveActor()}
+            </div>
           </div>
         )}
       </CardContent>
@@ -317,7 +360,9 @@ export default function GameReplayClient({
   const renderMoveList = () => (
     <Card className="bg-white border-4 border-black">
       <CardHeader className="border-b-4 border-black p-4 sm:p-6">
-        <CardTitle className="text-lg sm:text-xl font-bold uppercase">Move History</CardTitle>
+        <CardTitle className="text-lg sm:text-xl font-bold uppercase">
+          Move History
+        </CardTitle>
       </CardHeader>
       <CardContent className="p-0">
         <div className="max-h-[24rem] sm:max-h-[30rem] overflow-y-auto">
@@ -374,7 +419,9 @@ export default function GameReplayClient({
           </Link>
 
           <div className="bg-white border-4 border-black p-4 sm:p-6">
-            <h1 className="text-2xl sm:text-3xl font-bold text-black mb-2">GAME REPLAY</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold text-black mb-2">
+              GAME REPLAY
+            </h1>
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
               <div className="text-base sm:text-lg">
                 <span className="font-bold">{whiteUsername}</span>
@@ -402,14 +449,14 @@ export default function GameReplayClient({
                 <Board
                   moves={movesUpToCurrent}
                   onMove={() => {}}
-                  onCapturedPiecesChange={setCapturedPieces}
+                  onCapturedPiecesChange={handleCapturedPiecesChange}
                   viewerSide={undefined}
                   currentTurn={replayTurn}
                   isSpectator
                   canControlBoth={false}
                   gameOngoing={false}
                   isReplayMode
-                  variant={boardVariant}
+                  variant={game.variant as GameVariant}
                 />
               </div>
               <ReplayPlayerBar
@@ -430,7 +477,10 @@ export default function GameReplayClient({
             </div>
           </div>
 
-          <div className="space-y-4">{renderControls()}{renderMoveList()}</div>
+          <div className="space-y-4">
+            {renderControls()}
+            {renderMoveList()}
+          </div>
         </div>
 
         <div className="lg:hidden space-y-4">
@@ -446,14 +496,14 @@ export default function GameReplayClient({
               <Board
                 moves={movesUpToCurrent}
                 onMove={() => {}}
-                onCapturedPiecesChange={setCapturedPieces}
+                onCapturedPiecesChange={handleCapturedPiecesChange}
                 viewerSide={undefined}
                 currentTurn={replayTurn}
                 isSpectator
                 canControlBoth={false}
                 gameOngoing={false}
                 isReplayMode
-                variant={boardVariant}
+                variant={game.variant as GameVariant}
               />
             </div>
             <ReplayPlayerBar
@@ -509,7 +559,9 @@ function ReplayPlayerBar({
       }`}
     >
       <div className="shrink-0 min-w-[78px] sm:min-w-[90px]">
-        <div className="font-black uppercase text-xs sm:text-sm leading-none truncate">{label}</div>
+        <div className="font-black uppercase text-xs sm:text-sm leading-none truncate">
+          {label}
+        </div>
         <div className="text-[10px] uppercase tracking-wider font-bold leading-none mt-0.5 text-gray-400">
           {role}
         </div>
