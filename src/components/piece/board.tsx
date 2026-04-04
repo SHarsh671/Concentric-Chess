@@ -402,7 +402,7 @@ export default function Board({
   // The SVG viewBox is 0 0 1730 1730, but the board circle has radius 600 centered at (865,865),
   // so it spans 265–1465 in both axes (1200×1200 of 1730×1730 = ~69.4%). Scale up by 1730/1200
   // from the center so the board circle fills the container; overflow is clipped by the parent.
-  const BOARD_SCALE = 1730 / (variant.startsWith("concentric") ? 1250 : 1400);
+  const BOARD_SCALE = 1730 / (variant.startsWith("concentric") ? 1300 : 1400);
 
   return (
     <div
@@ -710,6 +710,104 @@ export default function Board({
                 </>
               );
             })()}
+
+          {/* ── Row numbers (1-12) outside the board boundary ── */}
+          {(() => {
+            const FONT = 32;
+            const isFlipped = viewerSide === "blk";
+            const fill = "#000";
+            const labelStyle: React.CSSProperties = {
+              userSelect: "none",
+              pointerEvents: "none",
+            };
+
+            // For the concentric board the boundary is a circle (r=600, cx=cy=865).
+            // For the archimedean board the boundary follows the spiral, so we use
+            // the actual left/right extents of each row's cells derived from the SVG.
+            // r1 and r12 are single-cell "poles" with no useful left/right side.
+            // True x extents per row, computed from the archimedean SVG paths.
+            // Each entry is [xLeft, xRight] — the actual cell boundary at that row,
+            // already including a 25-unit outward margin.
+            const AS_ROW_X: Record<number, [number, number]> = {
+              1: [620, 1170],
+              2: [475, 1325],
+              3: [390, 1415],
+              4: [335, 1470],
+              5: [305, 1510],
+              6: [295, 1530],
+              7: [200, 1435],
+              8: [215, 1425],
+              9: [255, 1395],
+              10: [320, 1345],
+              11: [410, 1255],
+              12: [570, 1100],
+            };
+
+            const isConcentric = variant.startsWith("concentric");
+            const CENTER = 865;
+            const RADIUS = 600;
+            const MARGIN = 20;
+
+            return Array.from({ length: 12 }, (_, i) => {
+              const row = i + 1;
+              // Both boards share the same row-to-y mapping (100 SVG units per row).
+              const y = 1415 - i * 100;
+
+              const xL = isConcentric
+                ? (() => {
+                    const dy = Math.abs(y - CENTER);
+                    const dx =
+                      dy < RADIUS ? Math.sqrt(RADIUS * RADIUS - dy * dy) : 0;
+                    return CENTER - dx - MARGIN;
+                  })()
+                : AS_ROW_X[row][0];
+              const xR = isConcentric
+                ? (() => {
+                    const dy = Math.abs(y - CENTER);
+                    const dx =
+                      dy < RADIUS ? Math.sqrt(RADIUS * RADIUS - dy * dy) : 0;
+                    return CENTER + dx + MARGIN;
+                  })()
+                : AS_ROW_X[row][1];
+
+              return (
+                <React.Fragment key={`rownum-${row}`}>
+                  <text
+                    x={xL}
+                    y={y + (row === 1 ? 5 : 0) - (row === 12 ? 10 : 0)}
+                    fontSize={FONT}
+                    fontFamily="sans-serif"
+                    fontWeight="bold"
+                    textAnchor="end"
+                    dominantBaseline="central"
+                    fill={fill}
+                    style={labelStyle}
+                    transform={
+                      isFlipped ? `rotate(180, ${xL}, ${y})` : undefined
+                    }
+                  >
+                    {row}
+                  </text>
+                  <text
+                    x={xR}
+                    y={y + (row === 1 ? 5 : 0) - (row === 12 ? 10 : 0)}
+                    fontSize={FONT}
+                    fontFamily="sans-serif"
+                    fontWeight="bold"
+                    textAnchor="start"
+                    dominantBaseline="central"
+                    fill={fill}
+                    style={labelStyle}
+                    transform={
+                      isFlipped ? `rotate(180, ${xR}, ${y})` : undefined
+                    }
+                  >
+                    {row}
+                  </text>
+                </React.Fragment>
+              );
+            });
+          })()}
         </svg>
 
         {boardState.pieces
