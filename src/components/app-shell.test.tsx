@@ -41,6 +41,7 @@ vi.mock("@/components/sidebar-close-on-navigate", () => ({
 vi.mock("@/components/ui/sidebar", () => {
   const pass =
     (Tag: keyof React.JSX.IntrinsicElements = "div") =>
+    // eslint-disable-next-line react/display-name
     ({
       children,
       ...rest
