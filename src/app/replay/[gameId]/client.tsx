@@ -15,8 +15,10 @@ import {
 import Link from "next/link";
 import Board, { CapturedPiece } from "@/components/piece/board";
 import Image from "next/image";
-import { startingTime } from "shared/rules";
+import { getBoardStatus, startingTime } from "shared/rules";
 import { GameVariant } from "shared";
+import { pieceLabel, toNotation } from "@/lib/utils";
+import { PieceType, Side } from "shared/graph";
 
 interface Move {
   id: string;
@@ -131,6 +133,24 @@ export default function GameReplayClient({
     () => (currentMoveIndex === -1 ? [] : moves.slice(0, currentMoveIndex + 1)),
     [currentMoveIndex, moves],
   );
+
+  // Pre-compute check/checkmate suffix for each move.
+  const moveSuffixes = useMemo(() => {
+    const boardVariant = game.variant as GameVariant;
+    return moves.map((move) => {
+      try {
+        const opponent: Side = move.moveNumber % 2 === 1 ? "blk" : "wht";
+        const status = getBoardStatus(
+          boardVariant,
+          moves.slice(0, move.moveNumber),
+          opponent,
+        );
+        return status === "checkmate" ? "++" : status === "check" ? "+" : "";
+      } catch {
+        return "";
+      }
+    });
+  }, [moves, game.variant]);
 
   const handleCapturedPiecesChange = useCallback((next: CapturedPiece[]) => {
     setCapturedPieces((prev) => {
@@ -391,8 +411,11 @@ export default function GameReplayClient({
                 <div className="flex items-center justify-between gap-2 text-sm sm:text-base">
                   <span className="font-bold shrink-0">{move.moveNumber}.</span>
                   <span className="flex-1 min-w-0 truncate">
-                    {move.fromSquare} → {move.toSquare}
+                    {toNotation(move.fromSquare, game.variant.startsWith("archimedean") ? "archimedean" : "concentric")}
+                    {`→`}
+                    {toNotation(move.toSquare, game.variant.startsWith("archimedean") ? "archimedean" : "concentric")}
                     {move.promotion && ` =${move.promotion}`}
+                    {moveSuffixes[index]}
                   </span>
                   <span className="text-xs sm:text-sm opacity-70 shrink-0">
                     {move.moveNumber % 2 === 1 ? "White" : "Black"}

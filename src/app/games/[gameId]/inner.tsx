@@ -13,7 +13,7 @@ import { pieceLabel, toNotation } from "@/lib/utils";
 import SpiralRulesDialog from "@/components/piece/spiral-rules-dialog";
 import { PieceType, Side } from "shared/graph";
 import Image from "next/image";
-import { getBoardStatus, initialPieces } from "shared/rules";
+import { getBoardStatus, getState, initialPieces } from "shared/rules";
 
 export default function GamePage({
   game: initialGame,
@@ -81,8 +81,8 @@ export default function GamePage({
     const out: Record<
       number,
       {
-        w?: (typeof moves)[0] & { piece: PieceType };
-        b?: (typeof moves)[0] & { piece: PieceType };
+        w?: (typeof moves)[0] & { piece: PieceType; suffix: string };
+        b?: (typeof moves)[0] & { piece: PieceType; suffix: string };
       }
     > = {};
     const state = initialPieces.reduce(
@@ -104,8 +104,25 @@ export default function GamePage({
           state,
         );
       }
+      // Determine check/checkmate suffix by evaluating the position after this move.
+      const movesUpTo = moves.slice(0, move.moveNumber);
+      const opponent: Side = side === "w" ? "blk" : "wht";
+      let suffix = "";
+      try {
+        const status = getBoardStatus(
+          game.variant as GameVariant,
+          movesUpTo,
+          opponent,
+        );
+        suffix =
+          status === "checkmate" ? "++" : status === "check" ? "+" : "";
+      } catch {
+        // Ignore errors from invalid move sequences (e.g. in tests).
+      }
+
       out[turn][side] = {
         piece: state[move.fromSquare].type,
+        suffix,
         ...move,
       };
       state[move.toSquare] = state[move.fromSquare];
@@ -114,7 +131,7 @@ export default function GamePage({
     return Object.entries(out)
       .sort((a, b) => parseInt(b[0]) - parseInt(a[0]))
       .map((entry) => entry);
-  }, [moves]);
+  }, [moves, game.variant]);
 
   useEffect(() => {
     gameRef.current = game;
@@ -695,9 +712,9 @@ function PlayerBar({
             key={i}
             src={`/pieces/${p.type}-${p.color}.png`}
             alt=""
-            width={24}
-            height={24}
-            className="w-6 h-6"
+            width={32}
+            height={32}
+            className="w-8 h-8"
           />
         ))}
       </div>
@@ -722,8 +739,8 @@ function MoveList({
   groupedMoves: [
     string,
     {
-      w?: { piece: PieceType; fromSquare: string; toSquare: string };
-      b?: { piece: PieceType; fromSquare: string; toSquare: string };
+      w?: { piece: PieceType; fromSquare: string; toSquare: string; suffix: string };
+      b?: { piece: PieceType; fromSquare: string; toSquare: string; suffix: string };
     },
   ][];
   variant: "concentric" | "archimedean";
@@ -741,14 +758,14 @@ function MoveList({
               `${pieceLabel(move.w.piece)} ${toNotation(
                 move.w.fromSquare,
                 variant,
-              )}-${toNotation(move.w.toSquare, variant)}`}
+              )}-${toNotation(move.w.toSquare, variant)}${move.w.suffix}`}
           </span>
           <span className="truncate">
             {move.b &&
               `${pieceLabel(move.b.piece)} ${toNotation(
                 move.b.fromSquare,
                 variant,
-              )}-${toNotation(move.b.toSquare, variant)}`}
+              )}-${toNotation(move.b.toSquare, variant)}${move.b.suffix}`}
           </span>
         </div>
       ))}
