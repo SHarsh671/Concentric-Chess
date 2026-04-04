@@ -411,9 +411,19 @@ export default function GameReplayClient({
                 <div className="flex items-center justify-between gap-2 text-sm sm:text-base">
                   <span className="font-bold shrink-0">{move.moveNumber}.</span>
                   <span className="flex-1 min-w-0 truncate">
-                    {toNotation(move.fromSquare, game.variant.startsWith("archimedean") ? "archimedean" : "concentric")}
+                    {toNotation(
+                      move.fromSquare,
+                      game.variant.startsWith("archimedean")
+                        ? "archimedean"
+                        : "concentric",
+                    )}
                     {`→`}
-                    {toNotation(move.toSquare, game.variant.startsWith("archimedean") ? "archimedean" : "concentric")}
+                    {toNotation(
+                      move.toSquare,
+                      game.variant.startsWith("archimedean")
+                        ? "archimedean"
+                        : "concentric",
+                    )}
                     {move.promotion && ` =${move.promotion}`}
                     {moveSuffixes[index]}
                   </span>
