@@ -25,7 +25,11 @@ vi.mock("next/link", () => ({
     href: string;
     children: React.ReactNode;
     [k: string]: unknown;
-  }) => <a href={href} {...rest}>{children}</a>,
+  }) => (
+    <a href={href} {...rest}>
+      {children}
+    </a>
+  ),
 }));
 
 vi.mock("@/components/sidebar-close-on-navigate", () => ({
@@ -37,7 +41,13 @@ vi.mock("@/components/sidebar-close-on-navigate", () => ({
 vi.mock("@/components/ui/sidebar", () => {
   const pass =
     (Tag: keyof React.JSX.IntrinsicElements = "div") =>
-    ({ children, ...rest }: { children?: React.ReactNode; [k: string]: unknown }) =>
+    ({
+      children,
+      ...rest
+    }: {
+      children?: React.ReactNode;
+      [k: string]: unknown;
+    }) =>
       React.createElement(Tag, rest, children);
 
   return {
@@ -84,7 +94,9 @@ describe("AppShell – navigation auth state (§8.2.1)", () => {
     const jsx = await AppShell({ children: <div /> });
     render(jsx as React.ReactElement);
 
-    expect(screen.queryByRole("link", { name: /settings/i })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("link", { name: /settings/i }),
+    ).not.toBeInTheDocument();
   });
 
   it("shows a Settings link when the user is authenticated", async () => {
@@ -106,8 +118,12 @@ describe("AppShell – navigation auth state (§8.2.1)", () => {
     const jsx = await AppShell({ children: <div /> });
     render(jsx as React.ReactElement);
 
-    expect(screen.queryByRole("link", { name: /sign up/i })).not.toBeInTheDocument();
-    expect(screen.queryByRole("link", { name: /log in/i })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("link", { name: /sign up/i }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("link", { name: /log in/i }),
+    ).not.toBeInTheDocument();
   });
 
   it("always shows Play, History and Rules nav links regardless of auth state", async () => {

@@ -5,8 +5,18 @@ import { LoginForm } from "./login-form";
 
 // Next.js Link and useActionState need lightweight stubs in jsdom
 vi.mock("next/link", () => ({
-  default: ({ href, children, ...props }: { href: string; children: React.ReactNode; [key: string]: unknown }) => (
-    <a href={href} {...props}>{children}</a>
+  default: ({
+    href,
+    children,
+    ...props
+  }: {
+    href: string;
+    children: React.ReactNode;
+    [key: string]: unknown;
+  }) => (
+    <a href={href} {...props}>
+      {children}
+    </a>
   ),
 }));
 
@@ -14,7 +24,11 @@ vi.mock("react", async (importOriginal) => {
   const actual = await importOriginal<typeof import("react")>();
   return {
     ...actual,
-    useActionState: vi.fn((_action: unknown, initial: unknown) => [initial, vi.fn(), false]),
+    useActionState: vi.fn((_action: unknown, initial: unknown) => [
+      initial,
+      vi.fn(),
+      false,
+    ]),
   };
 });
 
@@ -51,7 +65,10 @@ describe("LoginForm", () => {
 
   it("password input is of type password", () => {
     render(<LoginForm />);
-    expect(screen.getByLabelText(/password/i)).toHaveAttribute("type", "password");
+    expect(screen.getByLabelText(/password/i)).toHaveAttribute(
+      "type",
+      "password",
+    );
   });
 
   it("does not show error banner when there is no error state", () => {

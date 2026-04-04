@@ -6,6 +6,7 @@
 export {};
 
 declare global {
+  // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace Cypress {
     interface Chainable {
       loginAsTestUser(): Chainable;
@@ -64,16 +65,19 @@ Cypress.Commands.add("loginAsTestUser", () => {
  * Navigate to /play, select Local mode + given time control, submit, and alias
  * the resulting game URL as `@gameUrl`.
  */
-Cypress.Commands.add("startLocalGame", (opts: { timeControl?: string } = {}) => {
-  const timeControl = opts.timeControl ?? "Unlimited";
-  cy.visit("/play");
-  // Select Local mode
-  cy.contains("button", "Local").click();
-  // Select the requested time control
-  cy.contains("button", timeControl).click();
-  // Submit
-  cy.contains("button", "Start Game").click();
-  // Wait for redirect to /games/...
-  cy.url().should("include", "/games/");
-  cy.url().as("gameUrl");
-});
+Cypress.Commands.add(
+  "startLocalGame",
+  (opts: { timeControl?: string } = {}) => {
+    const timeControl = opts.timeControl ?? "Unlimited";
+    cy.visit("/play");
+    // Select Local mode
+    cy.contains("button", "Local").click();
+    // Select the requested time control
+    cy.contains("button", timeControl).click();
+    // Submit
+    cy.contains("button", "Start Game").click();
+    // Wait for redirect to /games/...
+    cy.url().should("include", "/games/");
+    cy.url().as("gameUrl");
+  },
+);

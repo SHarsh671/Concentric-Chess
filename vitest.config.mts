@@ -26,8 +26,10 @@ export default defineConfig({
   resolve: {
     alias: {
       // Stub out Next.js / Cloudflare server-only modules in tests
-      "server-only": new URL("./src/test/server-only-mock.ts", import.meta.url).pathname,
-      "client-only": new URL("./src/test/server-only-mock.ts", import.meta.url).pathname,
+      "server-only": new URL("./src/test/server-only-mock.ts", import.meta.url)
+        .pathname,
+      "client-only": new URL("./src/test/server-only-mock.ts", import.meta.url)
+        .pathname,
     },
   },
 });

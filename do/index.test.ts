@@ -503,7 +503,9 @@ describe("Move WebSocket Handler (§9.2.2)", () => {
 
     const syncMsg = messages.find((m) => m.type === "sync");
     expect(syncMsg).toBeDefined();
-    expect((syncMsg as Extract<ServerMsg, { type: "sync" }>).data.moves).toEqual([]);
+    expect(
+      (syncMsg as Extract<ServerMsg, { type: "sync" }>).data.moves,
+    ).toEqual([]);
   });
 
   it("malformed JSON does not crash the handler and records no move", async () => {
@@ -553,7 +555,10 @@ describe("Move WebSocket Handler (§9.2.2)", () => {
     await attachWsToStub(stub, GAME_ID, PLAYER_WHITE, fakeWs);
 
     await runInDurableObject(stub, async (instance) => {
-      await instance.webSocketMessage(fakeWs, JSON.stringify({ type: "resign" }));
+      await instance.webSocketMessage(
+        fakeWs,
+        JSON.stringify({ type: "resign" }),
+      );
     });
 
     const row = await env.DB.prepare("SELECT status FROM games WHERE id = ?")
@@ -594,7 +599,9 @@ describe("Timeout Alarm (§9.2.2)", () => {
     await runInDurableObject(stub, async (instance, state) => {
       await state.storage.put("id", GAME_ID);
       // Pass a truthy alarmInfo to bypass the early-return guard
-      await instance.alarm({ isRetry: false } as unknown as AlarmInvocationInfo);
+      await instance.alarm({
+        isRetry: false,
+      } as unknown as AlarmInvocationInfo);
     });
 
     const row = await env.DB.prepare("SELECT status FROM games WHERE id = ?")
@@ -615,7 +622,9 @@ describe("Timeout Alarm (§9.2.2)", () => {
 
     await runInDurableObject(stub, async (instance, state) => {
       await state.storage.put("id", GAME_ID);
-      await instance.alarm({ isRetry: false } as unknown as AlarmInvocationInfo);
+      await instance.alarm({
+        isRetry: false,
+      } as unknown as AlarmInvocationInfo);
     });
 
     const row = await env.DB.prepare("SELECT status FROM games WHERE id = ?")
@@ -639,7 +648,9 @@ describe("Timeout Alarm (§9.2.2)", () => {
     await runInDurableObject(stub, async (instance, state) => {
       await state.storage.put("id", GAME_ID);
       instance.sockets.set(fakeWs, { gameId: GAME_ID, playerId: PLAYER_WHITE });
-      await instance.alarm({ isRetry: false } as unknown as AlarmInvocationInfo);
+      await instance.alarm({
+        isRetry: false,
+      } as unknown as AlarmInvocationInfo);
     });
 
     expect(messages.some((m) => m.type === "game_over")).toBe(true);
@@ -782,7 +793,10 @@ describe("Persistence & Replay (§9.2.3)", () => {
 
     // White resigns → game ends
     await runInDurableObject(stub, async (instance) => {
-      await instance.webSocketMessage(fakeWs, JSON.stringify({ type: "resign" }));
+      await instance.webSocketMessage(
+        fakeWs,
+        JSON.stringify({ type: "resign" }),
+      );
     });
 
     // Now try to make a move on the finished game

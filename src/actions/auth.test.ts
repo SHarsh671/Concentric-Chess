@@ -98,16 +98,28 @@ describe("signup", () => {
   it("returns an error when passwords do not match", async () => {
     const result = await signup(
       null,
-      fd({ email: "a@b.com", username: "user", password: "pass1", "confirm-password": "pass2" }),
+      fd({
+        email: "a@b.com",
+        username: "user",
+        password: "pass1",
+        "confirm-password": "pass2",
+      }),
     );
     expect(result).toMatchObject({ message: /do not match/i });
   });
 
   it("returns a username validation error when checkUsername fails", async () => {
-    mockCheckUsername.mockResolvedValue("Username must be 3-20 characters long");
+    mockCheckUsername.mockResolvedValue(
+      "Username must be 3-20 characters long",
+    );
     const result = await signup(
       null,
-      fd({ email: "a@b.com", username: "x", password: "pass", "confirm-password": "pass" }),
+      fd({
+        email: "a@b.com",
+        username: "x",
+        password: "pass",
+        "confirm-password": "pass",
+      }),
     );
     expect(result).toMatchObject({ message: /3.{0,10}20/ });
   });
@@ -116,16 +128,28 @@ describe("signup", () => {
     mockCheckEmail.mockResolvedValue("Email must be a valid email address.");
     const result = await signup(
       null,
-      fd({ email: "bad", username: "validuser", password: "pass", "confirm-password": "pass" }),
+      fd({
+        email: "bad",
+        username: "validuser",
+        password: "pass",
+        "confirm-password": "pass",
+      }),
     );
     expect(result).toMatchObject({ message: /valid email/i });
   });
 
   it("returns a password validation error when checkPassword fails", async () => {
-    mockCheckPassword.mockResolvedValue("Password must be between 8 and 30 characters long.");
+    mockCheckPassword.mockResolvedValue(
+      "Password must be between 8 and 30 characters long.",
+    );
     const result = await signup(
       null,
-      fd({ email: "a@b.com", username: "validuser", password: "short", "confirm-password": "short" }),
+      fd({
+        email: "a@b.com",
+        username: "validuser",
+        password: "short",
+        "confirm-password": "short",
+      }),
     );
     expect(result).toMatchObject({ message: /8.{0,10}30/ });
   });
@@ -135,18 +159,32 @@ describe("signup", () => {
       () =>
         signup(
           null,
-          fd({ email: "a@b.com", username: "validuser", password: "goodpass1", "confirm-password": "goodpass1" }),
+          fd({
+            email: "a@b.com",
+            username: "validuser",
+            password: "goodpass1",
+            "confirm-password": "goodpass1",
+          }),
         ),
       "/",
     );
-    expect(mockCookieSet).toHaveBeenCalledWith("session_token", "tok", expect.any(Object));
+    expect(mockCookieSet).toHaveBeenCalledWith(
+      "session_token",
+      "tok",
+      expect.any(Object),
+    );
   });
 
   it("returns an error message when registerPlayer throws", async () => {
     mockRegisterPlayer.mockRejectedValue(new Error("DB error"));
     const result = await signup(
       null,
-      fd({ email: "a@b.com", username: "validuser", password: "goodpass1", "confirm-password": "goodpass1" }),
+      fd({
+        email: "a@b.com",
+        username: "validuser",
+        password: "goodpass1",
+        "confirm-password": "goodpass1",
+      }),
     );
     expect(result).toMatchObject({ message: /unexpected error/i });
   });
@@ -159,7 +197,10 @@ describe("login", () => {
 
   it("returns an error for invalid credentials", async () => {
     mockLoginWithUsername.mockResolvedValue(null);
-    const result = await login(null, fd({ username: "user", password: "wrong" }));
+    const result = await login(
+      null,
+      fd({ username: "user", password: "wrong" }),
+    );
     expect(result).toMatchObject({ message: /invalid username or password/i });
   });
 
@@ -172,12 +213,19 @@ describe("login", () => {
       () => login(null, fd({ username: "user", password: "correct" })),
       "/",
     );
-    expect(mockCookieSet).toHaveBeenCalledWith("session_token", "tok", expect.any(Object));
+    expect(mockCookieSet).toHaveBeenCalledWith(
+      "session_token",
+      "tok",
+      expect.any(Object),
+    );
   });
 
   it("returns an error message when loginWithUsername throws", async () => {
     mockLoginWithUsername.mockRejectedValue(new Error("DB error"));
-    const result = await login(null, fd({ username: "user", password: "pass" }));
+    const result = await login(
+      null,
+      fd({ username: "user", password: "pass" }),
+    );
     expect(result).toMatchObject({ message: /unexpected error/i });
   });
 });
@@ -188,7 +236,9 @@ describe("logout", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockCookieGet.mockReturnValue({ value: "tok" });
-    mockDbDelete.mockReturnValue({ where: vi.fn().mockResolvedValue(undefined) });
+    mockDbDelete.mockReturnValue({
+      where: vi.fn().mockResolvedValue(undefined),
+    });
   });
 
   it("clears the session cookie and redirects", async () => {
@@ -218,7 +268,8 @@ describe("updateUsername", () => {
       where: vi.fn().mockReturnValue({
         limit: vi.fn().mockReturnValue({
           then: vi.fn((cb: (r: unknown[]) => unknown) =>
-            Promise.resolve(cb([mockPlayer]))),
+            Promise.resolve(cb([mockPlayer])),
+          ),
         }),
       }),
     }),
@@ -238,7 +289,9 @@ describe("updateUsername", () => {
   });
 
   it("returns username validation error when checkUsername fails", async () => {
-    mockCheckUsername.mockResolvedValue("Username must be 3-20 characters long");
+    mockCheckUsername.mockResolvedValue(
+      "Username must be 3-20 characters long",
+    );
     const result = await updateUsername(
       null,
       fd({ username: "x", password: "pass" }),
@@ -266,7 +319,8 @@ describe("updateUsername", () => {
 
   it("redirects to /settings on success", async () => {
     await expectRedirectTo(
-      () => updateUsername(null, fd({ username: "newname", password: "correct" })),
+      () =>
+        updateUsername(null, fd({ username: "newname", password: "correct" })),
       "/settings",
     );
   });
@@ -281,7 +335,8 @@ describe("updateEmail", () => {
       where: vi.fn().mockReturnValue({
         limit: vi.fn().mockReturnValue({
           then: vi.fn((cb: (r: unknown[]) => unknown) =>
-            Promise.resolve(cb([mockPlayer]))),
+            Promise.resolve(cb([mockPlayer])),
+          ),
         }),
       }),
     }),
@@ -326,7 +381,11 @@ describe("updateEmail", () => {
 
   it("redirects to /settings on success", async () => {
     await expectRedirectTo(
-      () => updateEmail(null, fd({ email: "new@example.com", password: "correct" })),
+      () =>
+        updateEmail(
+          null,
+          fd({ email: "new@example.com", password: "correct" }),
+        ),
       "/settings",
     );
   });
@@ -341,7 +400,8 @@ describe("updatePassword", () => {
       where: vi.fn().mockReturnValue({
         limit: vi.fn().mockReturnValue({
           then: vi.fn((cb: (r: unknown[]) => unknown) =>
-            Promise.resolve(cb([mockPlayer]))),
+            Promise.resolve(cb([mockPlayer])),
+          ),
         }),
       }),
     }),
@@ -364,16 +424,26 @@ describe("updatePassword", () => {
   it("returns an error when new passwords do not match", async () => {
     const result = await updatePassword(
       null,
-      fd({ password: "current", new_password: "newpass1", confirm_password: "newpass2" }),
+      fd({
+        password: "current",
+        new_password: "newpass1",
+        confirm_password: "newpass2",
+      }),
     );
     expect(result).toMatchObject({ message: /do not match/i });
   });
 
   it("returns a password validation error when checkPassword fails", async () => {
-    mockCheckPassword.mockResolvedValue("Password must be between 8 and 30 characters long.");
+    mockCheckPassword.mockResolvedValue(
+      "Password must be between 8 and 30 characters long.",
+    );
     const result = await updatePassword(
       null,
-      fd({ password: "current", new_password: "short", confirm_password: "short" }),
+      fd({
+        password: "current",
+        new_password: "short",
+        confirm_password: "short",
+      }),
     );
     expect(result).toMatchObject({ message: /8.{0,10}30/ });
   });
@@ -382,7 +452,11 @@ describe("updatePassword", () => {
     mockGetSession.mockResolvedValue(null);
     const result = await updatePassword(
       null,
-      fd({ password: "current", new_password: "newpass12", confirm_password: "newpass12" }),
+      fd({
+        password: "current",
+        new_password: "newpass12",
+        confirm_password: "newpass12",
+      }),
     );
     expect(result).toMatchObject({ message: /logged in/i });
   });
@@ -391,7 +465,11 @@ describe("updatePassword", () => {
     mockVerifyPassword.mockResolvedValue(false);
     const result = await updatePassword(
       null,
-      fd({ password: "wrong", new_password: "newpass12", confirm_password: "newpass12" }),
+      fd({
+        password: "wrong",
+        new_password: "newpass12",
+        confirm_password: "newpass12",
+      }),
     );
     expect(result).toMatchObject({ message: /invalid current password/i });
   });
@@ -401,7 +479,11 @@ describe("updatePassword", () => {
       () =>
         updatePassword(
           null,
-          fd({ password: "current", new_password: "newpass12", confirm_password: "newpass12" }),
+          fd({
+            password: "current",
+            new_password: "newpass12",
+            confirm_password: "newpass12",
+          }),
         ),
       "/settings",
     );

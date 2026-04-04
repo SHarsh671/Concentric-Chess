@@ -35,10 +35,14 @@ const MockWebSocketFactory = vi.fn().mockImplementation((url: string) => {
   latestMockSocket = new MockWebSocket(url);
   return latestMockSocket;
 }) as unknown as typeof MockWebSocket;
-(MockWebSocketFactory as unknown as typeof MockWebSocket).OPEN = MockWebSocket.OPEN;
-(MockWebSocketFactory as unknown as typeof MockWebSocket).CLOSED = MockWebSocket.CLOSED;
-(MockWebSocketFactory as unknown as typeof MockWebSocket).CLOSING = MockWebSocket.CLOSING;
-(MockWebSocketFactory as unknown as typeof MockWebSocket).CONNECTING = MockWebSocket.CONNECTING;
+(MockWebSocketFactory as unknown as typeof MockWebSocket).OPEN =
+  MockWebSocket.OPEN;
+(MockWebSocketFactory as unknown as typeof MockWebSocket).CLOSED =
+  MockWebSocket.CLOSED;
+(MockWebSocketFactory as unknown as typeof MockWebSocket).CLOSING =
+  MockWebSocket.CLOSING;
+(MockWebSocketFactory as unknown as typeof MockWebSocket).CONNECTING =
+  MockWebSocket.CONNECTING;
 
 vi.stubGlobal("WebSocket", MockWebSocketFactory);
 
@@ -52,7 +56,7 @@ describe("GameSocket", () => {
   let mockSocket: MockWebSocket;
 
   beforeEach(() => {
-    (MockWebSocketFactory as ReturnType<typeof vi.fn>).mockClear();
+    (MockWebSocketFactory as unknown as ReturnType<typeof vi.fn>).mockClear();
     socket = new GameSocket("test-game-id");
     mockSocket = latestMockSocket;
     mockSocket.sent = [];
@@ -86,7 +90,7 @@ describe("GameSocket", () => {
     it("does not throw when no listener is registered", () => {
       socket.setListener(null);
       expect(() =>
-        socket.processMessage(JSON.stringify({ type: "aborted" }))
+        socket.processMessage(JSON.stringify({ type: "aborted" })),
       ).not.toThrow();
     });
 
@@ -117,12 +121,14 @@ describe("GameSocket", () => {
       };
       socket.processMessage(JSON.stringify(moveMsg));
       expect(received).not.toBeNull();
-      expect((received as ServerMsg).type).toBe("move");
+      expect(received!.type).toBe("move");
     });
 
     it("delivers game_over messages to the listener", () => {
       let received: ServerMsg | null = null;
-      socket.setListener((m) => { received = m; });
+      socket.setListener((m) => {
+        received = m;
+      });
 
       const gameOverMsg: ServerMsg = {
         type: "game_over",

@@ -67,10 +67,7 @@ function fd(
 }
 
 /** Expect a redirect to the given path */
-async function expectRedirect(
-  fn: () => Promise<unknown>,
-  toPath: string,
-) {
+async function expectRedirect(fn: () => Promise<unknown>, toPath: string) {
   try {
     await fn();
     expect.fail("Expected redirect to throw");
@@ -92,7 +89,9 @@ describe("play server action – auth guard (§9.2.5)", () => {
   it("returns an error when the user is not authenticated", async () => {
     mockGetSession.mockResolvedValue(null);
     const result = await play(null, fd());
-    expect(result).toMatchObject({ error: expect.stringMatching(/logged in/i) });
+    expect(result).toMatchObject({
+      error: expect.stringMatching(/logged in/i),
+    });
   });
 
   it("does not touch the database when unauthenticated", async () => {
@@ -110,12 +109,19 @@ describe("play server action – input validation (§9.2.5)", () => {
 
   it("returns an error for an invalid game variant", async () => {
     const result = await play(null, fd("not-a-variant", "online"));
-    expect(result).toMatchObject({ error: expect.stringMatching(/invalid game variant/i) });
+    expect(result).toMatchObject({
+      error: expect.stringMatching(/invalid game variant/i),
+    });
   });
 
   it("returns an error for an invalid mode", async () => {
-    const result = await play(null, fd("concentric-rapid", "invalid-mode" as "online"));
-    expect(result).toMatchObject({ error: expect.stringMatching(/invalid game mode/i) });
+    const result = await play(
+      null,
+      fd("concentric-rapid", "invalid-mode" as "online"),
+    );
+    expect(result).toMatchObject({
+      error: expect.stringMatching(/invalid game mode/i),
+    });
   });
 });
 
@@ -131,14 +137,21 @@ describe("play server action – invite flow (§9.2.5)", () => {
       from: vi.fn().mockReturnValue({
         where: vi.fn().mockReturnValue({
           limit: vi.fn().mockReturnValue({
-            then: vi.fn((cb: (r: unknown[]) => unknown) => Promise.resolve(cb([]))),
+            then: vi.fn((cb: (r: unknown[]) => unknown) =>
+              Promise.resolve(cb([])),
+            ),
           }),
         }),
       }),
     });
 
-    const result = await play(null, fd("concentric-rapid", "online", "unknownuser"));
-    expect(result).toMatchObject({ error: expect.stringMatching(/not found/i) });
+    const result = await play(
+      null,
+      fd("concentric-rapid", "online", "unknownuser"),
+    );
+    expect(result).toMatchObject({
+      error: expect.stringMatching(/not found/i),
+    });
   });
 
   it("redirects to the game page when an invited player is found", async () => {
@@ -148,12 +161,15 @@ describe("play server action – invite flow (§9.2.5)", () => {
         where: vi.fn().mockReturnValue({
           limit: vi.fn().mockReturnValue({
             then: vi.fn((cb: (r: unknown[]) => unknown) =>
-              Promise.resolve(cb([{ id: "player-2", username: "alice" }]))),
+              Promise.resolve(cb([{ id: "player-2", username: "alice" }])),
+            ),
           }),
         }),
       }),
     });
-    mockInsert.mockReturnValue({ values: vi.fn().mockResolvedValue(undefined) });
+    mockInsert.mockReturnValue({
+      values: vi.fn().mockResolvedValue(undefined),
+    });
 
     await expectRedirect(
       () => play(null, fd("concentric-rapid", "online", "alice")),
@@ -166,7 +182,9 @@ describe("play server action – local mode (§9.2.5)", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockGetSession.mockResolvedValue({ playerId: "player-1", token: "tok" });
-    mockInsert.mockReturnValue({ values: vi.fn().mockResolvedValue(undefined) });
+    mockInsert.mockReturnValue({
+      values: vi.fn().mockResolvedValue(undefined),
+    });
     mathRandomSpy.mockReturnValue(0.1);
   });
 
@@ -191,7 +209,9 @@ describe("play server action – random queue (§9.2.5)", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockGetSession.mockResolvedValue({ playerId: "player-1", token: "tok" });
-    mockInsert.mockReturnValue({ values: vi.fn().mockResolvedValue(undefined) });
+    mockInsert.mockReturnValue({
+      values: vi.fn().mockResolvedValue(undefined),
+    });
   });
 
   it("creates a new queue game and redirects when no waiting game exists", async () => {
@@ -201,7 +221,9 @@ describe("play server action – random queue (§9.2.5)", () => {
         from: vi.fn().mockReturnValue({
           where: vi.fn().mockReturnValue({
             limit: vi.fn().mockReturnValue({
-              then: vi.fn((cb: (r: unknown[]) => unknown) => Promise.resolve(cb([]))),
+              then: vi.fn((cb: (r: unknown[]) => unknown) =>
+                Promise.resolve(cb([])),
+              ),
             }),
           }),
         }),
@@ -210,7 +232,9 @@ describe("play server action – random queue (§9.2.5)", () => {
         from: vi.fn().mockReturnValue({
           where: vi.fn().mockReturnValue({
             limit: vi.fn().mockReturnValue({
-              then: vi.fn((cb: (r: unknown[]) => unknown) => Promise.resolve(cb([]))),
+              then: vi.fn((cb: (r: unknown[]) => unknown) =>
+                Promise.resolve(cb([])),
+              ),
             }),
           }),
         }),
@@ -230,7 +254,9 @@ describe("play server action – random queue (§9.2.5)", () => {
         from: vi.fn().mockReturnValue({
           where: vi.fn().mockReturnValue({
             limit: vi.fn().mockReturnValue({
-              then: vi.fn((cb: (r: unknown[]) => unknown) => Promise.resolve(cb([]))),
+              then: vi.fn((cb: (r: unknown[]) => unknown) =>
+                Promise.resolve(cb([])),
+              ),
             }),
           }),
         }),
@@ -241,7 +267,8 @@ describe("play server action – random queue (§9.2.5)", () => {
           where: vi.fn().mockReturnValue({
             limit: vi.fn().mockReturnValue({
               then: vi.fn((cb: (r: unknown[]) => unknown) =>
-                Promise.resolve(cb([{ id: "waiting-game-id" }]))),
+                Promise.resolve(cb([{ id: "waiting-game-id" }])),
+              ),
             }),
           }),
         }),

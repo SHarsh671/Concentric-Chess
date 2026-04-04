@@ -1,0 +1,37 @@
+[Team members + Dr Rapoport slide]
+Hello everyone, this is group 20 with concentric and archimedean chess.
+
+[Show homepage]
+
+As you all know, traditional chess has been played on a square board for more than a thousand years, with thousands of variants created over the centuries. Today we introduce two new variants developed by Dr. Rapoport, concentric and archimedean chess.
+
+[Scroll homepage to the two variants]
+Concentric chess uses a board formed of 6 concentric rings totaling 72 cells, while archimedean chess uses two interlocking archimedean spirals. Both variants use the same pieces as traditional chess, a new piece the prince, and some updated move mechanics to match the new board structures.
+
+Now what makes these variants unique?
+[Show rook slide]
+XTo start, the rook is now able to move around an entire ring in concentric chess and around an entire spiral in archimedean chess.
+[Show bishop slide]
+XThe bishop can swing around the middle of the board and in archimedean chess move along the entire center diagonal.
+[Show prince slide]
+XThe prince meanwhile is a new piece that can move like a king but is immune to check.
+[Show berolina pawn slide]
+XAnd when the pawn is along the center diagonal it becomes a berolina pawn and can move diagonally forward.
+
+Now let's give a brief live demonstration of the game.
+[Show login and start matchmaking]
+First, we log in, select our variant, and start matchmaking.
+[Show split screen find match and moves (don't show the whole thing, I made it very long)]
+The game automatically pairs us up with an opponent and we can start playing immediately. Here we have a game of concentric chess in the early stages.
+[Show archimedean late game split screen]
+And here we switch to a late game position in archimedean chess.
+[Navigate to rules page]
+If we need to check any rules during the game we can use the rules reference dialog or check the dedicated rules page.
+
+[Navigate to history page]
+Once the game is finished, we can review our match history and watch the replay.
+[Open a replay and show controls]
+Here we can step through the game move by move, or play it out automatically.
+
+[Thank you slide]
+Overall we completed all of our P0, P1, and P2 requirements and the game is fully playable now. Thank you for watching!

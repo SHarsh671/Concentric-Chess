@@ -4,8 +4,18 @@ import userEvent from "@testing-library/user-event";
 import PlayInner from "./inner";
 
 vi.mock("next/link", () => ({
-  default: ({ href, children, ...props }: { href: string; children: React.ReactNode; [key: string]: unknown }) => (
-    <a href={href} {...props}>{children}</a>
+  default: ({
+    href,
+    children,
+    ...props
+  }: {
+    href: string;
+    children: React.ReactNode;
+    [key: string]: unknown;
+  }) => (
+    <a href={href} {...props}>
+      {children}
+    </a>
   ),
 }));
 
@@ -18,7 +28,11 @@ vi.mock("react", async (importOriginal) => {
   const actual = await importOriginal<typeof import("react")>();
   return {
     ...actual,
-    useActionState: vi.fn((_action: unknown, _initial: unknown) => [mockState, mockFormAction, mockPending]),
+    useActionState: vi.fn((_action: unknown, _initial: unknown) => [
+      mockState,
+      mockFormAction,
+      mockPending,
+    ]),
   };
 });
 
@@ -58,15 +72,21 @@ describe("PlayInner – game lobby / matchmaking view", () => {
   it("renders a play / start game button", () => {
     render(<PlayInner isAuthenticated={true} />);
     const buttons = screen.getAllByRole("button");
-    const playBtn = buttons.find((b) => /start.?game|login.?to.?start/i.test(b.textContent ?? ""));
+    const playBtn = buttons.find((b) =>
+      /start.?game|login.?to.?start/i.test(b.textContent ?? ""),
+    );
     expect(playBtn).toBeTruthy();
   });
 
   it("shows a sign-in prompt when the user is not authenticated and online mode is active", () => {
     render(<PlayInner isAuthenticated={false} />);
     expect(
-      screen.queryAllByRole("link").some((l) => /sign.?in|log.?in|login|account/i.test(l.textContent ?? "")) ||
-      screen.queryAllByText(/sign.?in|log.?in|login|account/i).length > 0
+      screen
+        .queryAllByRole("link")
+        .some((l) =>
+          /sign.?in|log.?in|login|account/i.test(l.textContent ?? ""),
+        ) ||
+        screen.queryAllByText(/sign.?in|log.?in|login|account/i).length > 0,
     ).toBe(true);
   });
 
@@ -85,7 +105,9 @@ describe("PlayInner – game lobby / matchmaking view", () => {
     mockPending = true;
     render(<PlayInner isAuthenticated={true} />);
     const buttons = screen.getAllByRole("button");
-    const submitBtn = buttons.find((b) => /start.?game/i.test(b.textContent ?? ""));
+    const submitBtn = buttons.find((b) =>
+      /start.?game/i.test(b.textContent ?? ""),
+    );
     expect(submitBtn).toBeTruthy();
     expect(submitBtn).toBeDisabled();
   });
@@ -93,7 +115,9 @@ describe("PlayInner – game lobby / matchmaking view", () => {
   it("submit button is disabled when user is not authenticated", () => {
     render(<PlayInner isAuthenticated={false} />);
     const buttons = screen.getAllByRole("button");
-    const submitBtn = buttons.find((b) => /login.?to.?start/i.test(b.textContent ?? ""));
+    const submitBtn = buttons.find((b) =>
+      /login.?to.?start/i.test(b.textContent ?? ""),
+    );
     expect(submitBtn).toBeTruthy();
     expect(submitBtn).toBeDisabled();
   });

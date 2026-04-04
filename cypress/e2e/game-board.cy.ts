@@ -117,7 +117,6 @@ describe("Live game board", () => {
         .invoke("text")
         .then((initial) => {
           // Wait 1.5 s and check the value decreased.
-          // eslint-disable-next-line cypress/no-unnecessary-waiting
           cy.wait(1500);
           cy.get("@clock")
             .invoke("text")

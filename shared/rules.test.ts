@@ -26,7 +26,10 @@ type PieceInput = {
 };
 
 /** Build a custom board state without going through move history. */
-function makeState(pieces: PieceInput[], variant: GameVariant = "concentric-unlimited") {
+function makeState(
+  pieces: PieceInput[],
+  variant: GameVariant = "concentric-unlimited",
+) {
   const state = getState(variant, []);
   state.board.clear();
   state.captured = [];
@@ -85,7 +88,10 @@ function sorted(arr: CellId[]) {
 
 describe("board topology – CONCENTRIC_GRAPH", () => {
   it("r12c1 has correct edge neighbours (r11c1, r11c3)", () => {
-    expect(sorted(CONCENTRIC_GRAPH.edgeNbrs["r12c1"])).toEqual(["r11c1", "r11c3"]);
+    expect(sorted(CONCENTRIC_GRAPH.edgeNbrs["r12c1"])).toEqual([
+      "r11c1",
+      "r11c3",
+    ]);
   });
 
   it("r12c1 has correct vertex neighbours (r11c2)", () => {
@@ -93,19 +99,37 @@ describe("board topology – CONCENTRIC_GRAPH", () => {
   });
 
   it("r7c6 has correct edge neighbours (r6c6, r7c5, r7c7)", () => {
-    expect(sorted(CONCENTRIC_GRAPH.edgeNbrs["r7c6"])).toEqual(["r6c6", "r7c5", "r7c7"]);
+    expect(sorted(CONCENTRIC_GRAPH.edgeNbrs["r7c6"])).toEqual([
+      "r6c6",
+      "r7c5",
+      "r7c7",
+    ]);
   });
 
   it("r7c6 has correct vertex neighbours (r6c5, r6c7, r8c5)", () => {
-    expect(sorted(CONCENTRIC_GRAPH.vertexNbrs["r7c6"])).toEqual(["r6c5", "r6c7", "r8c5"]);
+    expect(sorted(CONCENTRIC_GRAPH.vertexNbrs["r7c6"])).toEqual([
+      "r6c5",
+      "r6c7",
+      "r8c5",
+    ]);
   });
 
   it("r9c3 has correct edge neighbours (r10c3, r8c3, r9c2, r9c4)", () => {
-    expect(sorted(CONCENTRIC_GRAPH.edgeNbrs["r9c3"])).toEqual(["r10c3", "r8c3", "r9c2", "r9c4"]);
+    expect(sorted(CONCENTRIC_GRAPH.edgeNbrs["r9c3"])).toEqual([
+      "r10c3",
+      "r8c3",
+      "r9c2",
+      "r9c4",
+    ]);
   });
 
   it("r9c3 has correct vertex neighbours (r10c2, r8c2, r8c4, r9c5)", () => {
-    expect(sorted(CONCENTRIC_GRAPH.vertexNbrs["r9c3"])).toEqual(["r10c2", "r8c2", "r8c4", "r9c5"]);
+    expect(sorted(CONCENTRIC_GRAPH.vertexNbrs["r9c3"])).toEqual([
+      "r10c2",
+      "r8c2",
+      "r8c4",
+      "r9c5",
+    ]);
   });
 
   it("r1c1 has correct edge neighbours (r2c1, r2c3)", () => {
@@ -136,7 +160,8 @@ describe("initial position", () => {
     const state = getState("concentric-unlimited", []);
     let total = 0;
     for (const [id, piece] of state.board.entries()) {
-      if (piece.color === "wht") total += getLegalMovesFromState(state, id).length;
+      if (piece.color === "wht")
+        total += getLegalMovesFromState(state, id).length;
     }
     expect(total).toBe(20);
   });
@@ -406,7 +431,12 @@ describe("bishop", () => {
 
   it("bishop cannot use colour-change move after it has already been used", () => {
     const s = makeState([
-      { type: "bishop", color: "wht", position: "r3c2", bishopColorChangeUsed: true },
+      {
+        type: "bishop",
+        color: "wht",
+        position: "r3c2",
+        bishopColorChangeUsed: true,
+      },
       WK("r1c1"),
       BK("r12c1"),
     ]);
@@ -454,7 +484,15 @@ describe("knight", () => {
       BK("r12c1"),
     ]);
     const moves = sorted(getLegalMovesFromState(s, "r5c5"));
-    expect(moves).toEqual(["r4c3", "r4c5", "r6c3", "r6c9", "r7c4", "r7c6", "r7c8"]);
+    expect(moves).toEqual([
+      "r4c3",
+      "r4c5",
+      "r6c3",
+      "r6c9",
+      "r7c4",
+      "r7c6",
+      "r7c8",
+    ]);
   });
 
   it("knight cannot land on a square occupied by own piece", () => {
@@ -494,8 +532,16 @@ describe("queen", () => {
   });
 
   it("queen at r6c6 can reach all cells the rook at r6c6 can reach", () => {
-    const sQ = makeState([{ type: "queen", color: "wht", position: "r6c6" }, WK("r1c1"), BK("r12c1")]);
-    const sR = makeState([{ type: "rook", color: "wht", position: "r6c6" }, WK("r1c1"), BK("r12c1")]);
+    const sQ = makeState([
+      { type: "queen", color: "wht", position: "r6c6" },
+      WK("r1c1"),
+      BK("r12c1"),
+    ]);
+    const sR = makeState([
+      { type: "rook", color: "wht", position: "r6c6" },
+      WK("r1c1"),
+      BK("r12c1"),
+    ]);
     const rookMoves = getLegalMovesFromState(sR, "r6c6");
     const queenMoves = getLegalMovesFromState(sQ, "r6c6");
     for (const m of rookMoves) {
@@ -624,42 +670,39 @@ describe("prince", () => {
 
 describe("pawn / prince promotion", () => {
   it("white pawn at row 10 or beyond can promote", () => {
-    expect(getPromotionOptionsForMove("pawn", "wht", "r10c1" as CellId)).toEqual([
-      "queen",
-      "rook",
-      "bishop",
-      "knight",
-    ]);
+    expect(
+      getPromotionOptionsForMove("pawn", "wht", "r10c1" as CellId),
+    ).toEqual(["queen", "rook", "bishop", "knight"]);
   });
 
   it("white pawn at row 9 cannot promote", () => {
-    expect(getPromotionOptionsForMove("pawn", "wht", "r9c1" as CellId)).toHaveLength(0);
+    expect(
+      getPromotionOptionsForMove("pawn", "wht", "r9c1" as CellId),
+    ).toHaveLength(0);
   });
 
   it("black pawn at row 3 or below can promote", () => {
-    expect(getPromotionOptionsForMove("pawn", "blk", "r3c1" as CellId)).toEqual([
-      "queen",
-      "rook",
-      "bishop",
-      "knight",
-    ]);
+    expect(getPromotionOptionsForMove("pawn", "blk", "r3c1" as CellId)).toEqual(
+      ["queen", "rook", "bishop", "knight"],
+    );
   });
 
   it("black pawn at row 4 cannot promote", () => {
-    expect(getPromotionOptionsForMove("pawn", "blk", "r4c1" as CellId)).toHaveLength(0);
+    expect(
+      getPromotionOptionsForMove("pawn", "blk", "r4c1" as CellId),
+    ).toHaveLength(0);
   });
 
   it("white prince can promote when reaching row 10+", () => {
-    expect(getPromotionOptionsForMove("prince", "wht", "r10c1" as CellId)).toEqual([
-      "queen",
-      "rook",
-      "bishop",
-      "knight",
-    ]);
+    expect(
+      getPromotionOptionsForMove("prince", "wht", "r10c1" as CellId),
+    ).toEqual(["queen", "rook", "bishop", "knight"]);
   });
 
   it("prince at row 9 cannot promote", () => {
-    expect(getPromotionOptionsForMove("prince", "wht", "r9c1" as CellId)).toHaveLength(0);
+    expect(
+      getPromotionOptionsForMove("prince", "wht", "r9c1" as CellId),
+    ).toHaveLength(0);
   });
 });
 
@@ -772,10 +815,7 @@ describe("determinism", () => {
   });
 
   it("replaying the same move list from scratch yields the same board state", () => {
-    const moves: Move[] = [
-      move("r4c1", "r5c1", 1),
-      move("r9c1", "r8c1", 2),
-    ];
+    const moves: Move[] = [move("r4c1", "r5c1", 1), move("r9c1", "r8c1", 2)];
     const s1 = getState("concentric-unlimited", moves);
     const s2 = getState("concentric-unlimited", moves);
     expect(s1.board.get("r5c1")?.type).toBe("pawn");
@@ -970,11 +1010,19 @@ describe("archimedean graph – knight movement", () => {
     // Knights use the graph's vertex+edge neighbour combination for their jump,
     // so we verify the archimedean knight still reaches valid squares.
     const arch = makeState(
-      [{ type: "knight", color: "wht", position: "r3c1" }, WK("r1c1"), BK("r12c1")],
+      [
+        { type: "knight", color: "wht", position: "r3c1" },
+        WK("r1c1"),
+        BK("r12c1"),
+      ],
       "archimedean-unlimited",
     );
     const conc = makeState(
-      [{ type: "knight", color: "wht", position: "r3c1" }, WK("r1c1"), BK("r12c1")],
+      [
+        { type: "knight", color: "wht", position: "r3c1" },
+        WK("r1c1"),
+        BK("r12c1"),
+      ],
       "concentric-unlimited",
     );
     const archMoves = sorted(getLegalMovesFromState(arch, "r3c1"));
@@ -1080,7 +1128,11 @@ describe("archimedean graph – check and checkmate", () => {
 describe("archimedean graph – promotion", () => {
   it("white pawn reaching row 10+ gets promotion options (same threshold as concentric)", () => {
     // Promotion fires when destination row >= 10 for white, regardless of variant
-    const options = getPromotionOptionsForMove("pawn", "wht", "r11c1" as CellId);
+    const options = getPromotionOptionsForMove(
+      "pawn",
+      "wht",
+      "r11c1" as CellId,
+    );
     expect(options).toContain("queen");
     expect(options).toContain("rook");
     expect(options).toContain("bishop");
@@ -1105,7 +1157,11 @@ describe("getLegalMoves (history-based API)", () => {
 
   it("after pawn moves to r5c1, it has only one square forward", () => {
     const movelist: Move[] = [move("r4c1", "r5c1", 1)];
-    const legal = getLegalMoves("concentric-unlimited", movelist, "r5c1" as CellId);
+    const legal = getLegalMoves(
+      "concentric-unlimited",
+      movelist,
+      "r5c1" as CellId,
+    );
     expect(sorted(legal)).toEqual(["r6c1"]);
   });
 });
@@ -1142,7 +1198,9 @@ describe("draw – threefold repetition", () => {
       move("r3c1", "r5c2", 5), // 2nd occurrence of initial string – not yet 3
     ];
     // Should be ongoing (or at most check/checkmate/stalemate, but not draw by threefold)
-    expect(getBoardStatus("concentric-unlimited", moves, "wht")).not.toBe("draw");
+    expect(getBoardStatus("concentric-unlimited", moves, "wht")).not.toBe(
+      "draw",
+    );
   });
 });
 

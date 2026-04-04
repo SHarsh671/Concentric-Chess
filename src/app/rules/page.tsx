@@ -374,8 +374,8 @@ function PawnTable({ title, rows }: { title: string; rows: string[][] }) {
                 i === 0
                   ? "bg-gray-100"
                   : i % 2 === 0
-                  ? "bg-gray-50"
-                  : "bg-white"
+                    ? "bg-gray-50"
+                    : "bg-white"
               }
             >
               {row.map((cell, j) => (

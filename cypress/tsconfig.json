@@ -4,10 +4,6 @@
     "types": ["cypress", "node"],
     "isolatedModules": false
   },
-  "include": [
-    "**/*.ts"
-  ],
-  "exclude": [
-    "../node_modules"
-  ]
+  "include": ["**/*.ts"],
+  "exclude": ["../node_modules"]
 }

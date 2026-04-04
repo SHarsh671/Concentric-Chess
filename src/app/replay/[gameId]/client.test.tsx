@@ -7,13 +7,31 @@ import GameReplayClient from "./client";
 // Stubs for dependencies that don't work in jsdom
 // ---------------------------------------------------------------------------
 vi.mock("next/link", () => ({
-  default: ({ href, children, ...props }: { href: string; children: React.ReactNode; [key: string]: unknown }) => (
-    <a href={href} {...props}>{children}</a>
+  default: ({
+    href,
+    children,
+    ...props
+  }: {
+    href: string;
+    children: React.ReactNode;
+    [key: string]: unknown;
+  }) => (
+    <a href={href} {...props}>
+      {children}
+    </a>
   ),
 }));
 
 vi.mock("next/image", () => ({
-  default: ({ src, alt, ...props }: { src: string; alt: string; [key: string]: unknown }) => (
+  default: ({
+    src,
+    alt,
+    ...props
+  }: {
+    src: string;
+    alt: string;
+    [key: string]: unknown;
+  }) => (
     // eslint-disable-next-line @next/next/no-img-element
     <img src={src} alt={alt} {...props} />
   ),
@@ -77,7 +95,7 @@ function renderReplay(moves = THREE_MOVES) {
       moves={moves}
       whiteUsername="Alice"
       blackUsername="Bob"
-    />
+    />,
   );
 }
 
@@ -87,9 +105,9 @@ function renderReplay(moves = THREE_MOVES) {
 describe("GameReplayClient – history page navigation", () => {
   it("renders a Play button", () => {
     renderReplay();
-    const playBtns = screen.getAllByRole("button").filter((b) =>
-      /play|pause/i.test(b.textContent ?? "")
-    );
+    const playBtns = screen
+      .getAllByRole("button")
+      .filter((b) => /play|pause/i.test(b.textContent ?? ""));
     expect(playBtns.length).toBeGreaterThan(0);
   });
 
@@ -110,7 +128,9 @@ describe("GameReplayClient – history page navigation", () => {
   it("first and previous buttons are disabled at the start (before any moves)", () => {
     renderReplay();
     // The first two nav buttons (SkipBack, ChevronLeft) should be disabled initially
-    const disabled = screen.getAllByRole("button").filter((b) => b.hasAttribute("disabled"));
+    const disabled = screen
+      .getAllByRole("button")
+      .filter((b) => b.hasAttribute("disabled"));
     // At index -1 (before first move), first and previous are disabled
     expect(disabled.length).toBeGreaterThanOrEqual(2);
   });
@@ -119,7 +139,9 @@ describe("GameReplayClient – history page navigation", () => {
     const user = userEvent.setup();
     renderReplay();
     // ChevronRight is the "next" button; find buttons that are NOT disabled
-    const enabledButtons = screen.getAllByRole("button").filter((b) => !b.hasAttribute("disabled"));
+    const enabledButtons = screen
+      .getAllByRole("button")
+      .filter((b) => !b.hasAttribute("disabled"));
     // Next button should be enabled at the start
     expect(enabledButtons.length).toBeGreaterThan(0);
   });
@@ -128,12 +150,16 @@ describe("GameReplayClient – history page navigation", () => {
     const user = userEvent.setup();
     renderReplay(THREE_MOVES);
     // Find the last (SkipForward) button among enabled buttons
-    const enabledBefore = screen.getAllByRole("button").filter((b) => !b.hasAttribute("disabled"));
+    const enabledBefore = screen
+      .getAllByRole("button")
+      .filter((b) => !b.hasAttribute("disabled"));
     // SkipForward is the last enabled nav button
     const lastBtn = enabledBefore.at(-1)!;
     await user.click(lastBtn);
     // After jumping to last move, next/last buttons become disabled
-    const disabledAfter = screen.getAllByRole("button").filter((b) => b.hasAttribute("disabled"));
+    const disabledAfter = screen
+      .getAllByRole("button")
+      .filter((b) => b.hasAttribute("disabled"));
     expect(disabledAfter.length).toBeGreaterThanOrEqual(2);
   });
 
@@ -152,16 +178,22 @@ describe("GameReplayClient – history page navigation", () => {
     renderReplay(THREE_MOVES);
 
     // Find the play/pause button
-    const playBtn = screen.getAllByRole("button").find((b) =>
-      /play|pause/i.test(b.textContent ?? "")
-    )!;
+    const playBtn = screen
+      .getAllByRole("button")
+      .find((b) => /play|pause/i.test(b.textContent ?? ""))!;
     const initialLabel = playBtn.textContent;
     await user.click(playBtn);
     // After click the label might change (play → pause or trigger autoplay)
     // At minimum the button should still be present
-    expect(screen.getAllByRole("button").some((b) => /play|pause/i.test(b.textContent ?? ""))).toBe(true);
+    expect(
+      screen
+        .getAllByRole("button")
+        .some((b) => /play|pause/i.test(b.textContent ?? "")),
+    ).toBe(true);
     // Initial label was "PLAY"; after click it should be "PAUSE" (or reset to first then autoplay)
-    const afterBtn = screen.getAllByRole("button").find((b) => /play|pause/i.test(b.textContent ?? ""))!;
+    const afterBtn = screen
+      .getAllByRole("button")
+      .find((b) => /play|pause/i.test(b.textContent ?? ""))!;
     expect(afterBtn.textContent).not.toBe(initialLabel);
   });
 

@@ -100,11 +100,7 @@ function makeGame(overrides: Partial<Game> = {}): Game {
   } as Game;
 }
 
-function renderGame(
-  game: Game,
-  moves: Move[] = [],
-  playerId?: string,
-) {
+function renderGame(game: Game, moves: Move[] = [], playerId?: string) {
   return render(
     <GamePage
       game={game}
