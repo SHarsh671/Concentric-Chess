@@ -1,4 +1,8 @@
-## Getting Started
+## For TA
+
+The production app can be accessed at [https://capstone.mrvillage.dev](https://capstone.mrvillage.dev). There is a test user with username `test` and password `12345678`. Please reach out to me if you have any issues ([grafj1@mcmaster.ca](mailto:grafj1@mcmaster.ca)) or Josef Graf on Teams.
+
+## Running Locally
 
 First, run the frontend development server:
 
@@ -15,3 +19,12 @@ npx wrangler dev --local --persist-to ../.wrangler/state
 ```
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+
+## Running Tests
+
+To run unit tests, run the following commands:
+
+```bash
+npm run test
+npm run test:do
+```
