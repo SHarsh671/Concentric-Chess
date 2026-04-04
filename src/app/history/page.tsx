@@ -3,6 +3,7 @@ import * as t from "drizzle-orm";
 import { GAME_VARIANTS, gamesTable } from "shared";
 import { db } from "@/lib/db";
 import { getSession } from "@/lib/auth";
+import { formatWhen } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -15,10 +16,6 @@ import {
 import { Play } from "lucide-react";
 
 const PAGE_SIZE = 25;
-const ONE_MINUTE_MS = 60 * 1000;
-const ONE_HOUR_MS = 60 * ONE_MINUTE_MS;
-const ONE_DAY_MS = 24 * ONE_HOUR_MS;
-const ONE_WEEK_MS = 7 * ONE_DAY_MS;
 
 const variantNameMap = new Map(
   GAME_VARIANTS.map((variant) => [variant.variant, variant.name]),
@@ -29,33 +26,6 @@ function formatVariantName(variant: string): string {
     variantNameMap.get(variant as (typeof GAME_VARIANTS)[number]["variant"]) ??
     variant
   );
-}
-
-function formatWhen(lastMoveAt: string | null): string {
-  if (!lastMoveAt) return "-";
-
-  const then = new Date(lastMoveAt).getTime();
-  if (Number.isNaN(then)) return "-";
-
-  const delta = Date.now() - then;
-  if (delta < ONE_WEEK_MS) {
-    if (delta < ONE_HOUR_MS) {
-      const minutes = Math.max(1, Math.floor(delta / ONE_MINUTE_MS));
-      return `${minutes} minute${minutes === 1 ? "" : "s"} ago`;
-    }
-    if (delta < ONE_DAY_MS) {
-      const hours = Math.max(1, Math.floor(delta / ONE_HOUR_MS));
-      return `${hours} hour${hours === 1 ? "" : "s"} ago`;
-    }
-    const days = Math.max(1, Math.floor(delta / ONE_DAY_MS));
-    return `${days} day${days === 1 ? "" : "s"} ago`;
-  }
-
-  return new Date(lastMoveAt).toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
 }
 
 type HistoryPageProps = {

@@ -360,7 +360,13 @@ export class GameObject extends DurableObject<CloudflareEnv> {
   async webSocketMessage(ws: WebSocket, message: string | ArrayBuffer) {
     await this.lock.acquire();
     try {
-      const msg: ClientMsg = JSON.parse(message.toString());
+      let msg: ClientMsg;
+      try {
+        msg = JSON.parse(message.toString());
+      } catch {
+        // Malformed JSON – ignore silently, do not crash the handler
+        return;
+      }
       const socketInfo = this.sockets.get(ws);
       if (!socketInfo) {
         return;

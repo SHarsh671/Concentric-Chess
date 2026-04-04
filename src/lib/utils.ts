@@ -9,6 +9,11 @@ export function cn(...inputs: ClassValue[]) {
 export function genId() {
   return crypto.randomUUID();
 }
+
+// ---------------------------------------------------------------------------
+// Cell notation helpers
+// ---------------------------------------------------------------------------
+
 function getNumCols(row: number): number {
   row = row >= 7 ? 13 - row : row;
   return 1 + 2 * (row - 1);
@@ -77,4 +82,45 @@ export function pieceLabel(piece: PieceType): string {
     default:
       return "";
   }
+}
+
+// ---------------------------------------------------------------------------
+// Time formatting
+// ---------------------------------------------------------------------------
+
+const ONE_MINUTE_MS = 60 * 1000;
+const ONE_HOUR_MS = 60 * ONE_MINUTE_MS;
+const ONE_DAY_MS = 24 * ONE_HOUR_MS;
+const ONE_WEEK_MS = 7 * ONE_DAY_MS;
+
+/**
+ * Returns a human-readable "time ago" string for a game's last-move timestamp.
+ * Returns "-" for null or invalid dates.
+ * Returns a locale date string for moves older than one week.
+ */
+export function formatWhen(lastMoveAt: string | null): string {
+  if (!lastMoveAt) return "-";
+
+  const then = new Date(lastMoveAt).getTime();
+  if (Number.isNaN(then)) return "-";
+
+  const delta = Date.now() - then;
+  if (delta < ONE_WEEK_MS) {
+    if (delta < ONE_HOUR_MS) {
+      const minutes = Math.max(1, Math.floor(delta / ONE_MINUTE_MS));
+      return `${minutes} minute${minutes === 1 ? "" : "s"} ago`;
+    }
+    if (delta < ONE_DAY_MS) {
+      const hours = Math.max(1, Math.floor(delta / ONE_HOUR_MS));
+      return `${hours} hour${hours === 1 ? "" : "s"} ago`;
+    }
+    const days = Math.max(1, Math.floor(delta / ONE_DAY_MS));
+    return `${days} day${days === 1 ? "" : "s"} ago`;
+  }
+
+  return new Date(lastMoveAt).toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
 }
