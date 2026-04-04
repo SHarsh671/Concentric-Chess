@@ -114,8 +114,7 @@ export default function GamePage({
           movesUpTo,
           opponent,
         );
-        suffix =
-          status === "checkmate" ? "++" : status === "check" ? "+" : "";
+        suffix = status === "checkmate" ? "++" : status === "check" ? "+" : "";
       } catch {
         // Ignore errors from invalid move sequences (e.g. in tests).
       }
@@ -739,8 +738,18 @@ function MoveList({
   groupedMoves: [
     string,
     {
-      w?: { piece: PieceType; fromSquare: string; toSquare: string; suffix: string };
-      b?: { piece: PieceType; fromSquare: string; toSquare: string; suffix: string };
+      w?: {
+        piece: PieceType;
+        fromSquare: string;
+        toSquare: string;
+        suffix: string;
+      };
+      b?: {
+        piece: PieceType;
+        fromSquare: string;
+        toSquare: string;
+        suffix: string;
+      };
     },
   ][];
   variant: "concentric" | "archimedean";
