@@ -15,7 +15,12 @@ import {
 import Link from "next/link";
 import Board, { CapturedPiece } from "@/components/piece/board";
 import Image from "next/image";
-import { getBoardStatus, getState, startingTime, updateStateWithMove } from "shared/rules";
+import {
+  getBoardStatus,
+  getState,
+  startingTime,
+  updateStateWithMove,
+} from "shared/rules";
 import { GameVariant } from "shared";
 import { pieceLabel, toNotation } from "@/lib/utils";
 import { PieceType, Side } from "shared/graph";
@@ -164,7 +169,7 @@ export default function GameReplayClient({
           boardState,
           move.fromSquare,
           move.toSquare,
-          move.promotion as PieceType ?? undefined,
+          (move.promotion as PieceType) ?? undefined,
         );
       } catch {
         // Ignore errors from invalid move sequences.
