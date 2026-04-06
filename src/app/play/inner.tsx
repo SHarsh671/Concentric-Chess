@@ -8,6 +8,12 @@ import Link from "next/link";
 import { useActionState, useState } from "react";
 import { GAME_VARIANTS } from "shared";
 
+const COLOR_PREFERENCES = [
+  { id: "white", label: "White", piece: "♙" },
+  { id: "black", label: "Black", piece: "♟" },
+  { id: "random", label: "Random", piece: "?" },
+] as const;
+
 const GAME_TYPES = [
   {
     id: "concentric",
@@ -37,6 +43,9 @@ export default function PlayInner({
 }) {
   const [state, formAction, pending] = useActionState(play, null);
   const [mode, setMode] = useState<"online" | "local">(state?.mode ?? "online");
+  const [colorPreference, setColorPreference] = useState<
+    "white" | "black" | "random"
+  >((state as PlayState)?.colorPreference ?? "random");
 
   const defaultVariant = state?.variant ?? GAME_VARIANTS[0].variant;
   const [gameType, setGameType] = useState<"concentric" | "archimedean">(
@@ -92,6 +101,13 @@ export default function PlayInner({
         <form action={formAction} className="flex flex-col gap-10">
           <input type="hidden" name="variant" value={variant} />
           <input type="hidden" name="mode" value={mode} />
+          {mode === "online" && (
+            <input
+              type="hidden"
+              name="colorPreference"
+              value={colorPreference}
+            />
+          )}
 
           <section>
             <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3">
@@ -214,6 +230,43 @@ export default function PlayInner({
               </button>
             </div>
           </section>
+
+          {mode === "online" && (
+            <section>
+              <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3">
+                Color{" "}
+                <span className="normal-case font-normal tracking-normal text-gray-300">
+                  (invite only)
+                </span>
+              </p>
+              <div className="grid grid-cols-3 gap-3">
+                {COLOR_PREFERENCES.map((cp) => {
+                  const selected = colorPreference === cp.id;
+                  return (
+                    <button
+                      type="button"
+                      key={cp.id}
+                      onClick={() => setColorPreference(cp.id)}
+                      className={`border-4 p-5 text-left transition-all cursor-pointer focus:outline-none ${
+                        selected
+                          ? "border-black bg-black text-white"
+                          : "border-gray-200 bg-white hover:border-gray-400"
+                      }`}
+                    >
+                      <div
+                        className={`text-3xl mb-2 leading-none select-none ${selected ? "opacity-80" : "opacity-30"}`}
+                      >
+                        {cp.piece}
+                      </div>
+                      <div className="font-bold uppercase tracking-wide text-sm leading-none">
+                        {cp.label}
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </section>
+          )}
 
           {mode === "online" && (
             <section>

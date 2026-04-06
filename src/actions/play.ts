@@ -14,6 +14,7 @@ export type PlayState = {
   variant?: schema.GameVariant;
   mode?: GameMode;
   username?: string;
+  colorPreference?: "white" | "black" | "random";
   error?: string;
 };
 
@@ -40,6 +41,12 @@ export async function play(_prevState: PlayState | null, formData: FormData) {
   switch (mode) {
     case "online":
       const username = formData.get("username") as string | null;
+      const colorPref =
+        (formData.get("colorPreference") as
+          | "white"
+          | "black"
+          | "random"
+          | null) ?? "random";
       if (username) {
         const player = await db()
           .select()
@@ -88,7 +95,13 @@ export async function play(_prevState: PlayState | null, formData: FormData) {
         // otherwise, create a new game
         const gameId = crypto.randomUUID();
         const whitePlayerId =
-          Math.random() < 0.5 ? session.playerId : player.id;
+          colorPref === "white"
+            ? session.playerId
+            : colorPref === "black"
+              ? player.id
+              : Math.random() < 0.5
+                ? session.playerId
+                : player.id;
         const blackPlayerId =
           whitePlayerId === session.playerId ? player.id : session.playerId;
         const whiteAccepted = whitePlayerId === session.playerId ? 1 : 0;

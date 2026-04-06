@@ -13,7 +13,12 @@ import { pieceLabel, toNotation } from "@/lib/utils";
 import SpiralRulesDialog from "@/components/piece/spiral-rules-dialog";
 import { PieceType, Side } from "shared/graph";
 import Image from "next/image";
-import { getBoardStatus, getState, initialPieces } from "shared/rules";
+import {
+  getBoardStatus,
+  getState,
+  initialPieces,
+  updateStateWithMove,
+} from "shared/rules";
 
 export default function GamePage({
   game: initialGame,
@@ -81,8 +86,16 @@ export default function GamePage({
     const out: Record<
       number,
       {
-        w?: (typeof moves)[0] & { piece: PieceType; suffix: string };
-        b?: (typeof moves)[0] & { piece: PieceType; suffix: string };
+        w?: (typeof moves)[0] & {
+          piece: PieceType;
+          suffix: string;
+          isCapture: boolean;
+        };
+        b?: (typeof moves)[0] & {
+          piece: PieceType;
+          suffix: string;
+          isCapture: boolean;
+        };
       }
     > = {};
     const state = initialPieces.reduce(
@@ -92,6 +105,7 @@ export default function GamePage({
       },
       {} as Record<string, { type: PieceType; color: string }>,
     );
+    const boardState = getState(game.variant as GameVariant, []);
     for (const move of moves) {
       const turn = Math.floor((move.moveNumber - 1) / 2) + 1;
       const side = move.moveNumber % 2 === 1 ? "w" : "b";
@@ -119,13 +133,29 @@ export default function GamePage({
         // Ignore errors from invalid move sequences (e.g. in tests).
       }
 
+      const isCapture =
+        boardState.board.has(move.toSquare) ||
+        (boardState.enPassantTarget?.[0] === move.toSquare &&
+          boardState.board.get(move.fromSquare)?.type === "pawn");
+
       out[turn][side] = {
         piece: state[move.fromSquare].type,
         suffix,
+        isCapture,
         ...move,
       };
       state[move.toSquare] = state[move.fromSquare];
       delete state[move.fromSquare];
+      try {
+        updateStateWithMove(
+          boardState,
+          move.fromSquare,
+          move.toSquare,
+          (move.promotion as PieceType) ?? undefined,
+        );
+      } catch {
+        // Ignore errors from invalid move sequences.
+      }
     }
     return Object.entries(out)
       .sort((a, b) => parseInt(b[0]) - parseInt(a[0]))
@@ -743,12 +773,14 @@ function MoveList({
         fromSquare: string;
         toSquare: string;
         suffix: string;
+        isCapture: boolean;
       };
       b?: {
         piece: PieceType;
         fromSquare: string;
         toSquare: string;
         suffix: string;
+        isCapture: boolean;
       };
     },
   ][];
@@ -767,14 +799,14 @@ function MoveList({
               `${pieceLabel(move.w.piece)} ${toNotation(
                 move.w.fromSquare,
                 variant,
-              )}-${toNotation(move.w.toSquare, variant)}${move.w.suffix}`}
+              )}${move.w.isCapture ? "x" : "-"}${toNotation(move.w.toSquare, variant)}${move.w.suffix}`}
           </span>
           <span className="truncate">
             {move.b &&
               `${pieceLabel(move.b.piece)} ${toNotation(
                 move.b.fromSquare,
                 variant,
-              )}-${toNotation(move.b.toSquare, variant)}${move.b.suffix}`}
+              )}${move.b.isCapture ? "x" : "-"}${toNotation(move.b.toSquare, variant)}${move.b.suffix}`}
           </span>
         </div>
       ))}

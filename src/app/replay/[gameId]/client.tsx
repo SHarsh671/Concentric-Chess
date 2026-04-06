@@ -15,7 +15,7 @@ import {
 import Link from "next/link";
 import Board, { CapturedPiece } from "@/components/piece/board";
 import Image from "next/image";
-import { getBoardStatus, startingTime } from "shared/rules";
+import { getBoardStatus, getState, startingTime, updateStateWithMove } from "shared/rules";
 import { GameVariant } from "shared";
 import { pieceLabel, toNotation } from "@/lib/utils";
 import { PieceType, Side } from "shared/graph";
@@ -149,6 +149,27 @@ export default function GameReplayClient({
       } catch {
         return "";
       }
+    });
+  }, [moves, game.variant]);
+
+  const moveMetadata = useMemo(() => {
+    const boardState = getState(game.variant as GameVariant, []);
+    return moves.map((move) => {
+      const piece = boardState.board.get(move.fromSquare)?.type ?? "pawn";
+      const isCapture =
+        boardState.board.has(move.toSquare) ||
+        (boardState.enPassantTarget?.[0] === move.toSquare && piece === "pawn");
+      try {
+        updateStateWithMove(
+          boardState,
+          move.fromSquare,
+          move.toSquare,
+          move.promotion as PieceType ?? undefined,
+        );
+      } catch {
+        // Ignore errors from invalid move sequences.
+      }
+      return { piece: piece as PieceType, isCapture };
     });
   }, [moves, game.variant]);
 
@@ -411,13 +432,14 @@ export default function GameReplayClient({
                 <div className="flex items-center justify-between gap-2 text-sm sm:text-base">
                   <span className="font-bold shrink-0">{move.moveNumber}.</span>
                   <span className="flex-1 min-w-0 truncate">
+                    {`${pieceLabel(moveMetadata[index].piece)} `}
                     {toNotation(
                       move.fromSquare,
                       game.variant.startsWith("archimedean")
                         ? "archimedean"
                         : "concentric",
                     )}
-                    {`→`}
+                    {moveMetadata[index].isCapture ? "x" : "-"}
                     {toNotation(
                       move.toSquare,
                       game.variant.startsWith("archimedean")
