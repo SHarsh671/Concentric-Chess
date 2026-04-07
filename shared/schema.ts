@@ -7,7 +7,9 @@ export const playersTable = sqliteTable("players", {
   email: text("email").notNull().unique(),
   // hashed
   password: text("password").notNull(),
-  requireMoveConfirmation: int("require_move_confirmation").notNull().default(1),
+  requireMoveConfirmation: int("require_move_confirmation")
+    .notNull()
+    .default(1),
   createdAt: text("created_at").default(sql`CURRENT_TIMESTAMP`),
 });
 

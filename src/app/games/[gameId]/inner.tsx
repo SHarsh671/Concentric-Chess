@@ -438,37 +438,37 @@ export default function GamePage({
   const topCaptured = topIsWhite ? blackCaptured : whiteCaptured;
   const botCaptured = topIsWhite ? whiteCaptured : blackCaptured;
   const topLabel = topIsWhite
-    ? whiteUsername ?? "♔ White"
-    : blackUsername ?? "♚ Black";
+    ? (whiteUsername ?? "♔ White")
+    : (blackUsername ?? "♚ Black");
   const botLabel = topIsWhite
-    ? blackUsername ?? "♚ Black"
-    : whiteUsername ?? "♔ White";
+    ? (blackUsername ?? "♚ Black")
+    : (whiteUsername ?? "♔ White");
   const topSideLabel = topIsWhite ? "♔ White" : "♚ Black";
   const botSideLabel = topIsWhite ? "♚ Black" : "♔ White";
   const topRole = isSpectator
     ? topSideLabel
     : viewerSide
-    ? `Opponent · ${topSideLabel}`
-    : topSideLabel;
+      ? `Opponent · ${topSideLabel}`
+      : topSideLabel;
   const botRole = isSpectator
     ? botSideLabel
     : viewerSide
-    ? `You · ${botSideLabel}`
-    : botSideLabel;
+      ? `You · ${botSideLabel}`
+      : botSideLabel;
 
   // Draw offer state
   const myDrawOffer =
     viewerSide === "wht"
       ? game.whiteDrawOffer
       : viewerSide === "blk"
-      ? game.blackDrawOffer
-      : 0;
+        ? game.blackDrawOffer
+        : 0;
   const opponentDrawOffer =
     viewerSide === "wht"
       ? game.blackDrawOffer
       : viewerSide === "blk"
-      ? game.whiteDrawOffer
-      : 0;
+        ? game.whiteDrawOffer
+        : 0;
 
   const boardVariant = game.variant.split("-")[0] as
     | "concentric"
@@ -479,28 +479,28 @@ export default function GamePage({
         ? "♔ White Wins by Checkmate"
         : "♔ White Wins!"
       : game.status === "black_win"
-      ? positionState === "checkmate"
-        ? "♚ Black Wins by Checkmate"
-        : "♚ Black Wins!"
-      : game.status === "draw"
-      ? positionState === "stalemate"
-        ? "Draw by Stalemate"
-        : "Game Drawn"
-      : game.status === "white_resign"
-      ? "White Resigned — Black Wins"
-      : game.status === "black_resign"
-      ? "Black Resigned — White Wins"
-      : null;
+        ? positionState === "checkmate"
+          ? "♚ Black Wins by Checkmate"
+          : "♚ Black Wins!"
+        : game.status === "draw"
+          ? positionState === "stalemate"
+            ? "Draw by Stalemate"
+            : "Game Drawn"
+          : game.status === "white_resign"
+            ? "White Resigned — Black Wins"
+            : game.status === "black_resign"
+              ? "Black Resigned — White Wins"
+              : null;
   const tacticalStatusMessage =
     positionState === "check"
       ? `${currentTurn === "wht" ? "♔ White" : "♚ Black"} in Check`
       : positionState === "checkmate"
-      ? "Checkmate"
-      : positionState === "stalemate"
-      ? "Stalemate"
-      : positionState === "draw"
-      ? "Draw"
-      : null;
+        ? "Checkmate"
+        : positionState === "stalemate"
+          ? "Stalemate"
+          : positionState === "draw"
+            ? "Draw"
+            : null;
   const topBannerMessage = statusMessage ?? tacticalStatusMessage;
   const desktopBoardReady = boardPx > 0;
 
@@ -586,10 +586,10 @@ export default function GamePage({
               {isSpectator
                 ? "Spectating"
                 : canControlBoth
-                ? "Both Sides"
-                : viewerSide === "wht"
-                ? "Playing White"
-                : "Playing Black"}
+                  ? "Both Sides"
+                  : viewerSide === "wht"
+                    ? "Playing White"
+                    : "Playing Black"}
             </span>
             <span className="text-[11px] font-black uppercase border-2 border-black px-2 py-0.5 bg-black text-white">
               {currentTurn === "wht" ? "♔ White" : "♚ Black"}

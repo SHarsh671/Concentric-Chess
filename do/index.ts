@@ -609,8 +609,8 @@ export class GameObject extends DurableObject<CloudflareEnv> {
                 ? "white"
                 : "black"
               : socketInfo.playerId === game.whitePlayerId
-              ? "white"
-              : "black";
+                ? "white"
+                : "black";
           const now = new Date();
           const elapsed =
             now.getTime() -
