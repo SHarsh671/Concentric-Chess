@@ -7,6 +7,7 @@ export type ServerMsg =
       data: {
         whitePlayerId: string | null;
         blackPlayerId: string | null;
+        lastMoveAt: string;
       };
     }
   | {

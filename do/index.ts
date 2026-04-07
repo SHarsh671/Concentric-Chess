@@ -146,6 +146,7 @@ export class GameObject extends DurableObject<CloudflareEnv> {
             data: {
               whitePlayerId: session.playerId,
               blackPlayerId: game.blackPlayerId,
+              lastMoveAt: now.toISOString(),
             },
           });
           return new Response("Game accepted", { status: 200 });
@@ -160,6 +161,7 @@ export class GameObject extends DurableObject<CloudflareEnv> {
             data: {
               whitePlayerId: game.whitePlayerId,
               blackPlayerId: session.playerId,
+              lastMoveAt: now.toISOString(),
             },
           });
           return new Response("Game accepted", { status: 200 });
@@ -179,6 +181,7 @@ export class GameObject extends DurableObject<CloudflareEnv> {
             data: {
               whitePlayerId: game.whitePlayerId,
               blackPlayerId: session.playerId,
+              lastMoveAt: now.toISOString(),
             },
           });
           return new Response("Game accepted", { status: 200 });
@@ -197,6 +200,7 @@ export class GameObject extends DurableObject<CloudflareEnv> {
             data: {
               whitePlayerId: session.playerId,
               blackPlayerId: game.blackPlayerId,
+              lastMoveAt: now.toISOString(),
             },
           });
           return new Response("Game accepted", { status: 200 });

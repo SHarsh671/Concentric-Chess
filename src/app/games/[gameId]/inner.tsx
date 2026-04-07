@@ -198,6 +198,7 @@ export default function GamePage({
         case "accepted":
           setGame((prev) => ({
             ...prev,
+            lastMoveAt: message.data.lastMoveAt,
             whitePlayerId: message.data.whitePlayerId,
             blackPlayerId: message.data.blackPlayerId,
             whiteAccepted: 1,
@@ -424,37 +425,37 @@ export default function GamePage({
   const topCaptured = topIsWhite ? blackCaptured : whiteCaptured;
   const botCaptured = topIsWhite ? whiteCaptured : blackCaptured;
   const topLabel = topIsWhite
-    ? (whiteUsername ?? "♔ White")
-    : (blackUsername ?? "♚ Black");
+    ? whiteUsername ?? "♔ White"
+    : blackUsername ?? "♚ Black";
   const botLabel = topIsWhite
-    ? (blackUsername ?? "♚ Black")
-    : (whiteUsername ?? "♔ White");
+    ? blackUsername ?? "♚ Black"
+    : whiteUsername ?? "♔ White";
   const topSideLabel = topIsWhite ? "♔ White" : "♚ Black";
   const botSideLabel = topIsWhite ? "♚ Black" : "♔ White";
   const topRole = isSpectator
     ? topSideLabel
     : viewerSide
-      ? `Opponent · ${topSideLabel}`
-      : topSideLabel;
+    ? `Opponent · ${topSideLabel}`
+    : topSideLabel;
   const botRole = isSpectator
     ? botSideLabel
     : viewerSide
-      ? `You · ${botSideLabel}`
-      : botSideLabel;
+    ? `You · ${botSideLabel}`
+    : botSideLabel;
 
   // Draw offer state
   const myDrawOffer =
     viewerSide === "wht"
       ? game.whiteDrawOffer
       : viewerSide === "blk"
-        ? game.blackDrawOffer
-        : 0;
+      ? game.blackDrawOffer
+      : 0;
   const opponentDrawOffer =
     viewerSide === "wht"
       ? game.blackDrawOffer
       : viewerSide === "blk"
-        ? game.whiteDrawOffer
-        : 0;
+      ? game.whiteDrawOffer
+      : 0;
 
   const boardVariant = game.variant.split("-")[0] as
     | "concentric"
@@ -465,28 +466,28 @@ export default function GamePage({
         ? "♔ White Wins by Checkmate"
         : "♔ White Wins!"
       : game.status === "black_win"
-        ? positionState === "checkmate"
-          ? "♚ Black Wins by Checkmate"
-          : "♚ Black Wins!"
-        : game.status === "draw"
-          ? positionState === "stalemate"
-            ? "Draw by Stalemate"
-            : "Game Drawn"
-          : game.status === "white_resign"
-            ? "White Resigned — Black Wins"
-            : game.status === "black_resign"
-              ? "Black Resigned — White Wins"
-              : null;
+      ? positionState === "checkmate"
+        ? "♚ Black Wins by Checkmate"
+        : "♚ Black Wins!"
+      : game.status === "draw"
+      ? positionState === "stalemate"
+        ? "Draw by Stalemate"
+        : "Game Drawn"
+      : game.status === "white_resign"
+      ? "White Resigned — Black Wins"
+      : game.status === "black_resign"
+      ? "Black Resigned — White Wins"
+      : null;
   const tacticalStatusMessage =
     positionState === "check"
       ? `${currentTurn === "wht" ? "♔ White" : "♚ Black"} in Check`
       : positionState === "checkmate"
-        ? "Checkmate"
-        : positionState === "stalemate"
-          ? "Stalemate"
-          : positionState === "draw"
-            ? "Draw"
-            : null;
+      ? "Checkmate"
+      : positionState === "stalemate"
+      ? "Stalemate"
+      : positionState === "draw"
+      ? "Draw"
+      : null;
   const topBannerMessage = statusMessage ?? tacticalStatusMessage;
   const desktopBoardReady = boardPx > 0;
 
@@ -571,10 +572,10 @@ export default function GamePage({
               {isSpectator
                 ? "Spectating"
                 : canControlBoth
-                  ? "Both Sides"
-                  : viewerSide === "wht"
-                    ? "Playing White"
-                    : "Playing Black"}
+                ? "Both Sides"
+                : viewerSide === "wht"
+                ? "Playing White"
+                : "Playing Black"}
             </span>
             <span className="text-[11px] font-black uppercase border-2 border-black px-2 py-0.5 bg-black text-white">
               {currentTurn === "wht" ? "♔ White" : "♚ Black"}
@@ -752,7 +753,9 @@ function PlayerBar({
           <span className="w-1.5 h-1.5 rounded-full bg-current animate-pulse" />
         )}
         <span
-          className={`flex items-center justify-center text-center font-mono font-black tabular-nums text-xl border-2 px-2 py-0.5 ${isWhiteSide ? "border-black text-black" : "border-white text-white"}`}
+          className={`flex items-center justify-center text-center font-mono font-black tabular-nums text-xl border-2 px-2 py-0.5 ${
+            isWhiteSide ? "border-black text-black" : "border-white text-white"
+          }`}
         >
           <TimerDisplay timeLeft={timeLeft} />
         </span>
@@ -799,14 +802,20 @@ function MoveList({
               `${pieceLabel(move.w.piece)} ${toNotation(
                 move.w.fromSquare,
                 variant,
-              )}${move.w.isCapture ? "x" : "-"}${toNotation(move.w.toSquare, variant)}${move.w.suffix}`}
+              )}${move.w.isCapture ? "x" : "-"}${toNotation(
+                move.w.toSquare,
+                variant,
+              )}${move.w.suffix}`}
           </span>
           <span className="truncate">
             {move.b &&
               `${pieceLabel(move.b.piece)} ${toNotation(
                 move.b.fromSquare,
                 variant,
-              )}${move.b.isCapture ? "x" : "-"}${toNotation(move.b.toSquare, variant)}${move.b.suffix}`}
+              )}${move.b.isCapture ? "x" : "-"}${toNotation(
+                move.b.toSquare,
+                variant,
+              )}${move.b.suffix}`}
           </span>
         </div>
       ))}
