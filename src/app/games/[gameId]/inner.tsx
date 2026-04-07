@@ -106,7 +106,8 @@ export default function GamePage({
       {} as Record<string, { type: PieceType; color: string }>,
     );
     const boardState = getState(game.variant as GameVariant, []);
-    for (const move of moves) {
+    const sortedMoves = [...moves].sort((a, b) => a.moveNumber - b.moveNumber);
+    for (const move of sortedMoves) {
       const turn = Math.floor((move.moveNumber - 1) / 2) + 1;
       const side = move.moveNumber % 2 === 1 ? "w" : "b";
 
