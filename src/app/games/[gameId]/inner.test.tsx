@@ -108,6 +108,7 @@ function renderGame(game: Game, moves: Move[] = [], playerId?: string) {
       playerId={playerId}
       whiteUsername="Alice"
       blackUsername="Bob"
+      requireMoveConfirmation={true}
     />,
   );
 }

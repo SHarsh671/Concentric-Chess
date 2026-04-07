@@ -20,7 +20,7 @@ describe("SettingsPage – account & profile interface (§8.2.5)", () => {
 
   describe("form fields", () => {
     it("renders the Update Username form with username and password inputs", () => {
-      render(<SettingsPage />);
+      render(<SettingsPage requireMoveConfirmation={true} />);
       expect(
         screen.getByRole("textbox", { name: /new username/i }),
       ).toBeInTheDocument();
@@ -30,14 +30,14 @@ describe("SettingsPage – account & profile interface (§8.2.5)", () => {
     });
 
     it("renders the Update Email form with an email input", () => {
-      render(<SettingsPage />);
+      render(<SettingsPage requireMoveConfirmation={true} />);
       expect(
         screen.getByRole("textbox", { name: /new email/i }),
       ).toBeInTheDocument();
     });
 
     it("renders Update Username, Update Email, and Update Password submit buttons", () => {
-      render(<SettingsPage />);
+      render(<SettingsPage requireMoveConfirmation={true} />);
       expect(
         screen.getAllByRole("button", { name: /update username/i }).length,
       ).toBeGreaterThan(0);
@@ -53,7 +53,7 @@ describe("SettingsPage – account & profile interface (§8.2.5)", () => {
   // ── Logout ───────────────────────────────────────────────────────────────
 
   it("renders a Logout button", () => {
-    render(<SettingsPage />);
+    render(<SettingsPage requireMoveConfirmation={true} />);
     expect(
       screen.getAllByRole("button", { name: /logout/i }).length,
     ).toBeGreaterThan(0);
@@ -62,7 +62,7 @@ describe("SettingsPage – account & profile interface (§8.2.5)", () => {
   // ── Error / feedback display (§8 Account & Profile) ─────────────────────
 
   it("does not show an error alert when there is no action error", () => {
-    render(<SettingsPage />);
+    render(<SettingsPage requireMoveConfirmation={true} />);
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
   });
 });
