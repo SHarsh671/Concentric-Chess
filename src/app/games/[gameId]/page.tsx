@@ -2,7 +2,7 @@ import { db } from "@/lib/db";
 import Game from "./inner";
 import { getSession } from "@/lib/auth";
 import { playersTable } from "shared/schema";
-import { inArray } from "drizzle-orm";
+import { inArray, eq } from "drizzle-orm";
 
 export default async function GamePage({
   params,
@@ -37,6 +37,17 @@ export default async function GamePage({
   const blackUsername =
     players.find((p) => p.id === game.blackPlayerId)?.username ?? null;
 
+  let requireMoveConfirmation = true;
+  if (session?.playerId) {
+    const player = await db()
+      .select({ requireMoveConfirmation: playersTable.requireMoveConfirmation })
+      .from(playersTable)
+      .where(eq(playersTable.id, session.playerId))
+      .limit(1)
+      .then((rows) => rows[0]);
+    requireMoveConfirmation = (player?.requireMoveConfirmation ?? 1) !== 0;
+  }
+
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
       <Game
@@ -45,6 +56,7 @@ export default async function GamePage({
         playerId={session?.playerId}
         whiteUsername={whiteUsername}
         blackUsername={blackUsername}
+        requireMoveConfirmation={requireMoveConfirmation}
       />
     </div>
   );

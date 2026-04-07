@@ -2,6 +2,7 @@
 
 import type React from "react";
 import { AlertCircleIcon, LoaderCircle } from "lucide-react";
+import { toast } from "sonner";
 
 import {
   Card,
@@ -13,16 +14,22 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
 import {
   logout,
   updateEmail,
+  updateMoveConfirmation,
   updatePassword,
   updateUsername,
 } from "@/actions/auth";
-import { useActionState } from "react";
+import { useActionState, useEffect } from "react";
 import { Alert, AlertTitle } from "@/components/ui/alert";
 
-export default function SettingsPage() {
+export default function SettingsPage({
+  requireMoveConfirmation,
+}: {
+  requireMoveConfirmation: boolean;
+}) {
   const [logoutState, logoutAction, logoutPending] = useActionState(
     logout,
     null,
@@ -39,11 +46,23 @@ export default function SettingsPage() {
     updatePassword,
     null,
   );
+  const [moveConfirmationState, updateMoveConfirmationAction] = useActionState(
+    updateMoveConfirmation,
+    null,
+  );
+
+  useEffect(() => {
+    if (moveConfirmationState?.success) {
+      toast.success("Preferences saved.");
+    }
+  }, [moveConfirmationState]);
+
   const message =
     passwordState?.message ||
     emailState?.message ||
     usernameState?.message ||
-    logoutState?.message;
+    logoutState?.message ||
+    moveConfirmationState?.message;
 
   return (
     <div className="min-h-screen bg-background p-6">
@@ -214,6 +233,41 @@ export default function SettingsPage() {
                   )}
                   Update Password
                 </Button>
+              </form>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Game Preferences</CardTitle>
+              <CardDescription>
+                Customize how you interact with the board during games.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <form action={updateMoveConfirmationAction} className="space-y-4">
+                <div className="flex items-center justify-between gap-4">
+                  <div className="space-y-1">
+                    <Label htmlFor="requireMoveConfirmation">
+                      Move confirmation
+                    </Label>
+                    <p className="text-sm text-muted-foreground">
+                      Require a second click to confirm each move.
+                    </p>
+                  </div>
+                  <Switch
+                    id="requireMoveConfirmation"
+                    name="requireMoveConfirmation"
+                    defaultChecked={requireMoveConfirmation}
+                    value="true"
+                  />
+                </div>
+                <input
+                  type="hidden"
+                  name="requireMoveConfirmation"
+                  value="false"
+                />
+                <Button type="submit">Save Preferences</Button>
               </form>
             </CardContent>
           </Card>

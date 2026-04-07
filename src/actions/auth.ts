@@ -267,6 +267,36 @@ export async function updateEmail(
   redirect("/settings");
 }
 
+export type UpdateMoveConfirmationState = {
+  message?: string;
+  success?: boolean;
+};
+
+export async function updateMoveConfirmation(
+  _prevState: UpdateMoveConfirmationState | null,
+  formData: FormData,
+): Promise<UpdateMoveConfirmationState> {
+  const requireMoveConfirmation =
+    formData.get("requireMoveConfirmation") === "true" ? 1 : 0;
+
+  try {
+    const session = await getSession();
+    if (!session) {
+      return { message: "You must be logged in to update your settings." };
+    }
+    await db()
+      .update(playersTable)
+      .set({ requireMoveConfirmation })
+      .where(t.eq(playersTable.id, session.playerId));
+  } catch (e) {
+    console.error("Error updating move confirmation:", e);
+    return { message: "An unexpected error occurred. Please try again." };
+  }
+
+  revalidatePath("/settings", "layout");
+  return { success: true };
+}
+
 export type UpdatePasswordState = {
   message: string;
 };

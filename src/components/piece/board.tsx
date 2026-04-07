@@ -55,6 +55,7 @@ export default function Board({
   onCapturedPiecesChange,
   trackCapturedPieces = true,
   isReplayMode = false,
+  requireMoveConfirmation = true,
 }: {
   moves: Move[];
   onMove: (from: string, to: string, promotion?: PieceType | null) => void;
@@ -67,6 +68,7 @@ export default function Board({
   onCapturedPiecesChange?: (captured: CapturedPiece[]) => void;
   trackCapturedPieces?: boolean;
   isReplayMode?: boolean;
+  requireMoveConfirmation?: boolean;
 }) {
   const [spaces, setSpaces] = useState<Space[]>([]);
   const [boardState, setBoardState] = useState<BoardState>({
@@ -199,6 +201,29 @@ export default function Board({
       boardState.legalMoves.includes(cellId) &&
       boardState.selectedPiece.color === currentTurn
     ) {
+      if (!requireMoveConfirmation) {
+        console.log(
+          "Move executed:",
+          boardState.selectedPiece.position,
+          "->",
+          cellId,
+        );
+        const promotionOptions = getPromotionOptionsForMove(
+          boardState.selectedPiece.type,
+          boardState.selectedPiece.color,
+          cellId,
+        );
+        if (promotionOptions.length > 0) {
+          setPendingPromotion({
+            from: boardState.selectedPiece.position,
+            to: cellId,
+            options: promotionOptions,
+          });
+          return;
+        }
+        onMove(boardState.selectedPiece.position, cellId, null);
+        return;
+      }
       console.log(
         "Move pending:",
         boardState.selectedPiece.position,

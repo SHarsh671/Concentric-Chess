@@ -26,12 +26,14 @@ export default function GamePage({
   playerId,
   whiteUsername,
   blackUsername,
+  requireMoveConfirmation,
 }: {
   game: Game;
   moves: Move[];
   playerId: string | undefined;
   whiteUsername: string | null;
   blackUsername: string | null;
+  requireMoveConfirmation: boolean;
 }) {
   const [game, setGame] = useState(initialGame);
   const ws = useMemo(
@@ -512,6 +514,7 @@ export default function GamePage({
     canControlBoth,
     gameOngoing: game.status === "ongoing",
     variant: game.variant as GameVariant,
+    requireMoveConfirmation,
   };
 
   // Player info bar used above and below the board
