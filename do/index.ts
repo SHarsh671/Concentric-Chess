@@ -25,6 +25,8 @@ export class GameObject extends DurableObject<CloudflareEnv> {
     {
       gameId: string;
       playerId: string | null;
+      lastWhiteDrawAt: string | null;
+      lastBlackDrawAt: string | null;
     }
   >;
   lock: Lock = new Lock();
@@ -127,6 +129,8 @@ export class GameObject extends DurableObject<CloudflareEnv> {
         this.sockets.set(server, {
           gameId,
           playerId: session?.playerId || null,
+          lastBlackDrawAt: null,
+          lastWhiteDrawAt: null,
         });
 
         return new Response(null, {
@@ -657,13 +661,13 @@ export class GameObject extends DurableObject<CloudflareEnv> {
               blackTimeLeft,
             });
           } else {
+            const now = new Date();
             if (
               (game.whitePlayerId === socketInfo.playerId &&
                 game.blackDrawOffer) ||
               (game.blackPlayerId === socketInfo.playerId &&
                 game.whiteDrawOffer)
             ) {
-              const now = new Date();
               const elapsed =
                 now.getTime() -
                 new Date(game.lastMoveAt || game.createdAt!).getTime();
@@ -694,6 +698,18 @@ export class GameObject extends DurableObject<CloudflareEnv> {
                 },
               });
             } else if (game.whitePlayerId === socketInfo.playerId) {
+              if (
+                socketInfo.lastWhiteDrawAt &&
+                socketInfo.lastWhiteDrawAt > game.lastMoveAt!
+              ) {
+                // rate limit to 1 per move
+                await this.broadcastToGame(game.id, {
+                  type: "draw_rate_limit",
+                  data: { side: "white" },
+                });
+                return;
+              }
+              socketInfo.lastWhiteDrawAt = new Date().toISOString();
               await this.db
                 .update(schema.gamesTable)
                 .set({ whiteDrawOffer: game.whiteDrawOffer ? 0 : 1 })
@@ -706,6 +722,18 @@ export class GameObject extends DurableObject<CloudflareEnv> {
                 },
               });
             } else if (game.blackPlayerId === socketInfo.playerId) {
+              if (
+                socketInfo.lastBlackDrawAt &&
+                socketInfo.lastBlackDrawAt > game.lastMoveAt!
+              ) {
+                // rate limit to 1 per move
+                await this.broadcastToGame(game.id, {
+                  type: "draw_rate_limit",
+                  data: { side: "black" },
+                });
+                return;
+              }
+              socketInfo.lastBlackDrawAt = new Date().toISOString();
               await this.db
                 .update(schema.gamesTable)
                 .set({ blackDrawOffer: game.blackDrawOffer ? 0 : 1 })

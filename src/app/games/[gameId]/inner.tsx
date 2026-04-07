@@ -231,6 +231,16 @@ export default function GamePage({
             description: "Your opponent declined the draw.",
           });
           break;
+        case "draw_rate_limit":
+          setGame((prev) => ({
+            ...prev,
+            whiteDrawOffer: 0,
+            blackDrawOffer: 0,
+          }));
+          toast("Draw offer rate limited", {
+            description: "You can only offer to draw once per move.",
+          });
+          break;
       }
     });
     return () => {
@@ -369,7 +379,7 @@ export default function GamePage({
             <span>⚔</span> Challenge Received
           </div>
           <h1 className="text-3xl font-bold uppercase tracking-wide mb-3">
-            Game Invite
+            Game Invite ({game.variant.replace("-", " ").toUpperCase()})
           </h1>
           <p className="text-gray-500 mb-8">
             An opponent is ready to play. Accept to start the game.

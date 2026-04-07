@@ -52,6 +52,12 @@ export type ServerMsg =
     }
   | {
       type: "draw_reject";
+    }
+  | {
+      type: "draw_rate_limit";
+      data: {
+        side: Side;
+      };
     };
 export type ClientMsg =
   | {
