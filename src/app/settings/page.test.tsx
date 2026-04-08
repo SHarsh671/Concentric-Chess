@@ -12,6 +12,16 @@ vi.mock("next/navigation", () => ({
   redirect: vi.fn(),
 }));
 
+vi.mock("@/lib/db", () => ({
+  db: vi.fn(() => ({
+    select: vi.fn().mockReturnThis(),
+    from: vi.fn().mockReturnThis(),
+    where: vi.fn().mockReturnThis(),
+    limit: vi.fn().mockReturnThis(),
+    then: vi.fn((cb: (rows: unknown[]) => unknown) => Promise.resolve(cb([{ requireMoveConfirmation: 1 }]))),
+  })),
+}));
+
 // Mock the Inner component so the test stays focused on the page guard
 vi.mock("./inner", () => ({
   default: () => <div data-testid="settings-inner" />,

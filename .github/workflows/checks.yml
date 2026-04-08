@@ -12,22 +12,25 @@ jobs:
           node-version: "18"
       - name: Install dependencies
         run: npm ci
-      - name: Run Vitest
-        run: npx vitest
+      - name: Run tests (frontend)
+        run: npm run test
+      - name: Run tests (durable object)
+        run: npm run test:do
 
-  cypress:
-    name: Cypress
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - name: Set up Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: "18"
-      - name: Install dependencies
-        run: npm ci
-      - name: Run Cypress tests
-        run: npx cypress run
+  # cypress requires that the dev server (frontend and backend) which isn't easy on Actions
+  # cypress:
+  #   name: Cypress
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v3
+  #     - name: Set up Node.js
+  #       uses: actions/setup-node@v3
+  #       with:
+  #         node-version: "18"
+  #     - name: Install dependencies
+  #       run: npm ci
+  #     - name: Run Cypress tests
+  #       run: npx cypress run
 
   eslint:
     name: ESLint

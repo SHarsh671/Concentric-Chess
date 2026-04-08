@@ -8,7 +8,7 @@ import Inner from "./inner";
 export default async function Page() {
   const session = await getSession();
   if (!session) {
-    redirect("/login");
+    return redirect("/login");
   }
   const player = await db()
     .select({ requireMoveConfirmation: playersTable.requireMoveConfirmation })
