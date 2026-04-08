@@ -18,7 +18,9 @@ vi.mock("@/lib/db", () => ({
     from: vi.fn().mockReturnThis(),
     where: vi.fn().mockReturnThis(),
     limit: vi.fn().mockReturnThis(),
-    then: vi.fn((cb: (rows: unknown[]) => unknown) => Promise.resolve(cb([{ requireMoveConfirmation: 1 }]))),
+    then: vi.fn((cb: (rows: unknown[]) => unknown) =>
+      Promise.resolve(cb([{ requireMoveConfirmation: 1 }])),
+    ),
   })),
 }));
 

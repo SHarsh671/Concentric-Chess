@@ -28,3 +28,9 @@ To run unit tests, run the following commands:
 npm run test
 npm run test:do
 ```
+
+To run integration tests, first start the frontend and backend dev servers then run:
+
+```bash
+npm run cypress:open
+```
