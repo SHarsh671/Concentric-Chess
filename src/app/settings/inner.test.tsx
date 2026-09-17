@@ -11,6 +11,7 @@ vi.mock("@/actions/auth", () => ({
   updateEmail: vi.fn(),
   updatePassword: vi.fn(),
   updateMoveConfirmation: vi.fn(),
+  resendVerificationEmail: vi.fn(),
 }));
 
 import SettingsPage from "./inner";

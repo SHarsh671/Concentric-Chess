@@ -6,6 +6,8 @@ declare namespace Cloudflare {
     GAME_OBJECT: DurableObjectNamespace /* GameObject from capstone-do */;
     DB: D1Database;
     ASSETS: Fetcher;
+    // secret, set via `wrangler secret put RESEND_API_KEY` / .dev.vars locally
+    RESEND_API_KEY: string;
   }
 }
 interface CloudflareEnv extends Cloudflare.Env {}

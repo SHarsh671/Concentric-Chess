@@ -15,6 +15,7 @@ import {
 import { getSession } from "@/lib/auth";
 import Link from "next/link";
 import { SidebarCloseOnNavigate } from "@/components/sidebar-close-on-navigate";
+import { InvitesNavItem } from "@/components/invites-nav-item";
 
 const data = [
   { title: "Play", url: "/play", icon: Gamepad, piece: "♟" },
@@ -65,6 +66,8 @@ export async function AppShell({
               </SidebarMenuItem>
             ))}
           </SidebarMenu>
+
+          {session && <InvitesNavItem enabled />}
 
           {/* Decorative chess row */}
           <div className="mx-2 mt-4 border-t-2 border-b-2 border-black py-2 text-center text-xl tracking-widest opacity-100 select-none">

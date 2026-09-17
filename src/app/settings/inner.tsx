@@ -1,7 +1,7 @@
 "use client";
 
 import type React from "react";
-import { AlertCircleIcon, LoaderCircle } from "lucide-react";
+import { AlertCircleIcon, LoaderCircle, MailWarning } from "lucide-react";
 import { toast } from "sonner";
 
 import {
@@ -17,6 +17,7 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import {
   logout,
+  resendVerificationEmail,
   updateEmail,
   updateMoveConfirmation,
   updatePassword,
@@ -27,8 +28,10 @@ import { Alert, AlertTitle } from "@/components/ui/alert";
 
 export default function SettingsPage({
   requireMoveConfirmation,
+  emailVerified = true,
 }: {
   requireMoveConfirmation: boolean;
+  emailVerified?: boolean;
 }) {
   const [logoutState, logoutAction, logoutPending] = useActionState(
     logout,
@@ -50,6 +53,10 @@ export default function SettingsPage({
     updateMoveConfirmation,
     null,
   );
+  const [resendState, resendAction, resendPending] = useActionState(
+    resendVerificationEmail,
+    null,
+  );
 
   useEffect(() => {
     if (moveConfirmationState?.success) {
@@ -57,12 +64,19 @@ export default function SettingsPage({
     }
   }, [moveConfirmationState]);
 
+  useEffect(() => {
+    if (resendState?.success) {
+      toast.success("Verification email sent.");
+    }
+  }, [resendState]);
+
   const message =
     passwordState?.message ||
     emailState?.message ||
     usernameState?.message ||
     logoutState?.message ||
-    moveConfirmationState?.message;
+    moveConfirmationState?.message ||
+    (resendState?.success ? undefined : resendState?.message);
 
   return (
     <div className="min-h-screen bg-background p-6">
@@ -91,6 +105,28 @@ export default function SettingsPage({
             </form>
           </div>
         </div>
+
+        {!emailVerified && (
+          <Alert>
+            <MailWarning />
+            <AlertTitle className="flex flex-1 items-center justify-between gap-4">
+              <span>
+                Your email isn&apos;t verified yet. Verify it to play online and
+                send/accept game invites.
+              </span>
+              <form action={resendAction}>
+                <Button type="submit" size="sm" disabled={resendPending}>
+                  {resendPending ? (
+                    <LoaderCircle className="size-4 animate-spin" />
+                  ) : (
+                    ""
+                  )}
+                  Resend Email
+                </Button>
+              </form>
+            </AlertTitle>
+          </Alert>
+        )}
 
         {message && (
           <Alert variant="destructive">

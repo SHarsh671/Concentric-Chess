@@ -49,7 +49,11 @@ const mathRandomSpy = vi.spyOn(Math, "random").mockReturnValue(0.1);
 
 // Auth mock – controlled per test
 const mockGetSession = vi.fn();
-vi.mock("@/lib/auth", () => ({ getSession: mockGetSession }));
+const mockIsEmailVerified = vi.fn().mockResolvedValue(true);
+vi.mock("@/lib/auth", () => ({
+  getSession: mockGetSession,
+  isEmailVerified: mockIsEmailVerified,
+}));
 
 // ── helpers ───────────────────────────────────────────────────────────────
 
@@ -105,6 +109,7 @@ describe("play server action – input validation (§9.2.5)", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockGetSession.mockResolvedValue({ playerId: "player-1", token: "tok" });
+    mockIsEmailVerified.mockResolvedValue(true);
   });
 
   it("returns an error for an invalid game variant", async () => {
@@ -122,6 +127,32 @@ describe("play server action – input validation (§9.2.5)", () => {
     expect(result).toMatchObject({
       error: expect.stringMatching(/invalid game mode/i),
     });
+  });
+});
+
+describe("play server action – email verification gating (§9.2.5)", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockGetSession.mockResolvedValue({ playerId: "player-1", token: "tok" });
+  });
+
+  it("blocks online play when the player's email is not verified", async () => {
+    mockIsEmailVerified.mockResolvedValueOnce(false);
+    const result = await play(null, fd("concentric-rapid", "online"));
+    expect(result).toMatchObject({
+      error: expect.stringMatching(/verify your email/i),
+    });
+    expect(mockInsert).not.toHaveBeenCalled();
+  });
+
+  it("allows local play even when the player's email is not verified", async () => {
+    mockInsert.mockReturnValue({
+      values: vi.fn().mockResolvedValue(undefined),
+    });
+    await expectRedirect(
+      () => play(null, fd("concentric-rapid", "local")),
+      "/games/test-game-uuid",
+    );
   });
 });
 

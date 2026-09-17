@@ -211,6 +211,28 @@ export class GameObject extends DurableObject<CloudflareEnv> {
         }
         // not an invite game, and both sides are filled
         return new Response("Game already accepted", { status: 409 });
+      } else if (request.url.endsWith("/decline") && session) {
+        // decline/cancel a pending direct invite: both player slots are filled
+        // but at least one side hasn't accepted yet, and the requester is one
+        // of the two players
+        const now = new Date();
+        if (
+          game.status === "ongoing" &&
+          game.deletedAt === null &&
+          game.whitePlayerId !== null &&
+          game.blackPlayerId !== null &&
+          (game.whiteAccepted === 0 || game.blackAccepted === 0) &&
+          (game.whitePlayerId === session.playerId ||
+            game.blackPlayerId === session.playerId)
+        ) {
+          await this.db
+            .update(schema.gamesTable)
+            .set({ status: "aborted", deletedAt: now.toISOString() })
+            .where(t.eq(schema.gamesTable.id, game.id));
+          await this.broadcastToGame(game.id, { type: "aborted" });
+          return new Response("Invite declined", { status: 200 });
+        }
+        return new Response("Invite cannot be declined", { status: 403 });
       } else if (request.url.endsWith("/abort") && session) {
         // in this case, we want to check if the game is still in queue and abort it
         const now = new Date();
@@ -268,11 +290,7 @@ export class GameObject extends DurableObject<CloudflareEnv> {
     gameId: string,
     update: {
       status:
-        | "white_win"
-        | "black_win"
-        | "draw"
-        | "white_resign"
-        | "black_resign";
+        "white_win" | "black_win" | "draw" | "white_resign" | "black_resign";
       whiteTimeLeft?: number | null;
       blackTimeLeft?: number | null;
     },

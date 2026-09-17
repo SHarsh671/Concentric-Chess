@@ -3,7 +3,7 @@
 import { db } from "@/lib/db";
 import * as schema from "shared/schema";
 import * as t from "drizzle-orm";
-import { getSession } from "@/lib/auth";
+import { getSession, isEmailVerified } from "@/lib/auth";
 import { startingTime } from "shared/rules";
 import { redirect } from "next/navigation";
 import { serialize } from "cookie";
@@ -40,13 +40,18 @@ export async function play(_prevState: PlayState | null, formData: FormData) {
   }
   switch (mode) {
     case "online":
+      if (!(await isEmailVerified(session.playerId))) {
+        return {
+          variant,
+          mode,
+          error:
+            "You must verify your email before playing online. Check your settings to resend the verification email.",
+        };
+      }
       const username = formData.get("username") as string | null;
       const colorPref =
         (formData.get("colorPreference") as
-          | "white"
-          | "black"
-          | "random"
-          | null) ?? "random";
+          "white" | "black" | "random" | null) ?? "random";
       if (username) {
         const player = await db()
           .select()

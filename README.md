@@ -4,7 +4,9 @@ The production app can be accessed at [https://capstone.mrvillage.dev](https://c
 
 ## Running Locally
 
-First, run the frontend development server:
+First, copy `.dev.vars.example` to `.dev.vars` and fill in a [Resend](https://resend.com) API key (used to send email verification and password reset emails; safe to leave as a placeholder if you don't need to test emails locally — sends are skipped with a console warning when unset).
+
+Then, run the frontend development server:
 
 ```bash
 npx wrangler d1 migrations apply capstone --local

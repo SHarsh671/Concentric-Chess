@@ -10,7 +10,36 @@ export const playersTable = sqliteTable("players", {
   requireMoveConfirmation: int("require_move_confirmation")
     .notNull()
     .default(1),
+  // NULL until the player verifies the email currently on their account
+  emailVerifiedAt: text("email_verified_at"),
   createdAt: text("created_at").default(sql`CURRENT_TIMESTAMP`),
+});
+
+export const emailVerificationTokensTable = sqliteTable(
+  "email_verification_tokens",
+  {
+    id: text("id").primaryKey(),
+    playerId: text("player_id")
+      .notNull()
+      .references(() => playersTable.id),
+    token: text("token").notNull().unique(),
+    // the email this token verifies (so changing email invalidates old tokens' effect)
+    email: text("email").notNull(),
+    createdAt: text("created_at").default(sql`CURRENT_TIMESTAMP`),
+    expiresAt: text("expires_at").notNull(),
+    usedAt: text("used_at"),
+  },
+);
+
+export const passwordResetTokensTable = sqliteTable("password_reset_tokens", {
+  id: text("id").primaryKey(),
+  playerId: text("player_id")
+    .notNull()
+    .references(() => playersTable.id),
+  token: text("token").notNull().unique(),
+  createdAt: text("created_at").default(sql`CURRENT_TIMESTAMP`),
+  expiresAt: text("expires_at").notNull(),
+  usedAt: text("used_at"),
 });
 
 export const sessionsTable = sqliteTable("sessions", {
@@ -92,6 +121,9 @@ export type Session = typeof sessionsTable.$inferSelect;
 export type Game = typeof gamesTable.$inferSelect;
 export type Move = typeof movesTable.$inferSelect;
 export type Rating = typeof ratingsTable.$inferSelect;
+export type EmailVerificationToken =
+  typeof emailVerificationTokensTable.$inferSelect;
+export type PasswordResetToken = typeof passwordResetTokensTable.$inferSelect;
 
 export type GameStatus =
   | "draw"

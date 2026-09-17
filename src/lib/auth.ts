@@ -2,8 +2,16 @@ import { cookies } from "next/headers";
 import "server-only";
 import { db } from "./db";
 import * as t from "drizzle-orm";
-import { playersTable, Session, sessionsTable } from "shared";
+import {
+  emailVerificationTokensTable,
+  passwordResetTokensTable,
+  Player,
+  playersTable,
+  Session,
+  sessionsTable,
+} from "shared";
 import bcrypt from "bcryptjs";
+import { sendPasswordResetEmail, sendVerificationEmail } from "./email";
 
 export async function getSession(): Promise<Session | null> {
   return await verifySession();
@@ -85,6 +93,7 @@ export async function registerPlayer(
     username: username.toLowerCase(),
     email,
     password: hashedPassword,
+    emailVerifiedAt: null,
     createdAt: new Date().toISOString(),
   });
   const token = crypto.randomUUID();
@@ -98,7 +107,126 @@ export async function registerPlayer(
     createdAt: new Date().toISOString(),
   };
   await db().insert(sessionsTable).values(session);
+  await sendEmailVerification(playerId, username.toLowerCase(), email);
   return session;
+}
+
+// creates a fresh verification token for the given email and sends it
+export async function sendEmailVerification(
+  playerId: string,
+  username: string,
+  email: string,
+): Promise<void> {
+  const token = crypto.randomUUID();
+  const expiresAt = new Date();
+  expiresAt.setHours(expiresAt.getHours() + 24);
+  await db().insert(emailVerificationTokensTable).values({
+    id: crypto.randomUUID(),
+    playerId,
+    token,
+    email,
+    expiresAt: expiresAt.toISOString(),
+    usedAt: null,
+  });
+  await sendVerificationEmail(email, username, token);
+}
+
+// returns undefined on success, or an error message
+export async function verifyEmailWithToken(
+  token: string,
+): Promise<string | undefined> {
+  const record = await db().query.emailVerificationTokensTable.findFirst({
+    where: t.eq(emailVerificationTokensTable.token, token),
+  });
+  if (!record) {
+    return "Invalid or expired verification link.";
+  }
+  if (record.usedAt || new Date(record.expiresAt) < new Date()) {
+    return "This verification link has expired or already been used.";
+  }
+  const player = await db().query.playersTable.findFirst({
+    where: t.eq(playersTable.id, record.playerId),
+  });
+  if (!player || player.email !== record.email) {
+    // the player's email changed since this token was issued
+    return "This verification link is no longer valid.";
+  }
+  await db()
+    .update(playersTable)
+    .set({ emailVerifiedAt: new Date().toISOString() })
+    .where(t.eq(playersTable.id, record.playerId));
+  await db()
+    .update(emailVerificationTokensTable)
+    .set({ usedAt: new Date().toISOString() })
+    .where(t.eq(emailVerificationTokensTable.id, record.id));
+  return undefined;
+}
+
+export async function isEmailVerified(playerId: string): Promise<boolean> {
+  const player = await db().query.playersTable.findFirst({
+    where: t.eq(playersTable.id, playerId),
+  });
+  return !!player?.emailVerifiedAt;
+}
+
+// starts a password reset flow; always resolves without revealing whether the
+// email exists, to avoid leaking account existence
+export async function startPasswordReset(email: string): Promise<void> {
+  const player = await db().query.playersTable.findFirst({
+    where: t.eq(playersTable.email, email.toLowerCase()),
+  });
+  if (!player) {
+    return;
+  }
+  const token = crypto.randomUUID();
+  const expiresAt = new Date();
+  expiresAt.setHours(expiresAt.getHours() + 1);
+  await db().insert(passwordResetTokensTable).values({
+    id: crypto.randomUUID(),
+    playerId: player.id,
+    token,
+    expiresAt: expiresAt.toISOString(),
+    usedAt: null,
+  });
+  await sendPasswordResetEmail(player.email, player.username, token);
+}
+
+// returns undefined on success, or an error message
+export async function resetPasswordWithToken(
+  token: string,
+  newPassword: string,
+): Promise<string | undefined> {
+  const record = await db().query.passwordResetTokensTable.findFirst({
+    where: t.eq(passwordResetTokensTable.token, token),
+  });
+  if (!record) {
+    return "Invalid or expired reset link.";
+  }
+  if (record.usedAt || new Date(record.expiresAt) < new Date()) {
+    return "This reset link has expired or already been used.";
+  }
+  const hashedPassword = await hashPassword(newPassword);
+  await db()
+    .update(playersTable)
+    .set({ password: hashedPassword })
+    .where(t.eq(playersTable.id, record.playerId));
+  await db()
+    .update(passwordResetTokensTable)
+    .set({ usedAt: new Date().toISOString() })
+    .where(t.eq(passwordResetTokensTable.id, record.id));
+  // invalidate all existing sessions for security
+  await db()
+    .delete(sessionsTable)
+    .where(t.eq(sessionsTable.playerId, record.playerId));
+  return undefined;
+}
+
+export async function getPlayerById(
+  playerId: string,
+): Promise<Player | undefined> {
+  return await db().query.playersTable.findFirst({
+    where: t.eq(playersTable.id, playerId),
+  });
 }
 
 export async function checkUsername(

@@ -8,6 +8,10 @@ import {
   hashPassword,
   loginWithUsername,
   registerPlayer,
+  resetPasswordWithToken,
+  sendEmailVerification,
+  startPasswordReset,
+  verifyEmailWithToken,
   verifyPassword,
 } from "@/lib/auth";
 import { db } from "@/lib/db";
@@ -250,11 +254,13 @@ export async function updateEmail(
         email,
       };
     }
-    // update the email
+    // update the email; changing it always resets verification status, since
+    // we haven't confirmed the new address belongs to this player yet
     await db()
       .update(playersTable)
-      .set({ email })
+      .set({ email, emailVerifiedAt: null })
       .where(t.eq(playersTable.id, session.playerId));
+    await sendEmailVerification(session.playerId, player.username, email);
   } catch (e) {
     console.error("Error updating email:", e);
     return {
@@ -265,6 +271,124 @@ export async function updateEmail(
 
   revalidatePath("/settings", "layout");
   redirect("/settings");
+}
+
+export type ResendVerificationState = {
+  message?: string;
+  success?: boolean;
+};
+
+export async function resendVerificationEmail(): Promise<ResendVerificationState> {
+  try {
+    const session = await getSession();
+    if (!session) {
+      return { message: "You must be logged in to verify your email." };
+    }
+    const player = await db()
+      .select()
+      .from(playersTable)
+      .where(t.eq(playersTable.id, session.playerId))
+      .limit(1)
+      .then((rows) => rows[0]);
+    if (!player) {
+      return { message: "Player not found." };
+    }
+    if (player.emailVerifiedAt) {
+      return { message: "Your email is already verified." };
+    }
+    await sendEmailVerification(player.id, player.username, player.email);
+  } catch (e) {
+    console.error("Error resending verification email:", e);
+    return { message: "An unexpected error occurred. Please try again." };
+  }
+  return { success: true };
+}
+
+export type VerifyEmailState = {
+  message?: string;
+  success?: boolean;
+};
+
+export async function verifyEmail(token: string): Promise<VerifyEmailState> {
+  try {
+    const error = await verifyEmailWithToken(token);
+    if (error) {
+      return { message: error };
+    }
+  } catch (e) {
+    console.error("Error verifying email:", e);
+    return { message: "An unexpected error occurred. Please try again." };
+  }
+  revalidatePath("/settings", "layout");
+  return { success: true };
+}
+
+export type ForgotPasswordState = {
+  message?: string;
+  success?: boolean;
+  email?: string;
+};
+
+export async function forgotPassword(
+  _prevState: ForgotPasswordState | null,
+  formData: FormData,
+): Promise<ForgotPasswordState> {
+  const email = (formData.get("email") as string).toLowerCase();
+  if (!email) {
+    return { message: "Please enter your email address.", email };
+  }
+  try {
+    await startPasswordReset(email);
+  } catch (e) {
+    console.error("Error starting password reset:", e);
+    return {
+      message: "An unexpected error occurred. Please try again.",
+      email,
+    };
+  }
+  // always report success, whether or not the email exists, to avoid leaking
+  // account existence
+  return {
+    success: true,
+    email,
+    message:
+      "If an account with that email exists, we've sent a password reset link.",
+  };
+}
+
+export type ResetPasswordState = {
+  message?: string;
+  success?: boolean;
+};
+
+export async function resetPassword(
+  token: string,
+  _prevState: ResetPasswordState | null,
+  formData: FormData,
+): Promise<ResetPasswordState> {
+  const password = formData.get("password") as string;
+  const confirmPassword = formData.get("confirm_password") as string;
+
+  if (password !== confirmPassword) {
+    return { message: "Passwords do not match." };
+  }
+
+  const passwordCheck = await checkPassword(password);
+  if (passwordCheck) {
+    return { message: passwordCheck };
+  }
+
+  try {
+    const error = await resetPasswordWithToken(token, password);
+    if (error) {
+      return { message: error };
+    }
+  } catch (e) {
+    console.error("Error resetting password:", e);
+    return { message: "An unexpected error occurred. Please try again." };
+  }
+
+  return { success: true };
 }
 
 export type UpdateMoveConfirmationState = {

@@ -11,7 +11,10 @@ export default async function Page() {
     return redirect("/login");
   }
   const player = await db()
-    .select({ requireMoveConfirmation: playersTable.requireMoveConfirmation })
+    .select({
+      requireMoveConfirmation: playersTable.requireMoveConfirmation,
+      emailVerifiedAt: playersTable.emailVerifiedAt,
+    })
     .from(playersTable)
     .where(t.eq(playersTable.id, session.playerId))
     .limit(1)
@@ -20,6 +23,7 @@ export default async function Page() {
   return (
     <Inner
       requireMoveConfirmation={(player?.requireMoveConfirmation ?? 1) === 1}
+      emailVerified={!!player?.emailVerifiedAt}
     />
   );
 }

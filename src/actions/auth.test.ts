@@ -49,6 +49,10 @@ const mockLoginWithUsername = vi.fn();
 const mockVerifyPassword = vi.fn();
 const mockHashPassword = vi.fn();
 const mockGetSession = vi.fn();
+const mockSendEmailVerification = vi.fn().mockResolvedValue(undefined);
+const mockVerifyEmailWithToken = vi.fn();
+const mockStartPasswordReset = vi.fn().mockResolvedValue(undefined);
+const mockResetPasswordWithToken = vi.fn();
 
 vi.mock("@/lib/auth", () => ({
   checkUsername: (...a: unknown[]) => mockCheckUsername(...a),
@@ -59,6 +63,10 @@ vi.mock("@/lib/auth", () => ({
   verifyPassword: (...a: unknown[]) => mockVerifyPassword(...a),
   hashPassword: (...a: unknown[]) => mockHashPassword(...a),
   getSession: (...a: unknown[]) => mockGetSession(...a),
+  sendEmailVerification: (...a: unknown[]) => mockSendEmailVerification(...a),
+  verifyEmailWithToken: (...a: unknown[]) => mockVerifyEmailWithToken(...a),
+  startPasswordReset: (...a: unknown[]) => mockStartPasswordReset(...a),
+  resetPasswordWithToken: (...a: unknown[]) => mockResetPasswordWithToken(...a),
 }));
 
 const { signup, login, logout, updateUsername, updateEmail, updatePassword } =
