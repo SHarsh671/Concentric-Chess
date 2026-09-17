@@ -31,7 +31,7 @@ export function InvitesNavItem({ enabled }: { enabled: boolean }) {
   const count = invites.received.length;
 
   return (
-    <SidebarMenu className="gap-0">
+    <SidebarMenu className="gap-0 px-2">
       <SidebarMenuItem>
         <SidebarMenuButton
           asChild
