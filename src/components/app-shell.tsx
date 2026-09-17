@@ -18,9 +18,9 @@ import { SidebarCloseOnNavigate } from "@/components/sidebar-close-on-navigate";
 import { InvitesNavItem } from "@/components/invites-nav-item";
 
 const data = [
-  { title: "Play", url: "/play", icon: Gamepad, piece: "♟" },
-  { title: "History", url: "/history", icon: History, piece: "♜" },
-  { title: "Rules", url: "/rules", icon: Book, piece: "♝" },
+  { title: "Play", url: "/play", icon: Gamepad },
+  { title: "History", url: "/history", icon: History },
+  { title: "Rules", url: "/rules", icon: Book },
 ];
 
 export async function AppShell({
@@ -57,9 +57,7 @@ export async function AppShell({
                   className="h-11 rounded-none border-2 border-transparent hover:border-black hover:bg-black hover:text-white transition-all group font-bold tracking-wide uppercase text-sm px-3"
                 >
                   <Link href={item.url} className="flex items-center gap-3">
-                    <span className="text-lg leading-none opacity-60 group-hover:opacity-100">
-                      {item.piece}
-                    </span>
+                    <item.icon className="size-4 opacity-60 group-hover:opacity-100" />
                     <span>{item.title}</span>
                   </Link>
                 </SidebarMenuButton>

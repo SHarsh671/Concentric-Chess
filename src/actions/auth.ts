@@ -319,7 +319,6 @@ export async function verifyEmail(token: string): Promise<VerifyEmailState> {
     console.error("Error verifying email:", e);
     return { message: "An unexpected error occurred. Please try again." };
   }
-  revalidatePath("/settings", "layout");
   return { success: true };
 }
 
